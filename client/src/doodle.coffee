@@ -43,7 +43,7 @@ postStroke = (coordinates) ->
 
 roomID = ""
 
-canvasFunctions = 
+canvasFunctions =
   attachTo: (canvas) ->
     up = false
     down = true
@@ -89,8 +89,8 @@ canvasFunctions =
 
 submitChat = () -> (
   onReturn = (jso) -> 0
-  data = {chat: jQuery("#chatText").val()}
-  url = "/chat_" + roomID
+  data = {what: "chat", chat: jQuery("#chatText").val()}
+  url = "/message_" + roomID
   submit = (onError) ->
     postJSONRoundtrip(url, data, onReturn, onError, 10000)
   onError = () -> submit(onError)
@@ -98,26 +98,19 @@ submitChat = () -> (
   return false)
 
 submitPicture = () -> (
-  onReturn = (jso) -> 0
-  data = jQuery("#primaryCanvas")[0].toDataURL()
-  url = "/savePicture"
-  alert(data)
+  onReturn = (jso) -> alert(JSON.stringify(jso))
+  picData = jQuery("#primaryCanvas")[0].toDataURL()
+  data = {what: "picture", picture: picData}
+  url = "/message_" + roomID
   submit = (onError) ->
-    jQuery.ajax(
-      url: url,
-      data: data,
-      type: "POST",
-      dataType: "text"
-      success: onReturn,
-      error: onError,
-      timeout: 10000)
+    postJSONRoundtrip(url, data, onReturn, onError, 10000)
   onError = () -> submit(onError)
   submit()
   return false)
 
 
 eventPump = () -> (
-  onReturn = (jso) -> 
+  onReturn = (jso) ->
     jQuery("#roomName").text(JSON.stringify(jso))#alert(jso)
     setTimeout(eventPump, 10)
   data = ""
@@ -126,12 +119,22 @@ eventPump = () -> (
 )
 
 jQuery(document).ready( () ->
+
   canvasFunctions.attachTo jQuery("#primaryCanvas")
-  roomID = window.location.pathname.split("_")[1] 
+
   setRoomName = (name) ->
     jQuery("#roomName").text(name)
-  jQuery.getJSON("/name_" + roomID, "", (data, _, __) -> setRoomName(data))
-  jQuery("#chatForm").submit(submitChat) 
+
+  setRoomState = (state) ->
+    setRoomName(state.name)
+    alert(JSON.stringify(state))
+
+  roomID = window.location.pathname.split("_")[1]
+  jQuery.getJSON(
+    "/state_" + roomID,
+    "", (data, _, __) -> setRoomState(data))
+
+  jQuery("#chatForm").submit(submitChat)
   jQuery("#savePictureForm").submit(submitPicture)
-  setTimeout(eventPump, 10)
-) 
+  #setTimeout(eventPump, 10)
+)

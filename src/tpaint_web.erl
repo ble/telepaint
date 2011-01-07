@@ -110,44 +110,18 @@ loop(Req, DocRoot) ->
           %Method must be a string.
           %Method might well be the key of another pair in the JSON object
           "message_" ++ ShortID ->
-            JSONIn = mochijson:decode(Req:recv_body()),
-            JSON = case JSONIn of
-              {struct, Items} ->
-                Params = dict:from_list(Items),
-                case dict:find("what", Params) of
-                  error ->
-                    tpaint_util:jsonError("bad method call");
-                  {ok, Method} ->
-                    case Method of
-                      "chat" ->
-                        case dict:find("chat", Params) of
-                          error ->
-                            tpaint_util:jsonError("bad call to chat method");
-                          {ok, Message} ->
-                            case getEstablishedSession(ShortID, Req) of
-                              {error, Why} ->
-                                tpaint_util:jsonError(Why);
-                              {ok,
-                               #roomRef{roomPID = PID},
-                               #userRef{pid = UserPID, sessionID = UserID}} ->
-                                 From = userServer:getName(UserPID),
-                                 Data =
-                                   {struct, [
-                                     {what, chat},
-                                     {chat, Message},
-                                     {from, From}]},
-                                 roomServer:chatMessage(PID, UserID, Data),
-                                "ok" 
-                            end
-                        end;
-                      _ ->
-                        tpaint_util:jsonError("unknown method")
-                    end
-                end;
-              _ ->
-                tpaint_util:jsonError("json not a method call")
-            end,
-            tpaint_util:respondJSON(Req, JSON);
+            JSONResponse = case rpcJSONParse(Req) of
+              {error, Why} ->
+                tpaint_util:jsonError(Why);
+              {ok, Method, Params} ->
+                case getEstablishedSession(ShortID, Req) of
+                  {error, Why} ->
+                    tpaint_util:jsonError(Why);
+                  { ok, RoomRef, UserRef } ->
+                    handleRPC(Method, Params, RoomRef, UserRef)
+                end
+            end, 
+            tpaint_util:respondJSON(Req, JSONResponse);
          _ ->
             Req:not_found()
         end;
@@ -209,3 +183,47 @@ getEstablishedSession(ShortID, Req) ->
           end
       end
   end.
+
+rpcJSONParse(Req) ->
+  JSONIn = mochijson:decode(Req:recv_body()),
+  case JSONIn of
+    {struct, Items} ->
+      Params = dict:from_list(Items),
+      case dict:find("what", Params) of
+        error ->
+          {error, "no method call"};
+        {ok, Method} ->
+          {ok, Method, Params}
+      end;
+    _ ->
+      {error, "no method call"}
+  end.
+      
+handleRPC("chat", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, sessionID = UserID}) ->
+  case dict:find("chat", Params) of
+    error ->
+      tpaint_util:jsonError("bad call to chat method");
+    {ok, Message} ->
+      Data = {struct, [{what, chat}, {chat, Message}, {from, userServer:getName(UPID)}]},
+      roomServer:chatMessage(RPID, UserID, Data),
+      "ok"
+  end;
+        
+handleRPC("name", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, sessionID = UserID}) ->
+  case dict:find("name", Params) of
+    error ->
+      tpaint_util:jsonError("bad call to name method");
+    {ok, Name} ->
+      case userServer:setName(UPID, Name) of
+        ok ->
+          roomServer:nameWasSet(RPID, UserID, Name),
+          {struct, [{name, Name},{status, "ok"}]};
+        alreadySet ->
+          "alreadySet";
+        {error, Why} ->
+          tpaint_util:jsonError(Why)
+      end
+  end;
+
+handleRPC(_UnknownMethod, _, _, _) ->
+  tpaint_util:jsonError("unknown method " ++ _UnknownMethod).

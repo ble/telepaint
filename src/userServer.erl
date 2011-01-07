@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 
--export([start/2, shutdown/1, getName/1, getMessages/2, enqueue/2]).
+-export([start/2, shutdown/1, setName/2, getName/1, getMessages/2, enqueue/2]).
 
 %%gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -32,6 +32,9 @@ init({UserID, RoomID}) -> {
 getName(PID) ->
   gen_server:call(PID, getName).
 
+setName(PID, Name) ->
+  gen_server:call(PID, {setName, Name}).
+
 getMessages(PID, Timeout) ->
   gen_server:cast(PID, {getMessages, self()}),
   receive
@@ -48,6 +51,12 @@ shutdown(ServerRef) ->
 
 handle_call(getName, _, State = #user{name=Name}) ->
   {reply, Name, State};
+
+handle_call({setName, Name}, _, State = #user{name=undefined}) ->
+  {reply, ok, State#user{name=Name}};
+
+handle_call({setName, _Name}, _, State = #user{name=_AlreadySet}) ->
+  {reply, alreadySet, State};
 
 handle_call(
   {enqueue, Message},

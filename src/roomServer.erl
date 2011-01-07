@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 
--export([start/4, addNewUser/2, getStateSeenBy/2, getUserRef/2, chatMessage/3]).
+-export([start/4, addNewUser/2, getStateSeenBy/2, getUserRef/2, chatMessage/3, nameWasSet/3]).
 
 %%gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -23,6 +23,9 @@ addNewUser(PID, UserID) ->
 
 chatMessage(PID, UserID, Data) ->
   gen_server:call(PID, {chatMessage, UserID, Data}).
+
+nameWasSet(PID, UserID, Name) ->
+  gen_server:call(PID, {nameWasSet, UserID, Name}).
 
 init({RoomID, RoomName, CreatorID, CreatorPID}) -> 
   {ok, state:initializeRoom(RoomID, RoomName, CreatorID, CreatorPID)}.
@@ -57,6 +60,12 @@ handle_call({chatMessage, _UserID, Data}, _, State = #roomState{users = UserDict
     end,
     UserPIDs),
   {reply, ok, State};
+
+handle_call({nameWasSet, UserID, Name}, _, _State) ->
+  %for now, do nothing
+  %should probably notify all users that the name was set
+  %or notify them that they should update their state
+  {reply, ok, _State};
 
 handle_call({getStateSeenBy, UserID}, _, State = #roomState{users = Users, userOrder = Order}) ->
   UserRefs = [UserRef || ID <- lists:reverse(Order), {ok, UserRef} <- [dict:find(ID, Users)]],

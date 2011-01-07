@@ -1,5 +1,37 @@
 
 roomID = ""
+myName = undefined
+PI = Math.PI
+
+hexPad = (number, digits) ->
+  result = number.toString(16)
+  result = "0" + result while (result.length < digits)
+  result
+
+hexFormatColor = (red, green, blue) ->
+  red = Math.floor(red)
+  green = Math.floor(green)
+  blue = Math.floor(blue)
+  hexPad(red, 2) + hexPad(green, 2) + hexPad(blue, 2)
+
+colorWheel = (radians) ->
+  radians -= 2*PI while radians > 2*PI
+  radians += 2*PI while radians < 0
+  ixMajor = Math.floor(radians / (2*PI/3)) % 3
+  ixMinor = (8 - Math.floor(radians / (PI/3))) % 3
+  center = (1 + 2 * ixMajor) * PI/3
+  amtMinor = 1.5 * Math.abs(radians - center)
+  red = 0
+  red = 255 if ixMajor == 0
+  red = 255 * Math.sin(amtMinor) if ixMinor == 0
+  green = 0
+  green = 255 if ixMajor == 1
+  green = 255 * Math.sin(amtMinor) if ixMinor == 1
+  blue = 0
+  blue = 255 if ixMajor == 2
+  blue = 255 * Math.sin(amtMinor) if ixMinor == 2
+  hexFormatColor(red, green, blue)
+
 postJSONRoundtrip = (url, data, success, error, timeout) ->
   settings =
     url: url
@@ -118,23 +150,60 @@ eventPump = () -> (
   getJSONRoundtrip(url, data, onReturn, onReturn, 10000)
 )
 
+submitName = () -> (
+  onReturn = (jso) ->
+    if jso.name
+      myName = jso.name
+      jQuery("#prompt").css("visibility", "hidden")
+    else if jso.status == "error"
+      alert("Server error: " + jso.description)
+  data = {what: "name", name: jQuery("#nameText").val()}
+  url = "/message_" + roomID
+  submit = (onError) ->
+    postJSONRoundtrip(url, data, onReturn, onError, 10000)
+  onError = () -> submit(onError)
+  submit()
+  return false)
+
 jQuery(document).ready( () ->
 
   canvasFunctions.attachTo jQuery("#primaryCanvas")
 
   setRoomName = (name) ->
-    jQuery("#roomName").text(name)
+    roomName = jQuery("#roomName")
+    roomName.text(name)
+#    jQuery("#roomName").text(name)
+#    angles = (x * 2 * PI / 40 for x in [0..80])
+#    colors = (colorWheel(angle) for angle in angles)
+#    doThing = (color) ->
+#      fragment = "<div>#</div>"
+#      res = roomName.append(fragment)
+#      res.children().last().css("color", "#"+color).css("float", "left")
+#    doThing(color) for color in colors
+
+
+  getMyName = (state) ->
+    me = state.users.filter( (x) -> x.whoIs == "you" )
+    return undefined if me.length == 0
+    return me[0].name
+
 
   setRoomState = (state) ->
     setRoomName(state.name)
-    alert(JSON.stringify(state))
+    myName = getMyName(state)
+    jQuery("#prompt").css("visibility", "visible") if (myName == undefined)
 
   roomID = window.location.pathname.split("_")[1]
   jQuery.getJSON(
     "/state_" + roomID,
-    "", (data, _, __) -> setRoomState(data))
+    "",
+    (data, _, __) ->
+      setRoomState(data)
+
+    )
 
   jQuery("#chatForm").submit(submitChat)
   jQuery("#savePictureForm").submit(submitPicture)
+  jQuery("#nameForm").submit(submitName)
   #setTimeout(eventPump, 10)
 )

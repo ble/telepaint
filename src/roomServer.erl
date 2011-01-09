@@ -107,15 +107,25 @@ handle_call({stroke, UserID, Params}, _, State = #roomState{users = Users, inGam
   end;
 
 
-handle_call({getStateSeenBy, UserID}, _, State = #roomState{users = Users, userOrder = Order, inGame = InGame, roomName = RoomName}) ->
+handle_call(
+  {getStateSeenBy, UserID},
+  _,
+  State = #roomState{
+    users = Users, 
+    creatorID = CreatorID,
+    userOrder = Order, 
+    inGame = InGame, 
+    roomName = RoomName}) ->
   UserRefs = [UserRef || ID <- Order, {ok, UserRef} <- [dict:find(ID, Users)]],
-  UserNames = [{userServer:getName(PID), UserID == ID} || #userRef{pid=PID, sessionID=ID} <- UserRefs],
+  UserNames = [{userServer:getName(PID), UserID == ID, ID} || #userRef{pid=PID, sessionID=ID} <- UserRefs],
   UsersJSON = [case Name of
       undefined ->
-        {struct, [{whoIs, WhoIs}]};
+        {struct, [{whoIs, WhoIs}, {isCreator, IsCreator}]};
       _ ->
-        {struct, [{whoIs, WhoIs}, {name, Name}]}
-    end || {Name, IsYou} <- UserNames, WhoIs <- [case IsYou of true -> "you"; _ -> "other" end]],
+        {struct, [{whoIs, WhoIs}, {name, Name}, {isCreator, IsCreator}]}
+    end || {Name, IsYou, ID} <- UserNames,
+           WhoIs <- [case IsYou of true -> "you"; _ -> "other" end],
+           IsCreator <- [ID == CreatorID]],
   Fields =
     [ {users, {array, UsersJSON}},
       {name, RoomName},

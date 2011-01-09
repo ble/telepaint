@@ -37,14 +37,26 @@ border-radius: 1em;
 }
 input[type="submit"]
 {
-border:solid 2px #ff6600;
-background-color:#FF6600;
+border:solid 2px #000;
+background-color:#690;
 color:#fff;
 font-size:.8em;
-padding:4px;
- 
+padding:4px; 
 border-radius: 1em; 
 }
+input:hover[type="submit"] 
+{
+  color: #000;
+}
+
+input[disabled] {
+  background-color:#ccc;
+  border:none
+}
+input:hover[disabled][type="submit"] {
+  color: #fff
+}
+
 
 .roomCreationForm {
 	width: 350px;
@@ -96,6 +108,12 @@ border-radius: 1em;
   background-color: #EEEEFF;
   min-width: 640px;
 }
+.bigButton {
+  min-width: 600px;
+  float:top;
+  font-size: 2.5em;
+}
+
 #chatForm {
   position: relative
   bottom: 1em

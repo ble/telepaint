@@ -1,7 +1,7 @@
 
 <!DOCTYPE html PUBLIC
-  "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html>
   <head>
@@ -28,15 +28,18 @@
     <div id="wrap" align="center">
       <div id="main" align="center">
         <div id="roomName" style="title"/>&nbsp;</div>
-          <div>
-            <canvas id="primaryCanvas" width="480" height="360"/> 
-          </div>
         <div>
-          <form method="POST", id="savePictureForm">
-            <input type="submit" value="send image"/>
+          <canvas id="primaryCanvas" width="480" height="360"/> 
+        </div>
+        <div>
+          <form method="POST", id="passStackForm">
+            <input type="submit" class="bigButton" disabled="disabled" value="pass stack"/>
+          </form>
+          <form method="POST", id="startGameForm">
+            <input type="submit" id="startGameButton" class="bigButton" disabled="disabled" value="start game"/>
           </form>
         </div>
-     </div>
+      </div>
       <div id="chatBar" class="chatText">
         <ul id="chatSpace">
         </ul>
@@ -46,10 +49,10 @@
             <input type="submit" id="chatButton" value="send"/>
           </form>
         </div> 
- 
+
       </div>
     </div>
-   <div id="prompt" align="center">
+    <div id="prompt" align="center">
       <form method="POST" id="nameForm">
         <input type="text" placeholder="your name here" id="nameText" value=""/><br/>
         <input type="submit" id="nameButton" value="send"/>

@@ -1,48 +1,6 @@
-
 #global state
 roomID = ""
 myName = undefined
-
-#PI = Math.PI
-#
-#hexPad = (number, digits) ->
-#  result = number.toString(16)
-#  result = "0" + result while (result.length < digits)
-#  result
-#
-#hexFormatColor = (red, green, blue) ->
-#  red = Math.floor(red)
-#  green = Math.floor(green)
-#  blue = Math.floor(blue)
-#  hexPad(red, 2) + hexPad(green, 2) + hexPad(blue, 2)
-#
-#colorWheel = (radians) ->
-#  radians -= 2*PI while radians > 2*PI
-#  radians += 2*PI while radians < 0
-#  ixMajor = Math.floor(radians / (2*PI/3)) % 3
-#  ixMinor = (8 - Math.floor(radians / (PI/3))) % 3
-#  center = (1 + 2 * ixMajor) * PI/3
-#  amtMinor = 1.5 * Math.abs(radians - center)
-#  red = 0
-#  red = 255 if ixMajor == 0
-#  red = 255 * Math.sin(amtMinor) if ixMinor == 0
-#  green = 0
-#  green = 255 if ixMajor == 1
-#  green = 255 * Math.sin(amtMinor) if ixMinor == 1
-#  blue = 0
-#  blue = 255 if ixMajor == 2
-#  blue = 255 * Math.sin(amtMinor) if ixMinor == 2
-#  hexFormatColor(red, green, blue)
-#
-#    jQuery("#roomName").text(name)
-#    angles = (x * 2 * PI / 40 for x in [0..80])
-#    colors = (colorWheel(angle) for angle in angles)
-#    doThing = (color) ->
-#      fragment = "<div>#</div>"
-#      res = roomName.append(fragment)
-#      res.children().last().css("color", "#"+color).css("float", "left")
-#    doThing(color) for color in colors
-
 
 postJSONRoundtrip = (url, data, success, error, timeout) ->
   settings =
@@ -66,28 +24,32 @@ getJSONRoundtrip = (url, data, success, error, timeout) ->
     type: "GET"
   jQuery.ajax(settings)
 
-roomID = ""
+#TODO: break the event pump and related functionality into its own module
+eventPump =
+  attachTo: (canvas) ->
+    data = ""
+    url = "/messages_" + roomID
+    onReturn = undefined
+    module =
+      start: () ->
+        getJSONRoundtrip(url, data, onReturn, onReturn, 10000)
+    onReturn = (jso) ->
+      x = 0
+      while x < jso.length
+        obj = jso[x]
+        if obj.method == "chat"
+          displayChat("<li>#{ obj.from }: #{ obj.message }</li>", "")
+        else if obj.method == "nameWasSet"
+          displayChat("<li>#{ obj.name } joined the par-tayyyy</li>", "userEntered")
+        else if obj.method == "stroke"
+          canvas.drawStroke(obj)
+        else
+          alert(JSON.stringify(obj))
+        x++
+      setTimeout(module.start, 500)
+    #return
+    module
 
-eventPump = () -> (
-  onReturn = (jso) ->
-    x = 0
-    while x < jso.length
-      obj = jso[x]
-      if obj.method == "chat"
-        displayChat("<li>#{ obj.from }: #{ obj.message }</li>", "")
-      else if obj.method == "nameWasSet"
-        displayChat("<li>#{ obj.name } joined the par-tayyyy</li>", "userEntered")
-      else if obj.method == "stroke"
-        canvasSelector = jQuery("#primaryCanvas")
-        drawStroke(canvasSelector, obj)
-      else
-        alert(JSON.stringify(obj))
-      x++
-    setTimeout(eventPump, 500)
-  data = ""
-  url = "/messages_" + roomID
-  getJSONRoundtrip(url, data, onReturn, onReturn, 10000)
-)
 
 displayChat = (element, style) ->
   selector = jQuery("#chatSpace")
@@ -143,7 +105,26 @@ pictureHandler =
       return false
     form.submit(submitPicture)
 
+startGameHandler =
+  attachTo: (form, button, canvas) ->
+    module =
+      enable: () ->
+        button.attr("disabled", "")
+      disable: () ->
+        button.attr("disabled", "disabled")
 
+    onSuccess = (jso) ->
+      alert(JSON.stringify(jso))
+      module.disable() if jso.status == "ok"
+
+    onError = alertStringify
+    url = postUrl()
+    rpc = {method: "startGame"}
+    submitStart = () ->
+     postJSONRoundtrip(url, rpc, onSuccess, onError, 10000)
+     return false
+    form.submit(submitStart)
+    module
 
 
 canvasHandler =
@@ -170,6 +151,18 @@ canvasHandler =
     context = null
     mouse = up
     points = []
+
+    #external API
+    module =
+      drawStroke: (obj) ->
+        xys = obj.coordinates.slice()
+        ctxPrivate = ctxOf(canvas)
+        ctxPrivate.beginPath()
+        ctxPrivate.moveTo xys.shift(), xys.shift()
+        while xys.length > 1
+          ctxPrivate.lineTo xys.shift(), xys.shift()
+        ctxPrivate.stroke()
+
 
     #XHR
     postStroke = (coordinates) ->
@@ -210,46 +203,43 @@ canvasHandler =
     canvas.bind('mouseup', handleUp)
     canvas.bind('mousemove', handleMove)
     canvas.bind('mouseout', handleUp)
-
-    #external API
-    drawStroke: (obj) ->
-      xys = obj.coordinates.slice()
-      ctxPrivate = ctxOf(canvas)
-      ctxPrivate.beginPath()
-      ctxPrivate.moveTo xys.shift(), xys.shift()
-      while xys.length > 1
-        ctxPrivate.lineTo xys.shift(), xys.shift()
-      ctxPrivate.stroke()
+    #return
+    module
 
 
 jQuery(document).ready( () ->
 
-
-  setRoomName = (name) ->
-    roomName = jQuery("#roomName")
-    roomName.text(name)
 
   roomID = window.location.pathname.split("_")[1]
   name = nameHandler.attachTo $("#prompt"), $("#nameForm"), $("#nameText")
   chatHandler.attachTo $("#chatForm"), $("#chatText")
   canvas = canvasHandler.attachTo $("#primaryCanvas")
   pictureHandler.attachTo $("#savePictureForm"), $("#primaryCanvas")
-  
+  starter = startGameHandler.attachTo $("#startGameForm"), $("#startGameButton"), $("#primaryCanvas")
+  pump = eventPump.attachTo(canvas)
+  pump.start()
 
-  getMyName = (state) ->
+  
+  #TODO: break out state-setting into its own "handler" / module
+  setRoomName = (name) ->
+    roomName = jQuery("#roomName")
+    roomName.text(name)
+
+  getMe = (state) ->
     me = state.users.filter( (x) -> x.whoIs == "you" )
     return undefined if me.length == 0
-    return me[0].name
+    return me[0]
 
   setRoomState = (state) ->
     setRoomName(state.name)
-    myName = getMyName(state)
-    name.showPrompt() if myName == undefined
-    name.hidePrompt() if myName /= undefined
+    me = getMe(state)
+    starter.enable() if me.isCreator
+    name.showPrompt() if me.name == undefined
+    name.hidePrompt() if me.name /= undefined
     canvas.drawStroke(stroke) for stroke in state.preGame
 
   initializeState = () ->
-    jQuery.getJSON("/state_" + roomID, "", (data, _, __) -> setRoomState(data))
+    jQuery.getJSON("/state_" + roomID, "", (state, _, __) -> setRoomState(state))
 
   initializeState()
   setTimeout(eventPump, 10)

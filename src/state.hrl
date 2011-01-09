@@ -7,7 +7,8 @@
     users,
     userOrder,
     creatorID,
-    gameState
+    gameState,
+    extra
   }).
 
 -record(roomRef,

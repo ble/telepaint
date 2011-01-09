@@ -69,11 +69,22 @@ ctxOf = (sel) ->
 postStroke = (coordinates) ->
   msg = coordinates: coordinates
   data = JSON.stringify(msg)
-  success = (result) -> debug(result)
+  success = (result) -> undefined
   error = (xhr, textStatus) -> debug(textStatus)
-  postJSONRoundtrip("stroke", data, success, error, 10000)
+  data = {method: "stroke", coordinates: coordinates}
+  postJSONRoundtrip("message_"+roomID, data, success, error, 10000)
 
 roomID = ""
+
+
+drawStroke = (canvas, obj) ->
+  cs = obj.coordinates.slice()
+  context = ctxOf(canvas)
+  context.beginPath()
+  context.moveTo(cs.shift(), cs.shift())
+  while cs.length >= 2
+    context.lineTo(cs.shift(), cs.shift())
+  context.stroke()
 
 canvasFunctions =
   attachTo: (canvas) ->
@@ -99,6 +110,7 @@ canvasFunctions =
       handleMove(event)
       if mouse is down
         mouse = up
+        postStroke(points.slice())
         points = []
         
     handleMove = (event) ->
@@ -121,7 +133,10 @@ canvasFunctions =
 
 submitChat = () -> (
   onReturn = (jso) -> 0
-  data = {what: "chat", chat: jQuery("#chatText").val()}
+  chatMessage = jQuery("#chatInput").val()
+  return false if chatMessage == ""
+  data = {method: "chat", chat: chatMessage}
+  jQuery("#chatInput").val("")
   url = "/message_" + roomID
   submit = (onError) ->
     postJSONRoundtrip(url, data, onReturn, onError, 10000)
@@ -132,7 +147,7 @@ submitChat = () -> (
 submitPicture = () -> (
   onReturn = (jso) -> alert(JSON.stringify(jso))
   picData = jQuery("#primaryCanvas")[0].toDataURL()
-  data = {what: "picture", picture: picData}
+  data = {method: "picture", picture: picData}
   url = "/message_" + roomID
   submit = (onError) ->
     postJSONRoundtrip(url, data, onReturn, onError, 10000)
@@ -143,12 +158,32 @@ submitPicture = () -> (
 
 eventPump = () -> (
   onReturn = (jso) ->
-    jQuery("#roomName").text(JSON.stringify(jso))#alert(jso)
-    setTimeout(eventPump, 10)
+    x = 0
+    while x < jso.length
+      obj = jso[x]
+      if obj.method == "chat"
+        displayChat("<li>#{ obj.from }: #{ obj.message }</li>", "")
+      else if obj.method == "nameWasSet"
+        displayChat("<li>#{ obj.name } joined the par-tayyyy</li>", "userEntered")
+      else if obj.method == "stroke"
+        canvasSelector = jQuery("#primaryCanvas")
+        drawStroke(canvasSelector, obj)
+      else
+        alert(JSON.stringify(obj))
+      x++
+    setTimeout(eventPump, 500)
   data = ""
-  url = "/events"
+  url = "/messages_" + roomID
   getJSONRoundtrip(url, data, onReturn, onReturn, 10000)
 )
+
+displayChat = (element, style) ->
+  selector = jQuery("#chatSpace")
+  selector.append(element)
+  selector.children().last().addClass(style)
+  selector.attr("scrollTop", selector.attr("scrollHeight"))
+
+
 
 submitName = () -> (
   onReturn = (jso) ->
@@ -157,7 +192,7 @@ submitName = () -> (
       jQuery("#prompt").css("visibility", "hidden")
     else if jso.status == "error"
       alert("Server error: " + jso.description)
-  data = {what: "name", name: jQuery("#nameText").val()}
+  data = {method: "name", name: jQuery("#nameText").val()}
   url = "/message_" + roomID
   submit = (onError) ->
     postJSONRoundtrip(url, data, onReturn, onError, 10000)
@@ -191,6 +226,7 @@ jQuery(document).ready( () ->
   setRoomState = (state) ->
     setRoomName(state.name)
     myName = getMyName(state)
+    drawStroke(jQuery("#primaryCanvas"), stroke) for stroke in state.preGame
     jQuery("#prompt").css("visibility", "visible") if (myName == undefined)
 
   roomID = window.location.pathname.split("_")[1]
@@ -205,5 +241,5 @@ jQuery(document).ready( () ->
   jQuery("#chatForm").submit(submitChat)
   jQuery("#savePictureForm").submit(submitPicture)
   jQuery("#nameForm").submit(submitName)
-  #setTimeout(eventPump, 10)
+  setTimeout(eventPump, 10)
 )

@@ -189,7 +189,7 @@ rpcJSONParse(Req) ->
   case JSONIn of
     {struct, Items} ->
       Params = dict:from_list(Items),
-      case dict:find("what", Params) of
+      case dict:find("method", Params) of
         error ->
           {error, "no method call"};
         {ok, Method} ->
@@ -199,13 +199,12 @@ rpcJSONParse(Req) ->
       {error, "no method call"}
   end.
       
-handleRPC("chat", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, sessionID = UserID}) ->
+handleRPC("chat", Params, #roomRef{roomPID = RPID}, #userRef{sessionID = UserID}) ->
   case dict:find("chat", Params) of
     error ->
       tpaint_util:jsonError("bad call to chat method");
     {ok, Message} ->
-      Data = {struct, [{what, chat}, {chat, Message}, {from, userServer:getName(UPID)}]},
-      roomServer:chatMessage(RPID, UserID, Data),
+      roomServer:chatMessage(RPID, UserID, Message),
       "ok"
   end;
         
@@ -224,6 +223,27 @@ handleRPC("name", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, session
           tpaint_util:jsonError(Why)
       end
   end;
+
+handleRPC("beginGame", _, #roomRef{roomPID = PID, creatorID = CreatorID}, #userRef{sessionID = CreatorID}) ->
+  case userServer:beginGame(PID) of
+    ok ->
+      "ok";
+    alreadyBegan ->
+      "alreadyBegan";
+    {error, Why} ->
+      tpaint_util:jsonError(Why)
+  end;
+
+handleRPC("stroke", Params, #roomRef{roomPID = PID}, #userRef{sessionID = UserID}) ->
+  case roomServer:stroke(PID, UserID, Params) of
+    ok -> "ok";
+    {error, Why} -> tpaint_util:jsonError(Why)
+  end;
+ 
+
+handleRPC("beginGame", _, _, _) ->
+  tpaint_util:jsonError("user not authorized to start game.");
+
 
 handleRPC(_UnknownMethod, _, _, _) ->
   tpaint_util:jsonError("unknown method " ++ _UnknownMethod).

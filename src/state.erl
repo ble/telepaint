@@ -20,7 +20,8 @@ initializeRoom(RoomID, RoomName, CreatorID, CreatorPID) ->
     gameTheme = none,
     users = dict:from_list([{CreatorID, UserRef}]),
     userOrder = [CreatorID],
-    gameState = none
+    gameState = none,
+    extra = []
   }.
 
 rotateLeft(N, List) ->

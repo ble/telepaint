@@ -4,8 +4,6 @@
 
 body,
 html {
-  margin: 0;
-  padding: 0;
   background: #99c;
 }
 
@@ -39,10 +37,10 @@ border-radius: 1em;
 }
 input[type="submit"]
 {
-border:solid 1px #ff6600;
+border:solid 2px #ff6600;
 background-color:#FF6600;
 color:#fff;
-font-size:14px;
+font-size:.8em;
 padding:4px;
  
 border-radius: 1em; 
@@ -65,7 +63,9 @@ border-radius: 1em;
   display: block;
   font-size: 1em;
 }
-
+#chatInput {
+  width:70%;
+}
 .chatText {
   font-family: 'Droid Sans Mono', arial, serif; 
   font-size: 0.75em;
@@ -82,6 +82,10 @@ border-radius: 1em;
   color: #FFFFFF;
   font-size: 2.5em;
 }
+#chatDiv {
+  text-align: center
+}
+
 
 #main {
   float:left;
@@ -92,18 +96,30 @@ border-radius: 1em;
   background-color: #EEEEFF;
   min-width: 640px;
 }
+#chatForm {
+  position: relative
+  bottom: 1em
+}
 #chatBar {
   float:left;
   border-style: solid;
   border-color: #FFFFCC;
   border-radius: 30px;
   background-color: #FFFFEE;
-  width: 240px;
-  max-height: 500px;
-  padding: 10px;
-  overflow-y: scroll;
+  width: 360px;
+  min-height: 500px;
+  position:relative;
+  left: 0.5 em;
 }
 
+#chatSpace {
+  list-style-type: none;
+  overflow-y: scroll;
+  height: 500px;
+}
+.userEntered {
+  font-style: italic;
+}
 #prompt {
   position:absolute;
   top: 0px;

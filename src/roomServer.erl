@@ -4,13 +4,17 @@
 -behaviour(gen_server).
 
 
--export([start/4, addNewUser/2, getStateSeenBy/2, getUserRef/2, chatMessage/3, nameWasSet/3, stroke/3]).
+-export([start/4, shutdown/1, addNewUser/2, getStateSeenBy/2, getUserRef/2,
+         chatMessage/3, nameWasSet/3, stroke/3, beginGame/1]).
 
 %%gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 start(RoomID, RoomName, CreatorID, CreatorPID) ->
   gen_server:start(?MODULE, {RoomID, RoomName, CreatorID, CreatorPID}, []).
+
+shutdown(PID) ->
+  gen_server:call(PID, shutdown).
 
 getStateSeenBy(PID, UserID) ->
   gen_server:call(PID, {getStateSeenBy, UserID}).
@@ -29,6 +33,9 @@ nameWasSet(PID, UserID, Name) ->
 
 stroke(PID, UserID, Params) ->
   gen_server:call(PID, {stroke, UserID, Params}).
+
+beginGame(PID) ->
+  gen_server:call(PID, beginGame).
 
 init({RoomID, RoomName, CreatorID, CreatorPID}) -> 
   {ok, state:initializeRoom(RoomID, RoomName, CreatorID, CreatorPID)}.
@@ -132,6 +139,13 @@ handle_call(
       {inGame, InGame},
       {preGame, {array, case InGame of false -> State#roomState.extra; _ -> [] end}}],
   {reply, {struct, Fields}, State};
+
+handle_call(beginGame, _, State = #roomState{inGame = false}) ->
+  sendToUsers({struct, [{method, beginGame}]}, State),
+  {reply, ok, State#roomState{inGame = true}};
+
+handle_call(beginGame, _, State = #roomState{inGame = true}) ->
+  {reply, alreadyBegan, State#roomState{inGame = true}};
 
 handle_call(Request, _, State) ->
   {reply, {unknownRequest, Request}, State}.

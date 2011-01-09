@@ -233,7 +233,7 @@ jQuery(document).ready( () ->
   setRoomState = (state) ->
     setRoomName(state.name)
     me = getMe(state)
-    starter.enable() if me.isCreator
+    starter.enable() if me.isCreator and not state.inGame
     name.showPrompt() if me.name == undefined
     name.hidePrompt() if me.name /= undefined
     canvas.drawStroke(stroke) for stroke in state.preGame

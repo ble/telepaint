@@ -224,12 +224,12 @@ handleRPC("name", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, session
       end
   end;
 
-handleRPC("beginGame", _, #roomRef{roomPID = PID, creatorID = CreatorID}, #userRef{sessionID = CreatorID}) ->
-  case userServer:beginGame(PID) of
+handleRPC("startGame", _, #roomRef{roomPID = PID, creatorID = CreatorID}, #userRef{sessionID = CreatorID}) ->
+  case roomServer:beginGame(PID) of
     ok ->
-      "ok";
+      {struct, [{status, ok}]};
     alreadyBegan ->
-      "alreadyBegan";
+      {struct, [{status, alreadyBegan}]};
     {error, Why} ->
       tpaint_util:jsonError(Why)
   end;
@@ -241,7 +241,7 @@ handleRPC("stroke", Params, #roomRef{roomPID = PID}, #userRef{sessionID = UserID
   end;
  
 
-handleRPC("beginGame", _, _, _) ->
+handleRPC("startGame", _, _, _) ->
   tpaint_util:jsonError("user not authorized to start game.");
 
 

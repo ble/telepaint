@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 
--export([start/2, shutdown/1, setName/2, getName/1, getMessages/2, enqueue/2]).
+-export([start/2, shutdown/1, setName/2, getName/1, getMessages/2, enqueue/2, beginGame/1]).
 
 %%gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -29,6 +29,7 @@ init({UserID, RoomID}) -> {
       pollingPIDs = []
     }}.
 
+
 getName(PID) ->
   gen_server:call(PID, getName).
 
@@ -46,6 +47,9 @@ getMessages(PID, Timeout) ->
 enqueue(PID, Message) ->
   gen_server:call(PID, {enqueue, Message}).
 
+beginGame(PID) ->
+  gen_server:call(PID, beginGame).
+
 shutdown(ServerRef) ->
   ok = gen_server:call(ServerRef, shutdown).
 
@@ -58,26 +62,29 @@ handle_call({setName, Name}, _, State = #user{name=undefined}) ->
 handle_call({setName, _Name}, _, State = #user{name=_AlreadySet}) ->
   {reply, alreadySet, State};
 
-handle_call(
-  {enqueue, Message},
-  _,
-  State = #user{mailbox = Mailbox, pollingPIDs = PIDs}) ->
-  Messages = [Message|Mailbox],
-  case PIDs of
-    [] ->
-      {reply, ok, State#user{mailbox = Messages}};
+handle_call({enqueue, Message}, _, State) ->
+  case enqueueMessage(Message, State) of
+    {ok, NewState} ->
+      {reply, ok, NewState};
     _ ->
-      lists:foreach(
-        fun (PID) -> PID ! {messages, self(), lists:reverse(Messages)} end,
-        PIDs),
-      {reply, ok, State#user{mailbox = [], pollingPIDs = []}}
+      {reply, {error, "Couldn't enqueue message"}}
   end;
 
 handle_call(shutdown, _, State) ->
   {stop, normal, ok, State};
 
+handle_call(beginGame, _, State) ->
+  case enqueueMessage({struct, [{method, beginGame}]}, State) of
+    {ok, NewState} ->
+      {reply, ok, NewState};
+    _ ->
+      {reply, error, State}
+  end;
+
+
 handle_call(Call, _, State) ->
   io:format("~p: ~p reports unknown synchronous call ~p", [?MODULE, debug_id(State), Call]),
+
   {reply, {unknownCall, Call}, State}.
 
 handle_cast({getMessages, From}, State = #user{mailbox = Mailbox, pollingPIDs = PIDs}) ->
@@ -98,6 +105,19 @@ handle_cast(Cast, State) ->
 handle_info(OOB, State) ->
   io:format("~p: ~p reports unknown oob message ~p", [?MODULE, debug_id(State), OOB]),
   {noreply, State}.
+
+%for internal use
+enqueueMessage(Message, State = #user{mailbox = Mailbox, pollingPIDs = PIDs}) ->
+  Messages = [Message|Mailbox],
+  case PIDs of
+    [] ->
+      {ok, State#user{mailbox = Messages}};
+    _ ->
+      [PID ! {messages, self(), lists:reverse(Messages)} || PID <- PIDs],
+      {ok, State#user{mailbox = [], pollingPIDs = []}}
+  end.
+
+
 
 terminate(Reason, State) ->
   io:format("~p:~p stopping: ~p\n", [?MODULE, debug_id(State), Reason]).

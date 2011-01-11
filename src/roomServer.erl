@@ -113,6 +113,8 @@ handle_call({stroke, UserID, Params}, _, State = #roomState{users = Users, inGam
       {reply, ok, State#roomState{extra=Extra}}
   end;
 
+handle_call({stroke, _, _}, _, State = #roomState{inGame = true}) ->
+  {reply, {error, "game already started"}, State};
 
 handle_call(
   {getStateSeenBy, UserID},

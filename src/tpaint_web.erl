@@ -245,5 +245,5 @@ handleRPC("startGame", _, _, _) ->
   tpaint_util:jsonError("user not authorized to start game.");
 
 
-handleRPC(_UnknownMethod, _, _, _) ->
-  tpaint_util:jsonError("unknown method " ++ _UnknownMethod).
+handleRPC(_, _, _, _) ->
+  tpaint_util:jsonError("unknown method ").

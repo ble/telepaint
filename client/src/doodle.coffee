@@ -1,6 +1,8 @@
 #global state
 roomID = ""
 myName = undefined
+postURL = () -> "message_" + roomID
+alertStringify = (jso) -> alert(JSON.stringify(jso))
 
 postJSONRoundtrip = (url, data, success, error, timeout) ->
   settings =
@@ -43,6 +45,8 @@ eventPump =
           displayChat("<li>#{ obj.name } joined the par-tayyyy</li>", "userEntered")
         else if obj.method == "stroke"
           canvas.drawStroke(obj)
+        else if obj.method == "beginGame"
+          canvas.clear()
         else
           alert(JSON.stringify(obj))
         x++
@@ -57,9 +61,6 @@ displayChat = (element, style) ->
   selector.children().last().addClass(style)
   selector.attr("scrollTop", selector.attr("scrollHeight"))
 
-alertStringify = (jso) -> alert(JSON.stringify(jso))
-postUrl = () -> "message_" + roomID
-
 
 nameHandler =
   attachTo: (prompt, form, text) ->
@@ -68,7 +69,7 @@ nameHandler =
       showPrompt: () -> prompt.css("visibility", "visible")
     onSuccess = result.hidePrompt
     onError = alertStringify
-    url = postUrl()
+    url = postURL()
     submitName = () ->
       name = text.val()
       return false if name == ""
@@ -78,13 +79,18 @@ nameHandler =
     form.submit(submitName)
     result
 
-
+class ButtonEnabler
+  constructor: (@button) ->
+  enable: () ->
+    @button.attr("disabled", "")
+  disable: () ->
+    @button.attr("disabled", "disabled")
 
 chatHandler =
   attachTo: (form, text) ->
     onSuccess = (jso) -> text.val("")
     onError = alertStringify
-    url = postUrl()
+    url = postURL()
     submitChat = () ->
       message = text.val()
       return false if message == ""
@@ -97,7 +103,7 @@ pictureHandler =
   attachTo: (form, canvas) ->
     onSuccess = (jso) -> undefined
     onError = alertStringify
-    url = postUrl()
+    url = postURL()
     submitPicture = () ->
       picData = canvas[0].toDataURL()
       rpc = {method: "passStack", newPicture: picData}
@@ -106,24 +112,37 @@ pictureHandler =
     form.submit(submitPicture)
 
 startGameHandler =
-  attachTo: (form, button, canvas) ->
-    module =
-      enable: () ->
-        button.attr("disabled", "")
-      disable: () ->
-        button.attr("disabled", "disabled")
+  attachTo: (form, button, passStack) ->
+    module = new ButtonEnabler(button)
 
     onSuccess = (jso) ->
       alert(JSON.stringify(jso))
       module.disable() if jso.status == "ok"
 
     onError = alertStringify
-    url = postUrl()
+    url = postURL()
     rpc = {method: "startGame"}
     submitStart = () ->
      postJSONRoundtrip(url, rpc, onSuccess, onError, 10000)
+     passStack.enable()
      return false
     form.submit(submitStart)
+    module
+
+passStackHandler =
+  attachTo: (form, button, canvas) ->
+    module = new ButtonEnabler(button)
+    onSuccess = (jso) ->
+      canvas.clear()
+      module.disable() if jso.inGame == false
+    onError = alertStringify
+    url = postURL()
+    submitPass = () ->
+      rpc = {method: "passStack", imageData: canvas.getImage()}
+      postJSONRoundtrip(url, rpc, onSuccess, onError, 10000)
+      return false
+    form.submit(submitPass)
+
     module
 
 
@@ -143,7 +162,7 @@ canvasHandler =
       coords.unshift loc.x, loc.y
 
     #delayed evaluation
-    url = postUrl()
+    url = postURL()
 
     #handler state
     up = false
@@ -162,8 +181,12 @@ canvasHandler =
         while xys.length > 1
           ctxPrivate.lineTo xys.shift(), xys.shift()
         ctxPrivate.stroke()
-
-
+      clear: () ->
+        _ctx = ctxOf(canvas)
+        _ctx.clearRect(0, 0, canvas.width(), canvas.height())
+      getImage: () ->
+        canvas[0].toDataURL()
+        
     #XHR
     postStroke = (coordinates) ->
       success = (result) -> undefined
@@ -215,7 +238,8 @@ jQuery(document).ready( () ->
   chatHandler.attachTo $("#chatForm"), $("#chatText")
   canvas = canvasHandler.attachTo $("#primaryCanvas")
   pictureHandler.attachTo $("#savePictureForm"), $("#primaryCanvas")
-  starter = startGameHandler.attachTo $("#startGameForm"), $("#startGameButton"), $("#primaryCanvas")
+  passStack = passStackHandler.attachTo $("#passStackForm"), $("#passStackButton"), canvas
+  starter = startGameHandler.attachTo $("#startGameForm"), $("#startGameButton"), passStack
   pump = eventPump.attachTo(canvas)
   pump.start()
 
@@ -234,8 +258,9 @@ jQuery(document).ready( () ->
     setRoomName(state.name)
     me = getMe(state)
     starter.enable() if me.isCreator and not state.inGame
-    name.showPrompt() if me.name == undefined
-    name.hidePrompt() if me.name /= undefined
+    passStack.enable() if state.inGame
+    name.showPrompt() if me.name is undefined
+    name.hidePrompt() if me.name isnt undefined
     canvas.drawStroke(stroke) for stroke in state.preGame
 
   initializeState = () ->

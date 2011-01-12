@@ -28,7 +28,7 @@ getJSONRoundtrip = (url, data, success, error, timeout) ->
 
 #TODO: break the event pump and related functionality into its own module
 eventPump =
-  attachTo: (canvas) ->
+  attachTo: (canvas, gameStartHandler, passStackHandler) ->
     data = ""
     url = "/messages_" + roomID
     onReturn = undefined
@@ -47,6 +47,7 @@ eventPump =
           canvas.drawStroke(obj)
         else if obj.method == "beginGame"
           canvas.clear()
+          passStackHandler.enable()
         else
           alert(JSON.stringify(obj))
         x++
@@ -240,7 +241,7 @@ jQuery(document).ready( () ->
   pictureHandler.attachTo $("#savePictureForm"), $("#primaryCanvas")
   passStack = passStackHandler.attachTo $("#passStackForm"), $("#passStackButton"), canvas
   starter = startGameHandler.attachTo $("#startGameForm"), $("#startGameButton"), passStack
-  pump = eventPump.attachTo(canvas)
+  pump = eventPump.attachTo(canvas, starter, passStack)
   pump.start()
 
   

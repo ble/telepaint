@@ -8,7 +8,8 @@
     userOrder,
     creatorID,
     gameState,
-    extra
+    extra,
+    startedTime
   }).
 
 -record(roomRef,
@@ -23,7 +24,7 @@
   {
     nPlayers,
     nextPlayer,
-    stacks
+    stacksByPlayer
   }).
 
 
@@ -52,6 +53,18 @@
     strokes
   }).
 
+-record(picRef,
+  {
+    roomName,
+    roomID,
+    roomStartDate,
+    startedBy,
+    startedID,
+    drawnBy,
+    drawnID,
+    n
+  }).
+
 -record(stroke,
   {
     width,
@@ -59,4 +72,7 @@
     coordinates
   }).
 
-
+-record(stateDiskStore,
+  {
+    storeRoot
+  }).

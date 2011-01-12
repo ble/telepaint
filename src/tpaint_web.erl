@@ -17,6 +17,7 @@ start(Options) ->
     ?MODULE:loop(Req, DocRoot)
   end,
   {ok, _} = nexus:start_link(),
+  {ok, _} = diskStore:start_link("./dyn"),
   mochiweb_http:start([{name, ?MODULE}, {loop, Loop} | Options1]).
 
 stop() ->
@@ -222,6 +223,14 @@ handleRPC("name", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, session
         {error, Why} ->
           tpaint_util:jsonError(Why)
       end
+  end;
+
+handleRPC("passStack", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, sessionID = UserID}) ->
+  case dict:find("newPicture", Params) of
+    error ->
+      tpaint_util:jsonError("no picture data makes kitty sad");
+    {ok, PictureData} ->
+      roomServer:passStack(RPID, UserID, PictureData)
   end;
 
 handleRPC("startGame", _, #roomRef{roomPID = PID, creatorID = CreatorID}, #userRef{sessionID = CreatorID}) ->

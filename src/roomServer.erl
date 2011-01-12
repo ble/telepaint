@@ -5,7 +5,7 @@
 
 
 -export([start/4, shutdown/1, addNewUser/2, getStateSeenBy/2, getUserRef/2,
-         chatMessage/3, nameWasSet/3, stroke/3, beginGame/1]).
+         chatMessage/3, nameWasSet/3, stroke/3, beginGame/1, passStack/3]).
 
 %%gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -36,6 +36,9 @@ stroke(PID, UserID, Params) ->
 
 beginGame(PID) ->
   gen_server:call(PID, beginGame).
+
+passStack(PID, UserID, PictureData) ->
+  gen_server:call(PID, {passStack, UserID, PictureData}).
 
 init({RoomID, RoomName, CreatorID, CreatorPID}) -> 
   {ok, state:initializeRoom(RoomID, RoomName, CreatorID, CreatorPID)}.
@@ -149,6 +152,8 @@ handle_call(beginGame, _, State = #roomState{inGame = false}) ->
 handle_call(beginGame, _, State = #roomState{inGame = true}) ->
   {reply, alreadyBegan, State#roomState{inGame = true}};
 
+handle_call(
+  {passStack, UserID, PictureData}, _, State = #roomState{inGame = true, roomName
 handle_call(Request, _, State) ->
   {reply, {unknownRequest, Request}, State}.
 

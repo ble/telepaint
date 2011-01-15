@@ -22,13 +22,20 @@ init({state, State}) ->
   {ok, State}.
 
 handle_call({savePicture, PicData, PicRef}, _, State = #stateDiskStore{storeRoot = StoreRoot}) ->
-  {StackDirectory, ArtistDirectory} = state:directoriesForPicRef(StoreRoot, PicRef),
+  {StackDirectory, ArtistDirectory} = directoriesForPicRef(StoreRoot, PicRef),
+  io:format(StackDirectory, []),
+  io:format(ArtistDirectory, []),
   case {ensureDirectoryExists(StackDirectory), ensureDirectoryExists(ArtistDirectory)} of
     {ok, ok} ->
-      Extension = getExtension(PicData),
-      Binary = decodePicture(PicData),
-      {SPath, APath} = state:filesForPicRef(StoreRoot, PicRef, Extension),
+      io:format("kate moss confidence", []),
+      {ok, Extension} = getExtension(PicData),
+      io:format("kate moss confidence", []),
+      {ok, Binary} = decodePicture(PicData),
+      io:format("kate moss confidence", []),
+      {SPath, APath} = filesForPicRef(StoreRoot, PicRef, Extension),
+      io:format("kate moss confidence", []),
 
+      io:format("~p~n", [SPath]),
       case file:write_file(SPath, Binary) of
         {error, Reason} ->
           {reply, {error, Reason}, State};
@@ -37,7 +44,7 @@ handle_call({savePicture, PicData, PicRef}, _, State = #stateDiskStore{storeRoot
             {error, Reason} ->
               {reply, {partial, Reason}, State};
             ok ->
-              {reply, ok, State}
+              {reply, {ok, SPath}, State}
           end
       end;
       _ ->
@@ -130,4 +137,62 @@ decodePicture("data:image/png;base64," ++ Data) ->
 decodePicture(_) ->
   error.
 
+directoriesForPicRef(
+  StoreRoot,
+  #picRef{
+    roomName = RoomName,
+    roomID = RoomID,
+    startDate = StartDate,
+    startedBy = Starter,
+    startedID = SID,
+    drawnBy = Artiste,
+    drawnID = DID,
+    n = N}) ->
+  RoomDirectory = [StoreRoot, $/, RoomName, RoomID],
+  GameDirectory = [RoomDirectory, $/, formatDate(StartDate)],
+  SDirectory = [GameDirectory, $/, startedBy, $=, Starter, SID],
+  ADirectory = [GameDirectory, $/, artist, $=, Artiste, DID],
+  {fileNameAsString(SDirectory), fileNameAsString(ADirectory)}.
 
+filesForPicRef(
+  StoreRoot,
+  PicRef = #picRef{
+    n = N,
+    drawnBy = DrawnBy,
+    startedBy = StartedBy},
+  Extension) ->
+  {StackDirectory, ArtistDirectory} = directoriesForPicRef(StoreRoot, PicRef), 
+  NStr = io_lib:fwrite("~3..0B", [N]),
+  SPath = [StackDirectory, $/, NStr, DrawnBy, Extension],
+  APath = [ArtistDirectory, $/, NStr, StartedBy, Extension],
+  {SPath, APath}.
+
+fileNameAsString(Name) ->
+  case lists:all(fun erlang:is_integer/1, Name) of
+    true ->
+      Name;
+    false when is_atom(Name) ->
+      erlang:atom_to_list(Name);
+    false when is_list(Name) ->
+      fileNameAsString([], Name);
+    false when is_binary(Name) ->
+      {error, "don't know how to handle the raw filename case."}
+  end.
+
+fileNameAsString(Accum, []) ->
+  lists:flatten(lists:reverse(Accum));
+
+fileNameAsString(Accum, [Char | Rest]) when is_integer(Char) ->
+  {AlsoInString, Remainder} = lists:splitwith(fun erlang:is_integer/1, Rest),
+  Prefix = [Char | AlsoInString],
+  fileNameAsString([Prefix | Accum], Remainder);
+
+fileNameAsString(Accum, [Atom | Rest]) when is_atom(Atom) ->
+  fileNameAsString([erlang:atom_to_list(Atom) | Accum], Rest); 
+
+fileNameAsString(Accum, [DeepList | Rest]) when is_list(DeepList) ->
+  Deeper = fileNameAsString([], DeepList),
+  fileNameAsString([Deeper | Accum], Rest).
+
+formatDate({{Y, M, D}, {H, Min, S}}) ->
+  lists:flatten(io_lib:format("~4..0B.~2..0B.~2..0B_~2..0B.~2..0B.~2..0B", [Y, M, D, H, Min, S])).

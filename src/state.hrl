@@ -2,14 +2,14 @@
   {
     roomID,
     roomName,
+    roomStartDate,
     inGame,
     gameTheme,
     users,
     userOrder,
     creatorID,
     gameState,
-    extra,
-    startedTime
+    extra
   }).
 
 -record(roomRef,
@@ -19,14 +19,6 @@
     roomPID,
     creatorID
   }).
-
--record(gameState,
-  {
-    nPlayers,
-    nextPlayer,
-    stacksByPlayer
-  }).
-
 
 -record(user,
   {
@@ -47,17 +39,16 @@
 
 -record(sheet,
   {
-    belongsTo,
-    roomID,
-    image,
-    strokes
+    picRef,
+    strokes,
+    file
   }).
 
 -record(picRef,
   {
     roomName,
     roomID,
-    roomStartDate,
+    startDate,
     startedBy,
     startedID,
     drawnBy,

@@ -230,7 +230,11 @@ handleRPC("passStack", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, se
     error ->
       tpaint_util:jsonError("no picture data makes kitty sad");
     {ok, PictureData} ->
-      roomServer:passStack(RPID, UserID, PictureData)
+      case roomServer:passStack(RPID, UserID, PictureData) of
+        ok -> ok;
+        {error, Reason} ->
+          tpaint_util:jsonError(lists:flatten(io_lib:fwrite("~p", [Reason])))
+      end 
   end;
 
 handleRPC("startGame", _, #roomRef{roomPID = PID, creatorID = CreatorID}, #userRef{sessionID = CreatorID}) ->

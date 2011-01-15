@@ -147,13 +147,15 @@ handle_call(
 
 handle_call(beginGame, _, State = #roomState{inGame = false}) ->
   sendToUsers({struct, [{method, beginGame}]}, State),
-  {reply, ok, State#roomState{inGame = true}};
+  NewGameState = gameState:initializeGameState(State),
+    {reply, ok, State#roomState{inGame = true, gameState = NewGameState}};
 
 handle_call(beginGame, _, State = #roomState{inGame = true}) ->
   {reply, alreadyBegan, State#roomState{inGame = true}};
 
-handle_call(
-  {passStack, UserID, PictureData}, _, State = #roomState{inGame = true, roomName
+handle_call({passStack, UserID, PictureData}, _, State = #roomState{ gameState = GameState }) ->
+  {reply, ok, State#roomState{gameState = gameState:passStack(GameState, PictureData, UserID)}};
+       
 handle_call(Request, _, State) ->
   {reply, {unknownRequest, Request}, State}.
 

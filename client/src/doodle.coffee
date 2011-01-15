@@ -136,10 +136,11 @@ passStackHandler =
     onSuccess = (jso) ->
       canvas.clear()
       module.disable() if jso.inGame == false
+      alert(JSON.stringify(jso))
     onError = alertStringify
     url = postURL()
     submitPass = () ->
-      rpc = {method: "passStack", imageData: canvas.getImage()}
+      rpc = {method: "passStack", newPicture: canvas.getImage()}
       postJSONRoundtrip(url, rpc, onSuccess, onError, 10000)
       return false
     form.submit(submitPass)

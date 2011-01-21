@@ -48,6 +48,8 @@ eventPump =
         else if obj.method == "beginGame"
           canvas.clear()
           passStackHandler.enable()
+        else if obj.method == "stackReady"
+          displayChat("<li><img src=\"#{obj.imgUrl}\"/></li>", "none")
         else
           alert(JSON.stringify(obj))
         x++

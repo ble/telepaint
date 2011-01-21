@@ -15,7 +15,7 @@ init_state(MaxRooms) ->
 
 %%external API
 start_link() ->
-  start_link(4). %default limits
+  start_link(128). %default limits
 
 start_link(RoomCount) ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, init_state(RoomCount), []).

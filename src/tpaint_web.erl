@@ -30,6 +30,8 @@ loop(Req, DocRoot) ->
     case Req:get(method) of
       Method when Method =:= 'GET'; Method =:= 'HEAD' ->
         case Path of
+          "./dyn/" ++ DynPath -> 
+            Req:serve_file(DynPath, "./dyn", []);
           %room_<ShortID>
           %actual URL to be visited by user, displayed in address bar, etc.
           %looks up whether such a room exists,

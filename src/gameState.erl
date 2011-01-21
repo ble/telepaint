@@ -46,21 +46,25 @@ passStack(GameState = #gameState{playerByID = Players, stacksHeldByID = Stacks0,
     [[]] ->
       {error, "player has no stacks"};
 
-    [[Stack | _RemainingStacks]] when length(Stack) >= N ->
+    [[Stack | _RemainingStacks]] when length(Stack) > N ->
       {error, "stack is already done"};
 
     [[Stack | RemainingStacks]] ->
       {ok, {_, _, PassingPlayerPID}} = dict:find(PassingPlayerID, Players),
       Stacks1 = dict:store(PassingPlayerID, RemainingStacks, Stacks0),  %remove stack from passer's pile
       PassedStack = addPictureToStack(PictureData, Stack, PassingPlayerID, GameState), %record the new picture in the stack
-      {ok, {ReceivingPlayerID, ReceivingPlayerPID}} = NextID(PassingPlayerID),
+      {ok, ReceivingPlayerID} = NextID(PassingPlayerID),
+      {ok, {_, _, ReceivingPlayerPID}} = dict:find(ReceivingPlayerID, Players),
       Stacks2 = dict:append(ReceivingPlayerID, PassedStack, Stacks1), %add the stack to the receiver's pile
-      {ok, ReceiversStacks} = dict:find(ReceivingPlayerID),
+      {ok, ReceiversStacks} = dict:find(ReceivingPlayerID, Stacks2), %grab the receivers pile
       NewGameState = GameState#gameState{stacksHeldByID = Stacks2},
 
       %let the passer know the pass completed; if there are other stacks waiting for the passer,
       %make the top stack ready for the passer to work on.
-      userServer:enqueue(PassingPlayerID, {struct, [{response, passStack}, {status, ok}]}),
+      userServer:enqueue(PassingPlayerPID, {struct, [{response, passStack}, {status, ok}]}),
+      io:format(
+        "Passer's stack count: ~b~nReceiver's stack count: ~b~n",
+        [length(RemainingStacks), length(ReceiversStacks)]),
       if
         length(RemainingStacks) > 0 ->
           sendStackReady(PassingPlayerPID, RemainingStacks);
@@ -74,8 +78,8 @@ passStack(GameState = #gameState{playerByID = Players, stacksHeldByID = Stacks0,
       NewGameState
   end.
 
-sendStackReady(PID, [[TopSheet | _] | _]) ->
-  userServer:enqueue(PID, {struct, [{response, stackReady}, {imgUrl, TopSheet#sheet.file}]}).
+sendStackReady(PID, [[_TopSheet | [FilledSheet | _]] | _]) ->
+  userServer:enqueue(PID, {struct, [{method, stackReady}, {imgUrl, FilledSheet#sheet.file}]}).
  
 picRefWithRoom(PicRef, #roomState{roomName = RN, roomID = RI, roomStartDate = RSD}) ->
   PicRef#picRef{
@@ -109,7 +113,7 @@ addPictureToStack(
   }) ->
   PicRef = TopSheet#sheet.picRef,
   {ok, Path} = diskStore:savePicture(PictureData, PicRef),
-  UpdatedSheet = TopSheet#sheet{file = Path},
+  UpdatedSheet = TopSheet#sheet{file = lists:flatten(Path)},
   {ok, ReceiverID} = SID(PassingPlayerID),
   {ok, {ReceiverID, ReceiverName, _}} = dict:find(ReceiverID, Players),
   NewSheet = #sheet{file = none, strokes = [], picRef = picRefWithDrawer(PicRef, ReceiverID, ReceiverName)},

@@ -27,13 +27,9 @@ handle_call({savePicture, PicData, PicRef}, _, State = #stateDiskStore{storeRoot
   io:format(ArtistDirectory, []),
   case {ensureDirectoryExists(StackDirectory), ensureDirectoryExists(ArtistDirectory)} of
     {ok, ok} ->
-      io:format("kate moss confidence", []),
       {ok, Extension} = getExtension(PicData),
-      io:format("kate moss confidence", []),
       {ok, Binary} = decodePicture(PicData),
-      io:format("kate moss confidence", []),
       {SPath, APath} = filesForPicRef(StoreRoot, PicRef, Extension),
-      io:format("kate moss confidence", []),
 
       io:format("~p~n", [SPath]),
       case file:write_file(SPath, Binary) of
@@ -148,10 +144,11 @@ directoriesForPicRef(
     drawnBy = Artiste,
     drawnID = DID,
     n = N}) ->
-  RoomDirectory = [StoreRoot, $/, RoomName, RoomID],
+  Escape = fun (X) -> edoc_lib:escape_uri(X) end,
+  RoomDirectory = [StoreRoot, $/, Escape(RoomName), RoomID],
   GameDirectory = [RoomDirectory, $/, formatDate(StartDate)],
-  SDirectory = [GameDirectory, $/, startedBy, $=, Starter, SID],
-  ADirectory = [GameDirectory, $/, artist, $=, Artiste, DID],
+  SDirectory = [GameDirectory, $/, startedBy, $=, Escape(Starter), SID],
+  ADirectory = [GameDirectory, $/, artist, $=, Escape(Artiste), DID],
   {fileNameAsString(SDirectory), fileNameAsString(ADirectory)}.
 
 filesForPicRef(
@@ -161,10 +158,11 @@ filesForPicRef(
     drawnBy = DrawnBy,
     startedBy = StartedBy},
   Extension) ->
+  Escape = fun (X) -> edoc_lib:escape_uri(X) end,
   {StackDirectory, ArtistDirectory} = directoriesForPicRef(StoreRoot, PicRef), 
   NStr = io_lib:fwrite("~3..0B", [N]),
-  SPath = [StackDirectory, $/, NStr, DrawnBy, Extension],
-  APath = [ArtistDirectory, $/, NStr, StartedBy, Extension],
+  SPath = [StackDirectory, $/, NStr, Escape(DrawnBy), Extension],
+  APath = [ArtistDirectory, $/, NStr, Escape(StartedBy), Extension],
   {SPath, APath}.
 
 fileNameAsString(Name) ->

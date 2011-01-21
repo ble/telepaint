@@ -1,0 +1,78 @@
+
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="./style.css"> 
+    <link type="text/css" rel="stylesheet" href="./stack.css"> 
+    <script type="text/javascript" language="javascript" src="./scripts/prototype.js"> </script>
+    <script type="text/javascript" language="javascript" src="./scripts/colorWheel.js"> </script>
+    <script type="text/javascript" language="javascript" src="./scripts/canvas.js"> </script>
+    <script type="text/javascript" language="javascript" src="./scripts/ui.js"> </script>
+    <script type="text/javascript" language="javascript" src="./scripts/test.js"> </script>
+
+    <title>Telephone Pictionary UI test</title>
+  </head>
+  <body>
+
+    <noscript>
+      <div class="noscripted">Your browser must have JavaScript enabled in order for this application to display correctly.</div>
+    </noscript>
+    <div class="debug">
+      <a id="showNamePrompt" href="javascript:void(0)">show name prompt</a>
+      <a id="showReview" href="javascript:void(0)">show review</a>
+      <br/>
+      <a id="addStack" href="javascript:void(0)">add stack</a>
+      <a id="removeStack" href="javascript:void(0)">remove stack</a>
+      <br/>
+      <a id="activateCanvas" href="javascript:void(0)">activate canvas</a>
+      <a id="deactivateCanvas" href="javascript:void(0)">deactivate canvas</a>
+      <br/>
+      <a id="addPlayer" href="javascript:void(0)">add player</a>
+      <br/>
+      <a id="addReviewStack" href="javascript:void(0)">add review stack</a>
+      <a id="rotateReviewStacks" href="javascript:void(0)">rotate review stacks</a>
+    </div>
+
+    <div class="wrapper">
+
+      <div class="main">
+        <div id="roomName" style="title"></div>
+        <div><canvas id="primaryCanvas" width="480" height="360"/></div>
+        <div>
+          <form method="POST" id="passStackForm">
+            <input type="submit" id="passStackButton" class="bigButton" disabled="disabled" value="pass stack"/>
+          </form>
+          <form method="POST" id="startGameForm">
+            <input type="submit" id="startGameButton" class="bigButton" disabled="disabled" value="start game"/>
+          </form>
+        </div>
+        <div id="waitingPile"></div>
+      </div>
+
+      <div class="chatBar">
+        <div class="chatTop">
+          <ul id="playerNames"></ul>
+        </div>
+        <div class="chatContainer">
+          <ul id="chatSpace"></ul>
+        </div>
+        <form method="POST" id="chatForm">
+          <input type="text" name="chatText" id="chatText" placeholder="say something"/>
+          <input type="submit" id="chatButton" value="send"/>
+        </form>
+      </div>
+
+      <div class="layer" id="namePrompt">
+        <form method="POST" id="nameForm">
+          <input type="text" placeholder="your name here" id="nameText" value=""/><br/>
+          <input type="submit" id="nameButton" value="send"/>
+        </form> 
+      </div>
+      <div class="layer" id="review">
+        <div id="reviewStack"></div>
+        <div id="reviewPiles"></div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -70,7 +70,7 @@
           console.log("unknown message");
         }
       }
-      return setTimeout(module.start, 50);
+      return setTimeout(module.start, 1);
     };
     return module;
   };

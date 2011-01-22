@@ -80,7 +80,7 @@ handle_call({chatMessage, UserID, Message}, _, State = #roomState{userOrder = Or
               UserID -> "you";
               _ -> "other"
             end,
-          {struct, [{method, chat}, {message, Message}, {from, Name}, {fromIndex, Index}, {whoIs, WhoIs}]}
+          {struct, [{method, chat}, {message, tpaint_util:sanitize(Message)}, {from, Name}, {fromIndex, Index}, {whoIs, WhoIs}]}
         end,
         sendFnToUsers( MessageFun, State ),
         {reply, ok, State}

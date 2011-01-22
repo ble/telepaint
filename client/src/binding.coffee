@@ -63,7 +63,7 @@ eventPump = (b) ->
       else
         console.log("unknown message")
 
-    setTimeout(module.start, 50)
+    setTimeout(module.start, 1)
   module
 
 

@@ -82,7 +82,7 @@ loop(Req, DocRoot) ->
               {error, Why} ->
                 tpaint_util:jsonError(Why);
               {ok, _, #userRef{pid = PID}} ->
-                {array, userServer:getMessages(PID, 5000)}
+                {array, userServer:getMessages(PID, 50000)}
             end, 
             io:format("~p~n", [JSON]),
             tpaint_util:respondJSON(Req, JSON);
@@ -220,7 +220,8 @@ handleRPC("name", Params, #roomRef{roomPID = RPID}, #userRef{pid = UPID, session
   case dict:find("name", Params) of
     error ->
       tpaint_util:jsonError("bad call to name method");
-    {ok, Name} ->
+    {ok, Name0} ->
+      Name = tpaint_util:sanitize(Name0),
       case userServer:setName(UPID, Name) of
         ok ->
           roomServer:nameWasSet(RPID, UserID, Name),

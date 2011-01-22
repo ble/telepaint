@@ -27,7 +27,7 @@ getRoomRef(ShortID) ->
   gen_server:call(?MODULE, {getRoomID, ShortID}).
 
 makeRoom(RoomID, CreatorID, RoomName) ->
-  gen_server:call(?MODULE, {makeRoom, RoomID, CreatorID, RoomName}).
+  gen_server:call(?MODULE, {makeRoom, RoomID, CreatorID, tpaint_util:sanitize(RoomName)}).
 
 %%gen server callbacks
 init(State) -> 

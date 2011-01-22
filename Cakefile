@@ -1,7 +1,7 @@
 fs            = require 'fs'
 path          = require 'path'
 exec          = require('child_process').exec
-sources = 'client/src/doodle.coffee'
+sources = 'client/src/*.coffee'
 output = 'priv/www/scripts/'
 
 

@@ -2,48 +2,36 @@
   font-family: 'Droid Sans Mono', arial, serif;
 }
 
-body,
-html {
-  background: #99c;
-}
-
-#wrap {
- margin:0 auto;
+body {
  background: #99c;
- overflow: hidden;
 }
 
-.title {
-	font-size: 10em;
-	font-weight: bold;
-	text-align: center	
+.noscripted {
+  color: #f00;
 }
 
-.big {
-	font-size: 2em;
+.debug {
+  width: 100%;
+  background-color: #fff;
+  margin: 15px;
 }
 
-.panel {
-    margin: 4px;
+.wrapper {
+  position: relative;
+  margin:0 auto;
+  height:100%;
 }
 
-input[type="text"]
-{
-border:solid 2px #99c;
-font-size:.8em;
-padding:4px;
-border-radius: 1em; 
- 
-}
+/* generic form styling */
 input[type="submit"]
 {
-border:solid 2px #000;
-background-color:#690;
-color:#fff;
-font-size:.8em;
-padding:4px; 
-border-radius: 1em; 
+  border:solid 2px #000;
+  background-color:#690;
+  color:#fff;
+  font-size:.8em;
+  border-radius: 1em; 
 }
+
 input:hover[type="submit"] 
 {
   color: #000;
@@ -51,68 +39,125 @@ input:hover[type="submit"]
 
 input[disabled] {
   background-color:#ccc;
-  border:none
+  border:none;
 }
+
 input:hover[disabled][type="submit"] {
   color: #fff
 }
 
-
-.roomCreationForm {
-	width: 350px;
-	border-style: solid;
-	background-color: #EEEEFF;
-	margin: 4px;
-	top: 30%;
+input[type="text"]
+{
+  border:solid 2px #99c;
+  font-size:.8em;
+  border-radius: 1em; 
 }
 
-
-.blankBox {
-	color: #AAAAAA;
-}
-
-.sendButton {
-  display: block;
-  font-size: 1em;
-}
-#chatInput {
-  width:70%;
-}
-.chatText {
-  font-family: 'Droid Sans Mono', arial, serif; 
-  font-size: 0.75em;
-  text-align:left;
-  width:70%;
-}
-
-#nameForm {
-  position: relative;
-  top: 7.5em;
-}
-#nameText {
-  background-color: #446688;
-  color: #FFFFFF;
-  font-size: 2.5em;
-}
-#chatDiv {
-  text-align: center
-}
-
-
-#main {
-  float:left;
-  align: center;
-  border-style: solid;
-  border-color: #CCCCFF;
-  border-radius: 30px;
-  background-color: #EEEEFF;
-  min-width: 640px;
-}
 .bigButton {
   min-width: 600px;
   float:top;
   font-size: 2.5em;
 }
+
+/* main column layout */
+.main {
+  float: left;
+  text-align: center;
+  border-style: solid;
+  border-color: #CCCCFF;
+  border-radius: 30px;
+  background-color: #EEEEFF;
+  min-width: 640px;
+  max-width: 640px;
+  min-height: 400px;
+}
+
+#pileSpace
+{
+  background-color: #ffe;
+  border-radius: 30px;
+  width: 640px;
+  height: 100px;
+}
+
+canvas#primaryCanvas {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  background-color: #ffe;
+  border-style: solid;
+  border-color: #ffb;
+}
+
+
+.title {
+	font-size: 10em;
+	font-weight: bold;
+	text-align: center	
+}
+
+
+/* chat bar layout / styling */
+.chatBar {
+  float:left;
+  border-style: solid;
+  border-color: #FFFFCC;
+  border-radius: 30px;
+  background-color: #FFFFEE;
+  width: 360px;
+  height: 600px;
+  position:relative;
+}
+
+#chatSpace {
+  list-style-type: none;
+  overflow-y: scroll;
+  max-height: 400px;
+  font-size: 0.75em;
+  position: relative;
+  left: -3.0em;
+  width: 100%;
+}
+
+#playerNames {
+  list-style-type: none;
+}
+
+#chatText {
+  width:70%;
+  font-family: 'Droid Sans Mono', arial, serif; 
+  font-size: 0.75em;
+  text-align:left;
+}
+
+
+/* prompt layout */
+#nameForm {
+  position: relative;
+  top: 7.5em;
+}
+.layer {
+  text-align: center;
+  position:absolute;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  color: #FFFFFF;
+  background-color: #000000;
+  opacity: 0.8;
+  visibility:hidden;
+}
+
+#nameText {
+  text-align: center;
+  background-color: #468;
+  color: #fff;
+  font-size: 2.5em;
+}
+/*
+#chatDiv {
+  text-align: center
+}
+
 
 #chatForm {
   position: relative
@@ -130,30 +175,8 @@ input:hover[disabled][type="submit"] {
   left: 0.5 em;
 }
 
-#chatSpace {
-  list-style-type: none;
-  overflow-y: scroll;
-  height: 500px;
-}
 .userEntered {
   font-style: italic;
 }
-#prompt {
-  position:absolute;
-  top: 0px;
-  width: 100%;
-  height: 100%;
-  color: #FFFFFF;
-  background-color: #000000;
-  opacity: 0.8;
-  visibility:hidden;
-}
 
-canvas#primaryCanvas {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  background-color: #FFFFF0;
-  border-style: solid;
-  border-color: #F0F0E0;
-}
-
+*/

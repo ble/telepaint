@@ -1,8 +1,8 @@
 -module(gameState).
 
 -include("state.hrl").
--export([initializeGameState/1, passStack/3]).
--record(gameState, {roomName, startDate, idOrder, playerByID, successorID, stacksHeldByID}).
+-export([initializeGameState/1, passStack/3, getTopStack/2]).
+-record(gameState, {roomName, startDate, idOrder, playerByID, successorID, stacksHeldByID, completeStacks}).
 
 initializeGameState(
   #roomState{
@@ -34,10 +34,29 @@ initializeGameState(
     idOrder = UserOrder,
     playerByID = PlayersByID,
     successorID = SuccessorID,
-    stacksHeldByID = dict:from_list(lists:zip(UserOrder, Stacks))}.
+    stacksHeldByID = dict:from_list(lists:zip(UserOrder, Stacks)),
+    completeStacks = []}.
 
+getTopStack(#gameState{stacksHeldByID = AllStacks}, PlayerID) ->
+  case [Stacks || {ok, Stacks} <- [dict:find(PlayerID, AllStacks)]] of
+    [] ->
+      {error, "bad player id"};
+    [[]] ->
+      {ok, "noStack"};
+    [[Stack | _Rest]] ->
+      [Top | _More] = Stack,
+      {ok, {struct, [{topSheet, Top#sheet.file}]}}
+  end.
 
-passStack(GameState = #gameState{playerByID = Players, stacksHeldByID = Stacks0, idOrder = IDs, successorID = NextID}, PictureData, PassingPlayerID) ->
+passStack(
+  GameState = #gameState{
+    playerByID = Players,
+    stacksHeldByID = Stacks0,
+    idOrder = IDs,
+    successorID = NextID,
+    completeStacks = CompleteStacks},
+  PictureData,
+  PassingPlayerID) ->
   N = length(IDs),
   case [Stacks || {ok, Stacks} <- [dict:find(PassingPlayerID, Stacks0)]] of
     [] ->
@@ -52,12 +71,27 @@ passStack(GameState = #gameState{playerByID = Players, stacksHeldByID = Stacks0,
     [[Stack | RemainingStacks]] ->
       {ok, {_, _, PassingPlayerPID}} = dict:find(PassingPlayerID, Players),
       Stacks1 = dict:store(PassingPlayerID, RemainingStacks, Stacks0),  %remove stack from passer's pile
+
       PassedStack = addPictureToStack(PictureData, Stack, PassingPlayerID, GameState), %record the new picture in the stack
+      CompleteStacks1 = case length(PassedStack)-1 of
+        N ->
+          %handle side effect messages
+          PIDs = [PID || ID <- IDs, {ok, {_, _, PID}} <- [dict:find(ID, Players)]],
+          Files = [File || Sheet <- PassedStack, File <- [Sheet#sheet.file]],
+          Message = {struct, [{method, completedStack},{urls, {array, Files}}]},
+          [userServer:enqueue(PID, Message) || PID <- PIDs],
+          userServer:enqueue(PassingPlayerPID, {struct, [{method, gameDone}]}),
+          %result value
+          [PassedStack | CompleteStacks];
+        _ ->
+          CompleteStacks
+      end,
+
       {ok, ReceivingPlayerID} = NextID(PassingPlayerID),
       {ok, {_, _, ReceivingPlayerPID}} = dict:find(ReceivingPlayerID, Players),
       Stacks2 = dict:append(ReceivingPlayerID, PassedStack, Stacks1), %add the stack to the receiver's pile
       {ok, ReceiversStacks} = dict:find(ReceivingPlayerID, Stacks2), %grab the receivers pile
-      NewGameState = GameState#gameState{stacksHeldByID = Stacks2},
+      NewGameState = GameState#gameState{stacksHeldByID = Stacks2, completeStacks = CompleteStacks1},
 
       %let the passer know the pass completed; if there are other stacks waiting for the passer,
       %make the top stack ready for the passer to work on.
@@ -66,12 +100,12 @@ passStack(GameState = #gameState{playerByID = Players, stacksHeldByID = Stacks0,
         "Passer's stack count: ~b~nReceiver's stack count: ~b~n",
         [length(RemainingStacks), length(ReceiversStacks)]),
       if
-        length(RemainingStacks) > 0 ->
+        length(RemainingStacks) > 0 andalso length(hd(RemainingStacks)) =< N ->
           sendStackReady(PassingPlayerPID, RemainingStacks);
         true -> []
       end,
       if
-        length(ReceiversStacks) == 1 ->
+        length(ReceiversStacks) == 1 andalso length(hd(ReceiversStacks)) =< N ->
           sendStackReady(ReceivingPlayerPID, ReceiversStacks);
         true -> []
       end,

@@ -30,7 +30,8 @@ loop(Req, DocRoot) ->
     case Req:get(method) of
       Method when Method =:= 'GET'; Method =:= 'HEAD' ->
         case Path of
-          "./dyn/" ++ DynPath -> 
+          "dyn/" ++ DynPath -> 
+            io:format("~p~n", [DynPath]),
             Req:serve_file(DynPath, "./dyn", []);
           %room_<ShortID>
           %actual URL to be visited by user, displayed in address bar, etc.
@@ -82,7 +83,8 @@ loop(Req, DocRoot) ->
                 tpaint_util:jsonError(Why);
               {ok, _, #userRef{pid = PID}} ->
                 {array, userServer:getMessages(PID, 5000)}
-            end,
+            end, 
+            io:format("~p~n", [JSON]),
             tpaint_util:respondJSON(Req, JSON);
           _ ->
             Req:serve_file(Path, DocRoot)
@@ -124,6 +126,7 @@ loop(Req, DocRoot) ->
                     handleRPC(Method, Params, RoomRef, UserRef)
                 end
             end, 
+            io:format("~p~n", [JSONResponse]),
             tpaint_util:respondJSON(Req, JSONResponse);
          _ ->
             Req:not_found()
@@ -188,7 +191,9 @@ getEstablishedSession(ShortID, Req) ->
   end.
 
 rpcJSONParse(Req) ->
-  JSONIn = mochijson:decode(Req:recv_body()),
+  Body = Req:recv_body(),
+  io:format("~p~n", [Body]),
+  JSONIn = mochijson:decode(Body),
   case JSONIn of
     {struct, Items} ->
       Params = dict:from_list(Items),

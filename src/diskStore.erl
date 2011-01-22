@@ -144,7 +144,8 @@ directoriesForPicRef(
     drawnBy = Artiste,
     drawnID = DID,
     n = N}) ->
-  Escape = fun (X) -> edoc_lib:escape_uri(X) end,
+  %Escape = fun (X) -> edoc_lib:escape_uri(X) end,
+  Escape = fun (X) -> X end,
   RoomDirectory = [StoreRoot, $/, Escape(RoomName), RoomID],
   GameDirectory = [RoomDirectory, $/, formatDate(StartDate)],
   SDirectory = [GameDirectory, $/, startedBy, $=, Escape(Starter), SID],

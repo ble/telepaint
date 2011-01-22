@@ -127,7 +127,8 @@ handle_call(
     creatorID = CreatorID,
     userOrder = Order, 
     inGame = InGame, 
-    roomName = RoomName}) ->
+    roomName = RoomName,
+    gameState = GameState}) ->
   UserRefs = [UserRef || ID <- Order, {ok, UserRef} <- [dict:find(ID, Users)]],
   UserNames = [{userServer:getName(PID), UserID == ID, ID} || #userRef{pid=PID, sessionID=ID} <- UserRefs],
   UsersJSON = [case Name of
@@ -143,11 +144,19 @@ handle_call(
       {name, RoomName},
       {inGame, InGame},
       {preGame, {array, case InGame of false -> State#roomState.extra; _ -> [] end}}],
-  {reply, {struct, Fields}, State};
+  Fields1 = case InGame of
+    true ->
+      {ok, TopStack} = gameState:getTopStack(GameState, UserID),
+      [ {topStack, TopStack} | Fields ];
+    false ->
+      Fields
+  end,
+  {reply, {struct, Fields1}, State};
 
 handle_call(beginGame, _, State = #roomState{inGame = false}) ->
   sendToUsers({struct, [{method, beginGame}]}, State),
   NewGameState = gameState:initializeGameState(State),
+  sendToUsers({struct, [{method, stackReady}, {imgUrl, undefined}]}, State),
     {reply, ok, State#roomState{inGame = true, gameState = NewGameState}};
 
 handle_call(beginGame, _, State = #roomState{inGame = true}) ->
@@ -212,5 +221,10 @@ canonicalStroke(Params) ->
     error ->
       error;
     {ok, Coordinates} ->
-      [{method, stroke}, {coordinates, Coordinates}]
+      case dict:find("color", Params) of
+        error ->
+          [{method, stroke}, {coordinates, Coordinates}];
+        {ok, Color} ->
+          [{method, stroke}, {coordinates, Coordinates}, {color, Color}]
+      end
   end.

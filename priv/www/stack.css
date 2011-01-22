@@ -1,0 +1,48 @@
+.stackTop:hover
+{
+  width:480px;
+  height:360px;
+  top:-180px;
+  z-index:100;
+}
+
+.miniContainer {
+  float: left;
+  position: relative;
+  top: 13px;
+  width: 100px;
+  height: 90px;
+}
+
+.mini {
+  height: 45px;
+  width: 60px;
+  background-color: #FFF;
+  border-style: solid;
+  border-color: #000;
+  border-width: 1px;
+}
+
+.mini1 {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.mini2 {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+.mini3 {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+}
+
+.mini4 {
+  position: absolute;
+  left: 30px;
+  top: 30px;
+}

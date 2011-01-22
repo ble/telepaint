@@ -9,7 +9,7 @@
 sanitize(S0) ->
   S1 = re:replace(S0, "<", "\\&lt;", [global]),
   S2 = re:replace(S1, ">", "\\&gt;", [global]),
-  erlang:iolist_to_binary(S2).
+  erlang:binary_to_list(erlang:iolist_to_binary(S2)).
 
 sfmt(Format, Items) ->
   lists:flatten(io_lib:fwrite(Format, Items)).

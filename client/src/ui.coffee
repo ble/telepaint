@@ -57,15 +57,16 @@ chatManager = (playerContainer, chatContainer) ->
 
   
 #display object for managing a pile (i.e. multiple stacks)
-stacksManager = (container) ->
+stacksManager = (container, makeBig, onNewTop) ->
   stacks = []
   module =
-    addToStacks: (topImage) ->
+    addToStacks: (stack) ->
+      topImage = stack.topImage
       inner = new Element("div", {class: "miniContainer"})
       inner.insert(new Element("div", {class: "mini mini4"}))
       inner.insert(new Element("div", {class: "mini mini3"}))
       inner.insert(new Element("div", {class: "mini mini2"}))
-      if stacks.length == 0
+      if stacks.length == 0 and makeBig
         classes = "stackTop mini mini1"
       else
         classes = "mini mini1"
@@ -73,7 +74,12 @@ stacksManager = (container) ->
         top = new Element("img", {class: classes, src: topImage})
       else
         top = new Element("img", {class: classes})
+      stacks.push(stack)
       inner.insert(top)
+      inner.observe("click", () ->
+        container.insert(container.children[0].remove())
+        stacks.push(stacks.shift())
+        onNewTop(stacks[0] if onNewTop isnt undefined))
       container.insert(inner)
       stacks.push([inner, top])
     clearStacks: () ->
@@ -89,18 +95,26 @@ stacksManager = (container) ->
 stackManager = (container) ->
   images = (new Element("img", {width: 480, height: 360}) for index in [0,1])
   container.insert(image) for image in images
+
   updateDisplay = (urls) ->
     for index in [0..images.length-1]
       url = urls[index] if index < urls.length
       url = "" if index >= urls.length
       images[index].writeAttribute("src", url)
-  model = rotater([], updateDisplay)
+      images[index].setStyle(backgroundColor: "#fff")
+      #images[index].observe("click"
+
+  model = rotater(images, updateDisplay)
   module =
     setStack: (stack) ->
       urls = (sheet.url for sheet in stack.sheets)
       model.replace(urls)
     rotateStack: () ->
       model.rotate()
+  image.observe("click", module.rotateStack) for image in images
+
+  module
+
 
 #HOF/object for updating an object with its state stored in an array
 rotater = (start, onUpdate) ->
@@ -117,14 +131,14 @@ rotater = (start, onUpdate) ->
       onUpdate(state)
 
 reviewPileManager = (container, stackContainer) ->
-  stacks = stacksManager(container)
   reviewStack = stackManager(stackContainer)
+  stacks = stacksManager(container, false, (newStack) -> reviewStack.setStack(newStack))
   updateDisplay = (state) ->
     topStack = state[0] if state.length > 0
     topStack = [] if state.length == 0
     reviewStack.setStack(topStack)
     stacks.clearStacks()
-    stacks.addToStacks(stack.topImage) for stack in state
+    stacks.addToStacks(stack) for stack in state
   module = rotater([], updateDisplay)
   module
 

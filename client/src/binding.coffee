@@ -58,8 +58,16 @@ eventPump = (b) ->
         else
           imgUrl = jso.imgUrl
         b.waitingStack.clearStacks()
-        b.waitingStack.addToStacks(imgUrl)
-
+        b.waitingStack.addToStacks(topImage: imgUrl)
+      else if jso.method == "completedStack"
+        urls = jso.urls
+        urls.shift() while urls[0] == "none"
+        stack =
+          sheets: ({url: url} for url in urls)
+          topImage: urls[0]
+        b.review.add(stack)
+      else if jso.method == "gameDone"
+        b.reviewLayer.show()
       else
         console.log("unknown message")
 
@@ -135,7 +143,9 @@ document.observe("dom:loaded", () -> (
     startGameButton: $("startGameButton")
     passStackButton: $("passStackButton")
     canvas: canvas
-    waitingStack: stacksManager($("waitingPile"))
+    waitingStack: stacksManager($("waitingPile"), true)
+    reviewLayer: bindLayer($("review"))
+    review: reviewPileManager($("reviewPiles"), $("reviewStack"))
 
   $("startGameForm").observe("submit", (event) ->
     rpc = {method: "startGame"}

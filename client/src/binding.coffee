@@ -62,6 +62,7 @@ eventPump = (b) ->
       else if jso.method == "completedStack"
         urls = jso.urls
         urls.shift() while urls[0] == "none"
+        urls.reverse()
         stack =
           sheets: ({url: url} for url in urls)
           topImage: urls[0]

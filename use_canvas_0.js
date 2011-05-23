@@ -7,22 +7,15 @@ var domHelper = new goog.dom.DomHelper();
 var body = domHelper.getElement("outermost");
 var canvas = new ble.scratch.Canvas(640, 480, 1.0);
 canvas.render(body);
-/*
-canvas.withContext( function(context) {
-  context.beginPath();
-  context.moveTo(50, 50);
-  context.lineTo(100, 0);
-  context.strokeStyle = "000";
-  context.stroke();
-});*/
-
 
 var unit_smiley = function(context) {
   var happy_yellow = "fd2";
   var white = "fff";
   var black = "000";
 
-//  context.lineWidth *= 9;
+//Multiplying the lineWidth property rather than setting it results in a
+//line drawn with a pixel width independent of the subcanvas scaling.
+  //context.lineWidth *= 9;
   context.lineWidth = 0.08;
   context.strokeStyle = black;
   context.fillStyle = happy_yellow;
@@ -75,28 +68,11 @@ var unit_smiley = function(context) {
   
 };
 
-var blueBox = function(context) {
-  var xs = [this.virtualCoords_[0], this.virtualCoords_[2]];
-  var ys = [this.virtualCoords_[1], this.virtualCoords_[3]];
-  context.beginPath();
-  context.moveTo(xs[0], ys[0]);
-  context.lineTo(xs[1], ys[0]);
-  context.lineTo(xs[1], ys[1]);
-  context.lineTo(xs[0], ys[1]);
-  context.closePath();
-  context.strokeStyle = "0ff";
-  context.fillStyle = "8ff";
-  context.lineWidth = 10;
-  context.stroke();
-  context.fill();
-};
 
 var subcanvas_whole = new ble.scratch.Subcanvas(canvas, [0, 0, 640, 480], [-1, .375, .5, -.75]);
-var subcanvas_pixels = new ble.scratch.Subcanvas(canvas, [50, 50, 590, 430]);
 var subcanvas_virtual = new ble.scratch.Subcanvas(canvas, [25, 70, 395, 440], [-1, 1, 1, -1]);
 var subcanvas_small = new ble.scratch.Subcanvas(canvas, [370, 210, 585, 425], [-1, 1, 1, -1]);
 
 subcanvas_whole.withContext(unit_smiley);
-//subcanvas_pixels.withContext(blueBox);
 subcanvas_virtual.withContext(unit_smiley);
 subcanvas_small.withContext(unit_smiley);

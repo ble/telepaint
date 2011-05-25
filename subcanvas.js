@@ -102,11 +102,38 @@ ble.scratch.Canvas = function(width_px, height_px, width_logical, aspect_logical
    * @type {Array.<ble.scratch.Subcanvas>}
    */
   this.subcanvases_ = [];
+
+  /**
+   * Listener object which forwards events to subcanvases
+   */
+  this.forwardingListener_ = null;
+
   var domHelper = new goog.dom.DomHelper();
   goog.ui.Component.call(this, domHelper);
 };
 
 goog.inherits(ble.scratch.Canvas, goog.ui.Component);
+
+/**
+ * Enable event forwarding to subcanvases for a particular event type.
+ */
+ble.scratch.Canvas.prototype.forwardEvents = function(type) {
+  if(this.forwardingListener_ === null) {
+    this.forwardingListener_ = function(event) {
+      var coord = new goog.math.Coordinate(event.offsetX, event.offsetY);
+      for(var i = 0; i < this.subcanvases_.length; i++) {
+        var subcanvas = this.subcanvases_[i];
+        if(subcanvas.pixelCoords_.contains(coord)) {
+          var result = subcanvas.dispatchEvent(event);
+          if(result === false) {
+            return false;
+          }
+        }
+      }
+    };
+  }
+  goog.events.listen(this.element_, type, this.forwardingListener_, false, this);
+};
 
 /**
  * Register a subcanvas
@@ -118,7 +145,7 @@ ble.scratch.Canvas.prototype.addSubcanvas = function(subcanvas) {
       this.addSubcanvas(subcanvas[i]);
     }
   } else {
-    this.subcanvases.unshift(subcanvas)
+    this.subcanvases_.unshift(subcanvas)
   }
 }
 

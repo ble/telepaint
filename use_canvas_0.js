@@ -1,5 +1,5 @@
-var unit_smiley = function(context) {
-  var happy_yellow = "fd2";
+var unit_smiley = function(faceColor) {
+  return function(context) {
   var white = "fff";
   var black = "000";
 
@@ -8,7 +8,7 @@ var unit_smiley = function(context) {
   //context.lineWidth *= 9;
   context.lineWidth = 0.08;
   context.strokeStyle = black;
-  context.fillStyle = happy_yellow;
+  context.fillStyle = faceColor;
   context.beginPath();
   context.arc(0, 0, .95, 0.0, 2.0 * Math.PI);
   context.fill();
@@ -56,8 +56,11 @@ var unit_smiley = function(context) {
     context.stroke();
   } context.restore();
   
+  };
 };
 
+var zombor = unit_smiley("6f2");
+var normal = unit_smiley("fd2");
 
 var domHelper = new goog.dom.DomHelper();
 
@@ -78,22 +81,14 @@ var subcanvases = goog.array.map( subcanvasSpec, function( spec ) {
   return new ble.scratch.Subcanvas(canvas, spec[0], spec[1]);
 });
 
+canvas.forwardEvents(goog.events.EventType.CLICK);
+
 goog.array.forEach( subcanvases, function( subcanvas ) {
-  subcanvas.withContext(unit_smiley);
+  subcanvas.withContext(normal);
+  goog.events.listen(subcanvas, goog.events.EventType.CLICK, function(e) {
+    this.withContext(zombor);
+    return false;
+  }, false, subcanvas);
+  canvas.addSubcanvas(subcanvas);
 });
-/*
-var dumbHandler = function(e) {
-  var center = [e.offsetX, e.offsetY];
-  var width = 100;
-  var height = width;
-  var vdims = [-1, 1, 1, -1];
-  var pdims = [center[0] - width / 2, center[1] - height / 2, center[0] + width / 2, center[1] + height / 2];
-  var subcanvas = new ble.scratch.Subcanvas(canvas, pdims, vdims);
-  subcanvas.withContext(unit_smiley);
-  console.log(e);
-};
-goog.events.listen(canvas.getElement(), goog.events.EventType.CLICK, dumbHandler);
-goog.events.listen(canvas, "FUBAR", function(e) { alert(e); });
-var theEvent = {"type": "FUBAR"};
-canvas.dispatchEvent(theEvent);
-*/
+

@@ -8,8 +8,12 @@
 goog.provide('ble.scratch.Canvas');
 goog.provide('ble.scratch.Subcanvas');
 
+goog.require('goog.math.Box');
+goog.require('goog.math.Coordinate');
+goog.require('goog.math.Size');
 goog.require('goog.dom');
-goog.require('goog.events.Event');
+goog.require('goog.events');
+goog.require('goog.events.EventType');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
 
@@ -21,32 +25,40 @@ var hypot = function(x, y) {
   return Math.sqrt(x * x + y * y);
 }
 
+/**
+ *  @type {function(goog.math.Box): goog.math.Size} 
+ */
+var sizeOfBox = function(box) {
+  return new goog.math.Size(box.right - box.left, box.bottom - box.top);
+};
 
 /**
  * A subsection of a canvas, occupying a certain rectangular region defined
  * in pixel coordinates which may have its own virtual size.
  * @param {ble.scratch.Canvas} parentCanvas
- * @param {Array.<number>} pixelCoords
- * @param {Array.<number>=} virtualCoords
+ * @param {goog.math.Box} pixelCoords
+ * @param {goog.math.Box=} virtualCoords
  * @constructor
+ * @extends {goog.events.EventTarget}
  */
 ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
   this.parentCanvas_ = parentCanvas;
   this.pixelCoords_ = pixelCoords;
-  this.pixelWidth_ = pixelCoords[2] - pixelCoords[0];
-  this.pixelHeight_ = pixelCoords[3] - pixelCoords[1];
+  this.pixelSize_ = sizeOfBox(this.pixelCoords_);
+
   if(virtualCoords !== undefined) {
-    var virtualCoords_ = virtualCoords.slice();
-    if(virtualCoords_.length === 2) {
-      virtualCoords_.unshift(0, 0);
-    }
-    this.virtualCoords_ = virtualCoords_;
+    this.virtualCoords_ = virtualCoords;
+    this.virtualSize_ = sizeOfBox(this.virtualCoords_);
   } else {
-    this.virtualCoords_ = [0, 0, this.pixelWidth_, this.pixelHeight_];
+    this.virtualSize_ = this.pixelSize_;
+    this.virtualCoords_ = new goog.math.Box(0, this.virtualSize_.width, this.virtualSize_.height, 0);
   }
-  this.virtualWidth_ = this.virtualCoords_[2] - this.virtualCoords_[0];
-  this.virtualHeight_ = this.virtualCoords_[3] - this.virtualCoords_[1];
+  this.pixelToVirtualRatio = new goog.math.Size(
+    this.pixelSize_.width / this.virtualSize_.width,
+    this.pixelSize_.height / this.virtualSize_.height);
+  goog.events.EventTarget.call(this);
 };
+goog.inherits(ble.scratch.Subcanvas, goog.events.EventTarget);
 
 ble.scratch.Subcanvas.prototype.withContext = function(action) {
   var context = this.parentCanvas_.getRawContext();
@@ -55,20 +67,18 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
   //apply clip
   
   context.beginPath();
-  context.moveTo(this.pixelCoords_[0], this.pixelCoords_[1]);
-  context.lineTo(this.pixelCoords_[2], this.pixelCoords_[1]);
-  context.lineTo(this.pixelCoords_[2], this.pixelCoords_[3]);
-  context.lineTo(this.pixelCoords_[0], this.pixelCoords_[3]);
+  context.moveTo(this.pixelCoords_.left, this.pixelCoords_.top);
+  context.lineTo(this.pixelCoords_.right, this.pixelCoords_.top);
+  context.lineTo(this.pixelCoords_.right, this.pixelCoords_.bottom);
+  context.lineTo(this.pixelCoords_.left, this.pixelCoords_.bottom);
   context.closePath();
   context.clip();
-  context.translate(this.pixelCoords_[0], this.pixelCoords_[1]); 
-  context.scale(
-      this.pixelWidth_ / this.virtualWidth_,
-      this.pixelHeight_ / this.virtualHeight_);
-  context.translate(-this.virtualCoords_[0], -this.virtualCoords_[1]);
-  context.lineWidth *= hypot(this.virtualWidth_ / this.pixelWidth_,
-                             this.virtualHeight_ / this.pixelHeight_);
-
+  context.translate(this.pixelCoords_.left, this.pixelCoords_.top); 
+  context.scale( this.pixelToVirtualRatio.width,
+                 this.pixelToVirtualRatio.height );
+  context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
+  context.lineWidth *= hypot( this.pixelToVirtualRatio.width,
+                              this.pixelToVirtualRatio.height);
 
   action.call(this, context);
 
@@ -87,11 +97,32 @@ ble.scratch.Canvas = function(width_px, height_px, width_logical, aspect_logical
   this.height_px = height_px;
   this.element_ = null;
 
+  /**
+   * Subcanvases registered to this canvas.
+   * @type {Array.<ble.scratch.Subcanvas>}
+   */
+  this.subcanvases_ = [];
   var domHelper = new goog.dom.DomHelper();
   goog.ui.Component.call(this, domHelper);
 };
 
 goog.inherits(ble.scratch.Canvas, goog.ui.Component);
+
+/**
+ * Register a subcanvas
+ * @param {ble.scratch.Subcanvas|Array.<ble.scratch.Subcanvas>} subcanvas
+ */
+ble.scratch.Canvas.prototype.addSubcanvas = function(subcanvas) {
+  if(goog.isArray(subcanvas)) {
+    for(var i = 0; i < subcanvas.length; i++) {
+      this.addSubcanvas(subcanvas[i]);
+    }
+  } else {
+    this.subcanvases.unshift(subcanvas)
+  }
+}
+
+
 
 ble.scratch.Canvas.prototype.withContext = function(action) {
   var context = this.getRawContext();

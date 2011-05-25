@@ -11,6 +11,7 @@ goog.provide('ble.scratch.Subcanvas');
 goog.require('goog.math.Box');
 goog.require('goog.math.Coordinate');
 goog.require('goog.math.Size');
+goog.require('goog.graphics.AffineTransform');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
@@ -85,6 +86,14 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
   context.restore();
 }
 
+ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
+  var transform = new goog.graphics.AffineTransform();
+  transform.translate(this.virtualCoords_.left, this.virtualCoords_.top);
+  transform.scale(1.0 / this.pixelToVirtualRatio.width, 1.0 / this.pixelToVirtualRatio.height);
+  transform.translate(-this.pixelCoords_.left, -this.pixelCoords_.top);
+  return transform;
+}
+
 /**
  * Simple canvas divisible into subcanvases.
  * @param {number} width_px
@@ -124,6 +133,12 @@ ble.scratch.Canvas.prototype.forwardEvents = function(type) {
       for(var i = 0; i < this.subcanvases_.length; i++) {
         var subcanvas = this.subcanvases_[i];
         if(subcanvas.pixelCoords_.contains(coord)) {
+          var affine = subcanvas.affinePixelToVirtual();
+          var pixelCoords = [event.offsetX, event.offsetY];
+          var virtualCoords = [null, null];
+          affine.transform(pixelCoords, 0, virtualCoords, 0, 1);
+          event.virtualX = virtualCoords[0];
+          event.virtualY = virtualCoords[1];
           var result = subcanvas.dispatchEvent(event);
           if(result === false) {
             return false;

@@ -1,4 +1,5 @@
-
+goog.require('ble.scratch.Canvas');
+goog.require('ble.scratch.Subcanvas');
 
 var nearestWholeMultiple = function(value, multiplier) {
   return multiplier * Math.round(value / multiplier);
@@ -206,19 +207,21 @@ var grabState = {"grabbed": false, "vx": NaN, "vy": NaN}
 var grabToggler = function(e) {
   if(e.type === goog.events.EventType.MOUSEDOWN) {
     grabState.grabbed = true;
-    grabState.vx = e.virtualX;
-    grabState.vy = e.virtualY;
+    grabState.pxX = e.offsetX;
+    grabState.pxY = e.offsetY;
     grabState.box = new goog.math.Box(partial.top, partial.right, partial.bottom, partial.left);
   } else if(e.type === goog.events.EventType.MOUSEUP) {
     grabState.grabbed = false;
-    grabState.vx = grabState.vy = NaN; 
+    grabState.pxX = grabState.pxY = NaN; 
   }
 }
 
 var grabMover = function(e) {
   if(grabState.grabbed) {
-    var deltaX = grabState.vx - e.virtualX;
-    var deltaY = grabState.vy - e.virtualY;
+    var pxDeltaX = grabState.pxX - e.offsetX;
+    var pxDeltaY = grabState.pxY - e.offsetY;
+    var deltaX = pxDeltaX / this.pixelToVirtualRatio.width;
+    var deltaY = pxDeltaY / this.pixelToVirtualRatio.height;
     partial.top = grabState.box.top + deltaY;
     partial.bottom = grabState.box.bottom + deltaY;
     partial.left = grabState.box.left + deltaX;

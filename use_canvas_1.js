@@ -1,7 +1,11 @@
 
 
+var nearestWholeMultiple = function(value, multiplier) {
+  return multiplier * Math.round(value / multiplier);
+}
+
 var nearestPowerOf10 = function(x) {
-  return Math.exp( Math.round( Math.log(x) / Math.LN10 ) * Math.LN10 )
+  return Math.exp( nearestWholeMultiple(Math.log(x), Math.LN10) );
 }
 
 var getTickSpacing = function(subcanvas, pixelSpacingX, pixelSpacingY) {
@@ -58,8 +62,10 @@ var axes = function(tickSpacingPixels, lineWidthMutator, strokeStyle, tickLength
     var xTickY = getTickLocation(this.virtualCoords_.top, this.virtualCoords_.bottom);
     var spacings = getTickSpacing(this, tickSpacingPixels, tickSpacingPixels);
 
-    var xTickLocs = fillRange(yTickX, this.virtualCoords_.left, this.virtualCoords_.right, spacings[0]);
-    var yTickLocs = fillRange(xTickY, this.virtualCoords_.top, this.virtualCoords_.bottom, spacings[1]);
+    var middleXTick = nearestWholeMultiple( (this.virtualCoords_.left + this.virtualCoords_.right) / 2, spacings[0]);
+    var middleYTick = nearestWholeMultiple( (this.virtualCoords_.top + this.virtualCoords_.bottom) / 2, spacings[1]);
+    var xTickLocs = fillRange(middleXTick, this.virtualCoords_.left, this.virtualCoords_.right, spacings[0]);
+    var yTickLocs = fillRange(middleYTick, this.virtualCoords_.top, this.virtualCoords_.bottom, spacings[1]);
     var xTickHeightVirtual = tickLengthPixels / this.pixelToVirtualRatio.height / 2;
     var yTickWidthVirtual = tickLengthPixels / this.pixelToVirtualRatio.width / 2;
     context.save(); {

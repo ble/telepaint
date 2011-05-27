@@ -62,9 +62,7 @@ var axes = function(tickSpacingPixels, lineWidthMutator, strokeStyle, tickLength
     var yTickLocs = fillRange(xTickY, this.virtualCoords_.top, this.virtualCoords_.bottom, spacings[1]);
     var xTickHeightVirtual = tickLengthPixels / this.pixelToVirtualRatio.height / 2;
     var yTickWidthVirtual = tickLengthPixels / this.pixelToVirtualRatio.width / 2;
-    console.log(context.lineWidth);
     context.save(); {
-      console.log(context.lineWidth);
       context.lineWidth = lineWidthMutator(context.lineWidth);
       context.beginPath();
       context.moveTo(this.virtualCoords_.left, 0);
@@ -112,7 +110,7 @@ canvas.render(container);
 var fullView = new goog.math.Box(1, 1, -1, -1);
 var partial = new goog.math.Box(0.20, 0.30, -0.10, -0.10);
 
-var pipBox = new goog.math.Box(400, 80, 480, 0);
+var pipBox = new goog.math.Box(320, 160, 480, 0);
 var mainBox = new goog.math.Box(0, 640, 480, 0);
 
 var pip = new ble.scratch.Subcanvas(canvas, pipBox, fullView);
@@ -153,3 +151,44 @@ var redraw = function() {
 };
 
 redraw();
+
+
+var isDown = false;
+var toggler = function(e) {
+  if(e.type === goog.events.EventType.MOUSEDOWN)
+    isDown = true;
+  else if(e.type === goog.events.EventType.MOUSEUP)
+    isDown = false;
+}
+
+var boxUpdater = function(toUpdate, after) {
+  return function(e) {
+    if(isDown) {
+      console.log(e.virtualX);
+      console.log(e.virtualY);
+      var width = toUpdate.right - toUpdate.left;
+      var height = toUpdate.bottom - toUpdate.top;
+      var xSign = toUpdate.left < toUpdate.right ? 1 : -1;
+      var ySign = toUpdate.top < toUpdate.bottom ? 1 : -1;
+      toUpdate.left = e.virtualX - xSign * width / 2;
+      toUpdate.right = e.virtualX + xSign * width / 2;
+      toUpdate.top = e.virtualY - ySign * height / 2;
+      toUpdate.bottom = e.virtualY + ySign * height / 2; 
+      if(after !== undefined) {
+        after();
+      }
+      console.log(toUpdate);
+    }
+  };
+};
+
+var forwardTypes = 
+  [goog.events.EventType.MOUSEDOWN,
+   goog.events.EventType.MOUSEMOVE];
+var togglerTypes = 
+  [goog.events.EventType.MOUSEDOWN,
+   goog.events.EventType.MOUSEUP];
+canvas.forwardEvents(forwardTypes);
+canvas.addSubcanvas(pip);
+goog.events.listen(canvas.element_, togglerTypes, toggler);
+goog.events.listen(pip, forwardTypes, boxUpdater(partial, redraw));

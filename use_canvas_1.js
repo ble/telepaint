@@ -148,6 +148,7 @@ var redraw = function() {
   pip.withContext(smallerAxes);
   pip.withContext(squiggler);
   pip.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
+  return false;
 };
 
 
@@ -172,11 +173,13 @@ var boxUpdater = function(toUpdate, after) {
       toUpdate.top = e.virtualY - ySign * height / 2;
       toUpdate.bottom = e.virtualY + ySign * height / 2; 
       if(after !== undefined) {
-        after();
+        return after();
       }
     }
   };
 };
+
+
 
 var forwardTypes = 
   [goog.events.EventType.MOUSEDOWN,
@@ -185,12 +188,41 @@ var togglerTypes =
   [goog.events.EventType.MOUSEDOWN,
    goog.events.EventType.MOUSEUP];
 canvas.forwardEvents(forwardTypes);
+canvas.addSubcanvas(main);
 canvas.addSubcanvas(pip);
-goog.events.listen(canvas.element_, togglerTypes, toggler);
+goog.events.listen(canvas.element_, goog.events.EventType.MOUSEUP, toggler);
+goog.events.listen(pip, togglerTypes, toggler);
 goog.events.listen(pip, forwardTypes, boxUpdater(partial, redraw));
 
-toggler({"type": goog.events.EventType.MOUSEDOWN});
-console.log(partial);
-boxUpdater(partial)({"virtualX": 0, "virtualY": 0});
-console.log(partial);
+
+var grabState = {"grabbed": false, "vx": NaN, "vy": NaN}
+var grabToggler = function(e) {
+  if(e.type === goog.events.EventType.MOUSEDOWN) {
+    grabState.grabbed = true;
+    grabState.vx = e.virtualX;
+    grabState.vy = e.virtualY;
+    grabState.box = new goog.math.Box(partial.top, partial.right, partial.bottom, partial.left);
+  } else if(e.type === goog.events.EventType.MOUSEUP) {
+    grabState.grabbed = false;
+    grabState.vx = grabState.vy = NaN; 
+  }
+}
+
+var grabMover = function(e) {
+  if(grabState.grabbed) {
+    var deltaX = grabState.vx - e.virtualX;
+    var deltaY = grabState.vy - e.virtualY;
+    partial.top = grabState.box.top + deltaY;
+    partial.bottom = grabState.box.bottom + deltaY;
+    partial.left = grabState.box.left + deltaX;
+    partial.right = grabState.box.right + deltaX;
+    redraw();
+    return false;
+  }
+}
+
+goog.events.listen(canvas.element_, goog.events.EventType.MOUSEUP, grabToggler);
+goog.events.listen(main, togglerTypes, grabToggler);
+goog.events.listen(main, forwardTypes, grabMover);
+
 redraw();

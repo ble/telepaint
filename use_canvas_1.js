@@ -110,7 +110,7 @@ canvas.render(container);
 var fullView = new goog.math.Box(1, 1, -1, -1);
 var partial = new goog.math.Box(0.20, 0.30, -0.10, -0.10);
 
-var pipBox = new goog.math.Box(320, 160, 480, 0);
+var pipBox = new goog.math.Box(360, 120, 480, 0);
 var mainBox = new goog.math.Box(0, 640, 480, 0);
 
 var pip = new ble.scratch.Subcanvas(canvas, pipBox, fullView);
@@ -164,8 +164,6 @@ var toggler = function(e) {
 var boxUpdater = function(toUpdate, after) {
   return function(e) {
     if(isDown) {
-      console.log(e.virtualX);
-      console.log(e.virtualY);
       var width = toUpdate.right - toUpdate.left;
       var height = toUpdate.bottom - toUpdate.top;
       var xSign = toUpdate.left < toUpdate.right ? 1 : -1;
@@ -177,7 +175,6 @@ var boxUpdater = function(toUpdate, after) {
       if(after !== undefined) {
         after();
       }
-      console.log(toUpdate);
     }
   };
 };

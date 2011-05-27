@@ -88,7 +88,6 @@ var axes = function(tickSpacingPixels, lineWidthMutator, strokeStyle, tickLength
   };
 };
 
-var bigAxes = axes(40, function(x) { return x * 0.5; }, "000", 20);
 
 var sinusoid = function(offset, amplitude, frequency) {
   return function(context) {
@@ -96,10 +95,11 @@ var sinusoid = function(offset, amplitude, frequency) {
     var end = this.virtualCoords_.right;
     var step = (end - start) / 2000;
     context.beginPath();
-    context.moveTo(start, offset + amplitude * sin(frequency * start));
+    context.moveTo(start, offset + amplitude * Math.sin(frequency * start));
     for(var x = start; x <= end; x += step) {
-      context.lineTo(x, offset + amplitude * sin(frequency * x));
+      context.lineTo(x, offset + amplitude * Math.sin(frequency * x));
     }
+    context.stroke();
   };
 };
 
@@ -110,7 +110,7 @@ canvas.render(container);
 
 
 var fullView = new goog.math.Box(1, 1, -1, -1);
-var partial = new goog.math.Box(0.10, 0.15, -0.05, -0.05);
+var partial = new goog.math.Box(0.20, 0.30, -0.10, -0.10);
 
 var pipBox = new goog.math.Box(400, 80, 480, 0);
 var mainBox = new goog.math.Box(0, 640, 480, 0);
@@ -118,4 +118,38 @@ var mainBox = new goog.math.Box(0, 640, 480, 0);
 var pip = new ble.scratch.Subcanvas(canvas, pipBox, fullView);
 var main = new ble.scratch.Subcanvas(canvas, mainBox, partial);
 
-main.withContext(bigAxes);
+var bigAxes = axes(40, function(x) { return x * 0.95; }, "000", 20);
+var smallerAxes = axes(10, function(x) { return x * 0.95; }, "000", 10);
+var squiggler = sinusoid(0, 0.1, Math.PI * 2 * 5);
+
+var strokeBox = function(box, strokeStyle, lineWidthMutator) {
+  return function(context) {
+    context.save();
+    context.lineWidth = lineWidthMutator(context.lineWidth);
+    context.strokeStyle = strokeStyle;
+    context.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+    context.restore();
+  };
+};
+
+var fillBox = function(box, fillStyle) {
+  return function(context) {
+    context.save();
+    context.fillStyle = fillStyle;
+    context.fillRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+    context.restore();
+  };
+};
+
+var redraw = function() {
+  canvas.withContext(function(context) { context.clearRect(0, 0, this.width_px, this.height_px); });
+  main.withContext(bigAxes);
+  main.withContext(squiggler);
+  pip.withContext(fillBox(fullView, "fff"));
+  pip.withContext(strokeBox(fullView, "0ff", function(x) { return x * 1.5; }));
+  pip.withContext(smallerAxes);
+  pip.withContext(squiggler);
+  pip.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
+};
+
+redraw();

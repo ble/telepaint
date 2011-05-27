@@ -143,6 +143,7 @@ var redraw = function() {
   canvas.withContext(function(context) { context.clearRect(0, 0, this.width_px, this.height_px); });
   main.withContext(bigAxes);
   main.withContext(squiggler);
+  main.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
   pip.withContext(fillBox(fullView, "fff"));
   pip.withContext(strokeBox(fullView, "0ff", function(x) { return x * 1.5; }));
   pip.withContext(smallerAxes);

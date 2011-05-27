@@ -10,6 +10,7 @@ goog.provide('ble.scratch.Subcanvas');
 goog.provide('ble.scratch.DrawSurface');
 goog.provide('ble.scratch.Drawable');
 
+goog.require('goog.color');
 goog.require('goog.math.Box');
 goog.require('goog.math.Coordinate');
 goog.require('goog.math.Size');
@@ -94,7 +95,7 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
   context.scale( this.pixelToVirtualRatio.width,
                  this.pixelToVirtualRatio.height );
   context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
-  context.lineWidth *= hypot( this.pixelToVirtualRatio.width,
+  context.lineWidth /= hypot( this.pixelToVirtualRatio.width,
                               this.pixelToVirtualRatio.height);
 
   action.call(this, context);

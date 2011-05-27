@@ -150,7 +150,6 @@ var redraw = function() {
   pip.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
 };
 
-redraw();
 
 
 var isDown = false;
@@ -164,8 +163,8 @@ var toggler = function(e) {
 var boxUpdater = function(toUpdate, after) {
   return function(e) {
     if(isDown) {
-      var width = toUpdate.right - toUpdate.left;
-      var height = toUpdate.bottom - toUpdate.top;
+      var width = Math.abs(toUpdate.right - toUpdate.left);
+      var height = Math.abs(toUpdate.bottom - toUpdate.top);
       var xSign = toUpdate.left < toUpdate.right ? 1 : -1;
       var ySign = toUpdate.top < toUpdate.bottom ? 1 : -1;
       toUpdate.left = e.virtualX - xSign * width / 2;
@@ -189,3 +188,9 @@ canvas.forwardEvents(forwardTypes);
 canvas.addSubcanvas(pip);
 goog.events.listen(canvas.element_, togglerTypes, toggler);
 goog.events.listen(pip, forwardTypes, boxUpdater(partial, redraw));
+
+toggler({"type": goog.events.EventType.MOUSEDOWN});
+console.log(partial);
+boxUpdater(partial)({"virtualX": 0, "virtualY": 0});
+console.log(partial);
+redraw();

@@ -7,6 +7,8 @@
 
 goog.provide('ble.scratch.Canvas');
 goog.provide('ble.scratch.Subcanvas');
+goog.provide('ble.scratch.DrawSurface');
+goog.provide('ble.scratch.Drawable');
 
 goog.require('goog.math.Box');
 goog.require('goog.math.Coordinate');
@@ -34,6 +36,19 @@ var sizeOfBox = function(box) {
 };
 
 /**
+ * @interface
+ */
+ble.scratch.DrawSurface = function() {};
+ble.scratch.DrawSurface.prototype.withContext = function(action) {};
+
+/**
+ * @interface
+ */
+ble.scratch.Drawable = function() {};
+ble.scratch.Drawable.prototype.drawTo = function(context) {};
+
+
+/**
  * A subsection of a canvas, occupying a certain rectangular region defined
  * in pixel coordinates which may have its own virtual size.
  * @param {ble.scratch.Canvas} parentCanvas
@@ -41,6 +56,7 @@ var sizeOfBox = function(box) {
  * @param {goog.math.Box=} virtualCoords
  * @constructor
  * @extends {goog.events.EventTarget}
+ * @implements {ble.scratch.DrawSurface}
  */
 ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
   this.parentCanvas_ = parentCanvas;
@@ -100,6 +116,7 @@ ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
  * @param {number} height_px
  * @constructor
  * @extends {goog.ui.Component}
+ * @implements {ble.scratch.DrawSurface}
  */
 ble.scratch.Canvas = function(width_px, height_px, width_logical, aspect_logical) {
   this.width_px = width_px;

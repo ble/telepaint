@@ -1,7 +1,7 @@
 
 
 var nearestPowerOf10 = function(x) {
-  return Math.exp( Math.round( Math.log(x) / Math.LOG10E ) * Math.LOG10E )
+  return Math.exp( Math.round( Math.log(x) / Math.LN10 ) * Math.LN10 )
 }
 
 var getTickSpacing = function(subcanvas, pixelSpacingX, pixelSpacingY) {

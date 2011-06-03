@@ -11,10 +11,10 @@ var arc = function(angle, radius) {
 
 var parts = [];
 var signs = [];
-for(var i = 0; i < 2000; i++) { 
+for(var i = 0; i < 4000; i++) { 
   var sign = i % 3 == 0 ? 1 : -1;
-  var radius = 0.0004 * i;
-  var angle = (Math.PI * sign / 3.35);
+  var radius = 0.0001 * i;
+  var angle = (Math.PI * sign / 4.498);
   var length = Math.abs(angle) * radius;
   parts.push(new ble.curves.CurvedPart(length, sign / radius));
   signs.push(sign);
@@ -25,8 +25,8 @@ var renderer = new ble.curves.Renderer(parts, [0, 0], 0);
 var coords = renderer.renderCurve();
 
 
-var pxWidth = 1920;
-var pxHeight = 1200;
+var pxWidth = 1024;
+var pxHeight = 768;
 var aspect = pxHeight / pxWidth;
 
 var domHelper = new goog.dom.DomHelper();
@@ -64,8 +64,6 @@ var renderCoords = function(lineWidthMutator, strokeStyle, parts, origin, angle,
   }
 };
 
-var id = function(x) { return x; };
-var theColor = "cdc";
 
 
 var completer = function() {
@@ -80,7 +78,11 @@ var completer = function() {
 
 
 var completer0 = completer();
-var render0 = renderCoords(id, theColor, parts, [-0.25, 0.25], 0, 10, completer0);
+
+var identity = function(x) { return x; };
+var onehalf = function(x) { return x / 2; };
+var theColor = "cdc";
+var render0 = renderCoords(onehalf, theColor, parts, [0.0, 0.0], 0, 1000, completer0);
 var id = setInterval(function() { subcanvas.withContext(render0); }, 15);
 completer0.id = id;
 /*

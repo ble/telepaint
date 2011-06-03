@@ -101,12 +101,12 @@ goog.inherits(ble.curves.CurvedPart, ble.curves.CurvaturePart);
 
 /**
  * A sharp angle in a curve
- * @param {number} degrees
+ * @param {number} angle in radians
  * @constructor
  * @extends {ble.curves.CurvaturePart}
  */
-ble.curves.Angle = function(degrees) {
-  this.deltaAngle = degrees / ble.curves.DEGREE;
+ble.curves.Angle = function(angle) {
+  this.deltaAngle = angle;
   ble.curves.CurvaturePart.call(this);
 };
 goog.inherits(ble.curves.Angle, ble.curves.CurvaturePart);

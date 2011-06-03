@@ -11,13 +11,14 @@ var arc = function(angle, radius) {
 
 var parts = [];
 var signs = [];
-for(var i = 0; i < 400; i++) { 
-  var sign = i % 3 == 0 ? 1 : -1;
-  var radius = 0.0013 * i;
-  var angle = (Math.PI * sign / 2.5);
-  var length = Math.abs(angle) * radius;
-  parts.push(new ble.curves.CurvedPart(length, sign / radius));
-  signs.push(sign);
+for(var i = 0; i < 600; i++) { 
+//  var sign = i % 3 == 0 ? 1 : -1;
+  var radius = 0.03125 * (1 * 2 * Math.floor(i / 3) + 0.5 * (i % 3));
+  var angle = Math.PI / 3;
+  var length = radius * angle;
+  parts.push(new ble.curves.CurvedPart(length, 1.0 / radius));
+  parts.push(new ble.curves.Angle(angle * 0.75));
+//  signs.push(sign);
 }
 
 
@@ -82,7 +83,7 @@ var completer0 = completer();
 var identity = function(x) { return x; };
 var times = function(y) { return function(x) { return x * y; }; };
 var theColor = "cdc";
-var render0 = renderCoords(times(5), theColor, parts, [0.0, 0.0], 0, 100000, completer0);
+var render0 = renderCoords(times(5), theColor, parts, [0.0, 0.0], 0, 100, completer0);
 completer0.id = setInterval(function() { subcanvas.withContext(render0); }, 15);
 /*
 

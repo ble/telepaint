@@ -67,10 +67,11 @@ subcanvas.withContext( render2 );
 subcanvas.withContext( render1 );
 subcanvas.withContext( render0 );
 
-/*
-var theImg = canvas.element_.toDataURL();
-var image = domHelper.createDom('img', {"src": theImg});
-var text = domHelper.createDom('div', null, theImg);
+//var theImg = canvas.element_.toDataURL();
+//var image = domHelper.createDom('img', {"src": theImg});
+//var text = domHelper.createDom('div', null, theImg);
+//var link = domHelper.createDom('a', {"href": theImg}, "clicky clicky" + theImg.length);
 //container.appendChild(image);
-container.appendChild(text);
-*/
+//container.appendChild(link);
+//container.removeChild(canvas.element_);
+//container.appendChild(text);

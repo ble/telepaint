@@ -11,13 +11,13 @@ var arc = function(angle, radius) {
 
 var parts = [];
 var signs = [];
-for(var i = 0; i < 600; i++) { 
+for(var i = 0; i < 3; i++) { 
 //  var sign = i % 3 == 0 ? 1 : -1;
-  var radius = 0.03125 * (1 * 2 * Math.floor(i / 3) + 0.5 * (i % 3));
+  var radius = 0.5;
   var angle = Math.PI / 3;
   var length = radius * angle;
   parts.push(new ble.curves.CurvedPart(length, 1.0 / radius));
-  parts.push(new ble.curves.Angle(angle * 0.75));
+  parts.push(new ble.curves.Angle(angle));
 //  signs.push(sign);
 }
 

@@ -83,8 +83,7 @@ var identity = function(x) { return x; };
 var onehalf = function(x) { return x / 2; };
 var theColor = "cdc";
 var render0 = renderCoords(onehalf, theColor, parts, [0.0, 0.0], 0, 1000, completer0);
-var id = setInterval(function() { subcanvas.withContext(render0); }, 15);
-completer0.id = id;
+completer0.id = setInterval(function() { subcanvas.withContext(render0); }, 15);
 /*
 
 var render1 = renderCoords(id, theColor, parts, [0.25,-0.25], Math.PI / 6, 1000, null);

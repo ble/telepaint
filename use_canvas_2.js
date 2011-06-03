@@ -11,10 +11,10 @@ var arc = function(angle, radius) {
 
 var parts = [];
 var signs = [];
-for(var i = 0; i < 4000; i++) { 
+for(var i = 0; i < 2000; i++) { 
   var sign = i % 3 == 0 ? 1 : -1;
-  var radius = 0.0001 * i;
-  var angle = (Math.PI * sign / 4.498);
+  var radius = 0.00025 * i;
+  var angle = (Math.PI * sign / 2.498);
   var length = Math.abs(angle) * radius;
   parts.push(new ble.curves.CurvedPart(length, sign / radius));
   signs.push(sign);

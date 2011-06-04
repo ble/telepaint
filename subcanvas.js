@@ -119,7 +119,7 @@ ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
  * @extends {goog.ui.Component}
  * @implements {ble.scratch.DrawSurface}
  */
-ble.scratch.Canvas = function(width_px, height_px, width_logical, aspect_logical) {
+ble.scratch.Canvas = function(width_px, height_px) {
   this.width_px = width_px;
   this.height_px = height_px;
   this.element_ = null;

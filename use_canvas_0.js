@@ -66,7 +66,7 @@ var normal = unit_smiley("fd2");
 var domHelper = new goog.dom.DomHelper();
 
 var body = domHelper.getElement("outermost");
-var canvas = new ble.scratch.Canvas(640, 480, 1.0);
+var canvas = new ble.scratch.Canvas(640, 480);
 canvas.render(body);
 
 var partialView = new goog.math.Box(.375, .5, -.75, -1);

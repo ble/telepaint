@@ -32,7 +32,7 @@ var aspect = pxHeight / pxWidth;
 
 var domHelper = new goog.dom.DomHelper();
 var container = domHelper.getElement("outermost");
-var canvas = new ble.scratch.Canvas(pxWidth, pxHeight, 1.0);
+var canvas = new ble.scratch.Canvas(pxWidth, pxHeight);
 canvas.render(container);
 canvas.withContext( function(context) {
   context.fillStyle = "000";

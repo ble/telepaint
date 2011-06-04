@@ -110,7 +110,7 @@ var sinusoid = function(offset, amplitude, frequency) {
 
 var domHelper = new goog.dom.DomHelper();
 var container = domHelper.getElement("outermost");
-var canvas = new ble.scratch.Canvas(640, 480, 1.0);
+var canvas = new ble.scratch.Canvas(640, 480);
 canvas.render(container);
 
 

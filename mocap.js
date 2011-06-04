@@ -82,7 +82,7 @@ ble.mocap.Replayer = function(capture, callback) {
   this.id = null;
 }
 
-ble.mocap.Replayer.prototype.delay = 50; //milliseconds
+ble.mocap.Replayer.prototype.delay = 10; //milliseconds
 
 ble.mocap.Replayer.prototype.start = function() {
   if(this.started)

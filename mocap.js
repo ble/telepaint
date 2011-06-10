@@ -14,11 +14,12 @@ goog.require('goog.events.EventType');
  * A motion-capture listener which records the location and time-after-
  * mousedown of every mousemove event after mousedown and before mouseup or
  * mouseout.
- * @param {function(Array.<number>)} callback executed on mouseup / mouseout.
+ * @param {function(Array.<number>)} callbackDone executed on mouseup / mouseout.
  * @constructor
  */
-ble.mocap.PixelMocap = function(callback) {
-  this.callback = callback;
+ble.mocap.PixelMocap = function(callbackMoved, callbackDone) {
+  this.callbackMoved = callbackMoved;
+  this.callbackDone = callbackDone;
   this.mouseState = this.UP;
   this.startTime = null;
   this.coordinates = null;
@@ -35,16 +36,19 @@ ble.mocap.PixelMocap.prototype.handler0 = function(event) {
   if(event.type == goog.events.EventType.MOUSEDOWN) {
     this.initMocap(event);
     this.mocap(event);
+    this.callbackMoved(event);
   } else if(this.mouseState == this.DOWN &&
             (event.type == goog.events.EventType.MOUSEUP ||
              event.type == goog.events.EventType.MOUSEOUT)) {
     this.mocap(event);
+    this.callbackMoved(event);
     var coords = this.coordinates.slice();
     this.terminateMocap();
-    this.callback(coords);
+    this.callbackDone(coords);
   } else if(this.mouseState == this.DOWN &&
             event.type == goog.events.EventType.MOUSEMOVE) {
     this.mocap(event);
+    this.callbackMoved(event);
   }
 }
 

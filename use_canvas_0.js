@@ -63,6 +63,18 @@ var unit_smiley = function(faceColor) {
 var zombor = unit_smiley("6f2");
 var normal = unit_smiley("fd2");
 
+var zombieDot = function(e) {
+  this.withContext(zombor);
+  var virtualCoords = [e.virtualX, e.virtualY];
+  this.withContext(function(context) {
+    context.fillStyle = "f00";
+    context.beginPath();
+    context.arc(e.virtualX, e.virtualY, 0.05, 0.0, 2.0 * Math.PI);
+    context.fill();
+  });
+  return false;
+};
+
 var domHelper = new goog.dom.DomHelper();
 
 var body = domHelper.getElement("outermost");
@@ -82,25 +94,6 @@ var subcanvases = goog.array.map( subcanvasSpec, function( spec ) {
   return new ble.scratch.Subcanvas(canvas, spec[0], spec[1]);
 });
 
-var eventTypes =
-  [goog.events.EventType.CLICK,
-   goog.events.EventType.MOUSEDOWN,
-   goog.events.EventType.MOUSEMOVE];
-
-canvas.forwardEvents(eventTypes);
-
-var zombieDot = function(e) {
-  this.withContext(zombor);
-  var virtualCoords = [e.virtualX, e.virtualY];
-  this.withContext(function(context) {
-    context.fillStyle = "f00";
-    context.beginPath();
-    context.arc(e.virtualX, e.virtualY, 0.05, 0.0, 2.0 * Math.PI);
-    context.fill();
-  });
-  return false;
-};
-
 var isDown = false;
 var toggler = function(e) {
   if(e.type === goog.events.EventType.MOUSEDOWN)
@@ -113,24 +106,20 @@ var zombieDotWhenDown = function(e) {
   if(isDown) {
     return zombieDot.call(this, e);
   }
-}
+};
 
-goog.events.listen(canvas.element_, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP], toggler);
+var eventTypes =
+  [goog.events.EventType.MOUSEDOWN,
+   goog.events.EventType.MOUSEUP,
+   goog.events.EventType.MOUSEMOVE];
+
+goog.events.listen( canvas.getElement(), eventTypes, toggler);
+goog.events.listen( canvas.getElement(), eventTypes, canvas.forwardingListener, false, canvas);
 goog.array.forEach( subcanvases, function( subcanvas ) {
-  subcanvas.withContext(normal);
-  goog.events.listen(subcanvas, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP], toggler);
-  goog.events.listen(subcanvas, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEMOVE], zombieDotWhenDown, false, subcanvas);
-/*  goog.events.listen(subcanvas, goog.events.EventType.CLICK, function(e) {
-    this.withContext(zombor);
-    console.log(e);
-    this.withContext(function(context) {
-      context.fillStyle = "f00";
-      context.beginPath();
-      context.arc(e.virtualX, e.virtualY, 0.05, 0.0, 2.0 * Math.PI);
-      context.fill();
-    });
-    return false;
-  }, false, subcanvas);*/
-  canvas.addSubcanvas(subcanvas);
+  subcanvas.withContext( normal );
+  canvas.forwardEvents( subcanvas, eventTypes );
+  goog.events.listen( subcanvas, eventTypes, subcanvas.virtualizeListener( zombieDotWhenDown ), false, subcanvas );
 });
+
+
 

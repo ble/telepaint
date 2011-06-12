@@ -48,6 +48,22 @@ ble.scratch.DrawSurface.prototype.withContext = function(action) {};
 ble.scratch.Drawable = function() {};
 ble.scratch.Drawable.prototype.drawTo = function(context) {};
 
+/**
+ * @interface
+ */
+ble.scratch.EventRegion = function() {};
+
+/**
+ * @param {goog.events.Event} event
+ * @return {boolean}
+ */
+ble.scratch.EventRegion.prototype.inRegion = function(event) {};
+
+/**
+ * @return {goog.events.EventTarget}
+ */
+ble.scratch.EventRegion.prototype.getTarget = function() {};
+
 
 /**
  * A subsection of a canvas, occupying a certain rectangular region defined
@@ -58,6 +74,7 @@ ble.scratch.Drawable.prototype.drawTo = function(context) {};
  * @constructor
  * @extends {goog.events.EventTarget}
  * @implements {ble.scratch.DrawSurface}
+ * @implements {ble.scratch.EventRegion}
  */
 ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
   this.parentCanvas_ = parentCanvas;
@@ -77,6 +94,15 @@ ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
   goog.events.EventTarget.call(this);
 };
 goog.inherits(ble.scratch.Subcanvas, goog.events.EventTarget);
+
+ble.scratch.Subcanvas.prototype.inRegion = function(event) {
+  var coord = new goog.math.Coordinate(event.offsetX, event.offsetY);
+  return this.pixelCoords_.contains(coord);
+}
+
+ble.scratch.Subcanvas.prototype.getTarget = function() {
+  return this;
+}
 
 ble.scratch.Subcanvas.prototype.withContext = function(action) {
   var context = this.parentCanvas_.getRawContext();
@@ -111,6 +137,24 @@ ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
   return transform;
 }
 
+ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
+  var affine = this.affinePixelToVirtual();
+  var pixelCoords = [event.offsetX, event.offsetY];
+  var virtualCoords = [null, null];
+  affine.transform(pixelCoords, 0, virtualCoords, 0, 1);
+  event.virtualX = virtualCoords[0];
+  event.virtualY = virtualCoords[1];
+}
+
+ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
+  var subcanvas = this;
+  return function(event) {
+    subcanvas.virtualizeEvent(event);
+    return listener.call(this, event);
+  };
+}
+
+
 /**
  * Simple canvas divisible into subcanvases.
  * @param {number} width_px
@@ -125,15 +169,10 @@ ble.scratch.Canvas = function(width_px, height_px) {
   this.element_ = null;
 
   /**
-   * Subcanvases registered to this canvas.
-   * @type {Array.<ble.scratch.Subcanvas>}
+   * Regions which will receive forwarded events
+   * @type {Object.<string,Array.<ble.scratch.EventRegion>>}
    */
-  this.subcanvases_ = [];
-
-  /**
-   * Listener object which forwards events to subcanvases
-   */
-  this.forwardingListener_ = null;
+  this.regions_ = {};
 
   var domHelper = new goog.dom.DomHelper();
   goog.ui.Component.call(this, domHelper);
@@ -142,47 +181,42 @@ ble.scratch.Canvas = function(width_px, height_px) {
 goog.inherits(ble.scratch.Canvas, goog.ui.Component);
 
 /**
- * Enable event forwarding to subcanvases for a particular event type.
+ * Specify that events of the given type(s) should be passed on to the given
+ * event region.
+ * @param {ble.scratch.EventRegion} region
+ * @param {string|Array.<string>} eventType
  */
-ble.scratch.Canvas.prototype.forwardEvents = function(type) {
-  if(this.forwardingListener_ === null) {
-    this.forwardingListener_ = function(event) {
-      var coord = new goog.math.Coordinate(event.offsetX, event.offsetY);
-      for(var i = 0; i < this.subcanvases_.length; i++) {
-        var subcanvas = this.subcanvases_[i];
-        if(subcanvas.pixelCoords_.contains(coord)) {
-          var affine = subcanvas.affinePixelToVirtual();
-          var pixelCoords = [event.offsetX, event.offsetY];
-          var virtualCoords = [null, null];
-          affine.transform(pixelCoords, 0, virtualCoords, 0, 1);
-          event.virtualX = virtualCoords[0];
-          event.virtualY = virtualCoords[1];
-          var result = subcanvas.dispatchEvent(event);
-          if(result === false) {
-            return false;
-          }
-        }
-      }
-    };
-  }
-  goog.events.listen(this.element_, type, this.forwardingListener_, false, this);
-};
 
-/**
- * Register a subcanvas
- * @param {ble.scratch.Subcanvas|Array.<ble.scratch.Subcanvas>} subcanvas
- */
-ble.scratch.Canvas.prototype.addSubcanvas = function(subcanvas) {
-  if(goog.isArray(subcanvas)) {
-    for(var i = 0; i < subcanvas.length; i++) {
-      this.addSubcanvas(subcanvas[i]);
+ble.scratch.Canvas.prototype.forwardEvents = function(region, eventType) {
+  if(goog.isArray(eventType)) {
+    for(var i = 0; i < eventType.length; i++) {
+      this.forwardEvents(region, eventType[i]);
     }
   } else {
-    this.subcanvases_.unshift(subcanvas)
+    if(!(eventType in this.regions_))
+      this.regions_[eventType] = [];
+    var regions = this.regions_[eventType];
+    for(var i = 0; i < regions.length; i++) {
+      if(regions[i] === region)
+        return;
+    }
+    regions.unshift(region);
   }
 }
 
-
+ble.scratch.Canvas.prototype.forwardingListener = function(event) {
+  var regions = this.regions_[event.type];
+  if(goog.isDef(regions)) {
+    for(var i = 0; i < regions.length; i++) {
+      var region = regions[i];
+      if(region.inRegion(event)) { 
+        var result = region.getTarget().dispatchEvent(event);
+        if(result === false)
+          break; 
+      }
+    }
+  }
+};
 
 ble.scratch.Canvas.prototype.withContext = function(action) {
   var context = this.getRawContext();

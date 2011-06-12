@@ -192,15 +192,8 @@ var boxUpdater = function(toUpdate, after) {
 var forwardTypes = 
   [goog.events.EventType.MOUSEDOWN,
    goog.events.EventType.MOUSEMOVE];
-var togglerTypes = 
-  [goog.events.EventType.MOUSEDOWN,
-   goog.events.EventType.MOUSEUP];
-canvas.forwardEvents(forwardTypes);
-canvas.addSubcanvas(main);
-canvas.addSubcanvas(pip);
-goog.events.listen(canvas.element_, goog.events.EventType.MOUSEUP, toggler);
-goog.events.listen(pip, togglerTypes, toggler);
-goog.events.listen(pip, forwardTypes, boxUpdater(partial, redraw));
+
+
 
 
 var grabState = {"grabbed": false, "vx": NaN, "vy": NaN}
@@ -230,9 +223,16 @@ var grabMover = function(e) {
     return false;
   }
 }
+goog.events.listen(canvas.getElement(), forwardTypes, canvas.forwardingListener, false, canvas);
+goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, toggler);
+goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, grabToggler);
+goog.events.listen(pip, forwardTypes, toggler);
+goog.events.listen(pip, forwardTypes, pip.virtualizeListener(boxUpdater(partial, redraw)));
 
-goog.events.listen(canvas.element_, goog.events.EventType.MOUSEUP, grabToggler);
-goog.events.listen(main, togglerTypes, grabToggler);
+goog.events.listen(main, forwardTypes, grabToggler);
 goog.events.listen(main, forwardTypes, grabMover);
+
+canvas.forwardEvents(main, forwardTypes);
+canvas.forwardEvents(pip, forwardTypes);
 
 redraw();

@@ -3,6 +3,7 @@ goog.require('ble.mocap.Stroke');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 
+var delay = 10;
 var pxWidth = 640;
 var pxHeight = 480;
 var aspect = pxHeight / pxWidth;
@@ -16,6 +17,22 @@ var link = domHelper.createElement("a");
 link.setAttribute("href", "javascript:replayAll()");
 link.appendChild(domHelper.createTextNode("replay all"));
 container.appendChild(link);
+
+var dehydrate = function() {
+  var tmp = scene.complete;
+  scene.complete = [];
+  canvas.withContext(redrawPolyline);
+  return JSON.stringify(tmp);
+}
+
+var rehydrate = function(spaceIceCream) {
+  var objs = JSON.parse(spaceIceCream);
+  scene.complete = [];
+  for(var i = 0; i < objs.length; i++) {
+    scene.complete.push(ble.mocap.Capture.blessJSONObject(objs[i]));
+  }
+  canvas.withContext(redrawPolyline);
+}
 
 
 var replayAll = function() {
@@ -32,23 +49,7 @@ var replayAll = function() {
     scene.startTimes.push(startTime);
   scene.beingDrawn = null;
   scene.beingReplayed = toReplay;
-  update();
-}
-
-var dehydrate = function() {
-  var tmp = scene.complete;
-  scene.complete = [];
-  canvas.withContext(redraw);
-  return JSON.stringify(tmp);
-}
-
-var rehydrate = function(spaceIceCream) {
-  var objs = JSON.parse(spaceIceCream);
-  scene.complete = [];
-  for(var i = 0; i < objs.length; i++) {
-    scene.complete.push(ble.mocap.Capture.blessJSONObject(objs[i]));
-  }
-  canvas.withContext(redraw);
+  polylineUpdate();
 }
 
 
@@ -79,69 +80,90 @@ var strokeCoordsWithin = function(ctx, coords, start, last) {
   for(var i = start+1; i <= last; i++)
     ctx.lineTo(coords[2*i], coords[2*i+1]);
   ctx.stroke();
-}
+};
 
+var polylineUntil = function(ctx, coords, control, lastCoord, lastControl) {
+  var controlPoints = [];
+  for(var i = 0; i <= lastControl; i++) {
+    var controlIx = control[i];
+    controlPoints.push(coords[controlIx * 2], coords[controlIx * 2 + 1]);
+  }
+  controlPoints.push(coords[lastCoord * 2], coords[lastCoord * 2 + 1]);
+  ctx.beginPath();
+  ctx.moveTo(controlPoints[0], controlPoints[1]);
+  for(var i = 1; i < controlPoints.length / 2; i++) {
+    ctx.lineTo(controlPoints[2 * i], controlPoints[2 * i + 1]);
+  }
+  ctx.stroke();
+};
 
-//Redraw strokes at various stages of progress
-var redraw = function(ctx) {
+var polyline = function(ctx, coords, control) {
+  if(coords.length < 2 || control.length < 1) return;
+  var controlPoints = [];
+  for(var i = 0; i < control.length; i++) {
+    controlPoints.push(coords[control[i] * 2], coords[control[i] * 2 + 1]);
+  }
+  controlPoints.push(coords[coords.length - 2], coords[coords.length - 1]);
+  strokeCoords(ctx, controlPoints);
+};
+
+var redrawPolyline = function(ctx) {
   var now = Date.now();
   ctx.clearRect(0, 0, pxWidth, pxHeight);
   if(!goog.isNull(scene.beingDrawn)) {
-    strokeCoords(ctx, scene.beingDrawn.coordinates);
+    polyline(ctx, scene.beingDrawn.coordinates, scene.beingDrawn.controlTimeIndices);
   }
   for(var i = 0; i < scene.complete.length; i++) {
-    strokeCoords(ctx, scene.complete[i].coordinates);
+    polyline(ctx, scene.complete[i].coordinates, scene.complete[i].controlTimeIndices)
   }
   if(!goog.isNull(scene.beingReplayed)) {
-    var replayRemaining = [];
-    var startTimeRemaining = [];
+    var replayContinue = [];
+    var startContinue = [];
     while(scene.beingReplayed.length > 0) {
       var replay = scene.beingReplayed.pop();
       var startTime = scene.startTimes.pop();
       var timeDelta = now - startTime;
       var indices = replay.betweenTimes(0, timeDelta);
-      strokeCoordsWithin(ctx, replay.coordinates, indices[0], indices[1]);
+      polylineUntil(ctx, replay.coordinates, replay.controlTimeIndices, indices[1], indices[3]);
+      console.log(indices);
       var lastTime = replay.times[replay.times.length - 1];
       if(timeDelta <= lastTime) {
-        replayRemaining.unshift(replay);
-        startTimeRemaining.unshift(startTime);
+        replayContinue.push(replay);
+        startContinue.push(startTime);
       } else {
         scene.complete.unshift(replay);
       }
     }
-    if(replayRemaining.length > 0) {
-      scene.beingReplayed = replayRemaining;
-      scene.startTimes = startTimeRemaining;
+    if(replayContinue.length > 0) {
+      scene.beingReplayed = replayContinue;
+      scene.startTimes = startContinue;
     } else {
       scene.beingReplayed = null;
       scene.startTimes = null;
     }
   }
-}
+};
 
-var delay = 10;
-
-var scheduleUpdate = function() {
-  return window.setTimeout(update, delay);
-}
-var update = function() {
-  canvas.withContext(redraw);
+var polylineUpdate = function() {
+  canvas.withContext(redrawPolyline);
   if(!goog.isNull(scene.beingReplayed)) {
-    scheduleUpdate();
+    schedulePolylineUpdate();
   }
-}
+};
 
+var schedulePolylineUpdate = function() {
+  return window.setTimeout(polylineUpdate, delay);
+};
 
-var mocapHandler = new goog.events.EventTarget();
+var polylineHandler = new goog.events.EventTarget();
 
-mocapHandler.handler0 = function(event) {
+polylineHandler.handler0 = function(event) {
   if(event.type == ble.mocap.EventType.BEGIN) {
     scene.beingDrawn = event.capture;
-    canvas.withContext(redraw);
   } else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
-    canvas.withContext(redraw);
-  } else if(event.type == ble.mocap.EventType.END) {
+    canvas.withContext(redrawPolyline);
+  } else if(event.type = ble.mocap.EventType.END) {
     scene.beingDrawn = null;
     if(goog.isNull(scene.beingReplayed)) {
       scene.beingReplayed = [];
@@ -149,20 +171,20 @@ mocapHandler.handler0 = function(event) {
     }
     scene.beingReplayed.push(event.capture);
     scene.startTimes.push(Date.now() - 50);
-    update();
+    polylineUpdate();
   }
 };
 
-var motionCapture = new ble.mocap.Stroke();
+var polylineCapture = new ble.mocap.Polyline(true);
 goog.events.listen(
     canvas.getElement(),
-    motionCapture.eventTypesOfInterest,
-    motionCapture.forwardingListener,
+    polylineCapture.eventTypesOfInterest,
+    polylineCapture.forwardingListener,
     false,
-    motionCapture);
+    polylineCapture);
 
-motionCapture.addTarget(mocapHandler, ble.mocap.EventType.ALL);
+polylineCapture.addTarget(polylineHandler, ble.mocap.EventType.ALL);
 goog.events.listen(
-    mocapHandler,
+    polylineHandler,
     ble.mocap.EventType.ALL,
-    mocapHandler.handler0);
+    polylineHandler.handler0);

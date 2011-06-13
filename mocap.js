@@ -3,6 +3,7 @@
 goog.provide('ble.mocap.Mocap');
 goog.provide('ble.mocap.Replayer');
 goog.provide('ble.mocap.EventType');
+goog.provide('ble.mocap.Capture');
 
 goog.require('goog.events');
 goog.require('goog.events.EventType');
@@ -38,6 +39,19 @@ ble.mocap.Capture = function(startTime) {
   this.times = [];
   this.controlTimeIndices = [];
   this.controlPoints = [];
+}
+
+ble.mocap.Capture.blessJSONObject = function(obj) {
+  var result = new ble.mocap.Capture(obj.startTime);
+  result.coordinates = obj.coordinates;
+  result.times = obj.times;
+  result.controlTimeIndices = obj.controlTimeIndices;
+  result.controlPoints = obj.controlPoints;
+  delete obj.coordinates;
+  delete obj.times;
+  delete obj.controlTimeIndices;
+  delete obj.controlPoints;
+  return result;
 }
 
 /**
@@ -115,7 +129,7 @@ ble.mocap.Mocap = function() {
   this.capture = null;
   /**
    * Targets which will receive mocap events.
-   * @type {Object.<string,Array.<goog.events.EventTarget>}
+   * @type {Object.<string,Array.<goog.events.EventTarget>>}
    */
   this.targets = {};
 }
@@ -213,3 +227,43 @@ ble.mocap.Stroke.prototype.eventTypesOfInterest =
    goog.events.EventType.MOUSEMOVE,
    goog.events.EventType.MOUSEUP,
    goog.events.EventType.MOUSEOUT];
+
+/**
+ * Polyline motion capture: capture begins on click, optionally progresses
+ * with mousemove, control points on subsequent clicks, ends on dblclick.
+ * @param {boolean?} captureMove
+ * @constructor
+ * @extends {ble.mocap.Mocap}
+ */
+ble.mocap.Polyline = function(captureMove) {
+  ble.mocap.Mocap.call(this);
+  this.drawing = false;
+  this.captureMove = captureMove;
+  this.eventTypesOfInterest = this.eventTypesOfInterest0();
+};
+goog.inherits(ble.mocap.Polyline, ble.mocap.Mocap);
+
+ble.mocap.Polyline.prototype.eventTypesOfInterest0 = function() {
+  var types = [goog.events.EventType.CLICK, goog.events.EventType.DBLCLICK];
+  if(this.captureMove)
+    types.push(goog.events.EventType.MOUSEMOVE);
+  return types;
+};
+
+ble.mocap.Polyline.prototype.forwardingListener = function(event) {
+  if(this.drawing) {
+    if(this.captureMove && event.type == goog.events.EventType.MOUSEMOVE) {
+      this.progressCapture(event);
+    } else if(event.type == goog.events.EventType.CLICK) {
+      this.controlCapture(event, null);
+    } else if(event.type == goog.events.EventType.DBLCLICK) {
+      this.controlCapture(event, null);
+      this.endCapture(event);
+      this.drawing = false;
+    }
+  } else if(event.type == goog.events.EventType.CLICK) {
+    this.drawing = true;
+    this.beginCapture(event);
+    this.controlCapture(event, null);
+  }
+}

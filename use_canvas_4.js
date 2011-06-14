@@ -52,6 +52,8 @@ var replayAll = function() {
   polylineUpdate();
 }
 
+=======
+>>>>>>> 053f6ddb993d06a9143a42a411f167091c541bf3
 
 //Scene graph
 var scene = {
@@ -153,38 +155,4 @@ var polylineUpdate = function() {
 
 var schedulePolylineUpdate = function() {
   return window.setTimeout(polylineUpdate, delay);
-};
-
-var polylineHandler = new goog.events.EventTarget();
-
-polylineHandler.handler0 = function(event) {
-  if(event.type == ble.mocap.EventType.BEGIN) {
-    scene.beingDrawn = event.capture;
-  } else if(event.type == ble.mocap.EventType.PROGRESS ||
-            event.type == ble.mocap.EventType.CONTROLPOINT) {
-    canvas.withContext(redrawPolyline);
-  } else if(event.type = ble.mocap.EventType.END) {
-    scene.beingDrawn = null;
-    if(goog.isNull(scene.beingReplayed)) {
-      scene.beingReplayed = [];
-      scene.startTimes = [];
-    }
-    scene.beingReplayed.push(event.capture);
-    scene.startTimes.push(Date.now() - 50);
-    polylineUpdate();
-  }
-};
-
-var polylineCapture = new ble.mocap.Polyline(true);
-goog.events.listen(
-    canvas.getElement(),
-    polylineCapture.eventTypesOfInterest,
-    polylineCapture.forwardingListener,
-    false,
-    polylineCapture);
-
-polylineCapture.addTarget(polylineHandler, ble.mocap.EventType.ALL);
-goog.events.listen(
-    polylineHandler,
-    ble.mocap.EventType.ALL,
-    polylineHandler.handler0);
+}

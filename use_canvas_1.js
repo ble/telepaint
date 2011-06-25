@@ -187,6 +187,31 @@ var boxUpdater = function(toUpdate, after) {
   };
 };
 
+var boxScaler = function(toUpdate, after) {
+  return function(e) {
+      var width = Math.abs(toUpdate.right - toUpdate.left);
+      var height = Math.abs(toUpdate.bottom - toUpdate.top);
+      var xSign = toUpdate.left < toUpdate.right ? 1 : -1;
+      var ySign = toUpdate.top < toUpdate.bottom ? 1 : -1;
+      var centerX = (toUpdate.right + toUpdate.left) / 2;
+      var centerY = (toUpdate.bottom + toUpdate.top) / 2;
+      if(e.detail > 0) {
+        width *= 1.25;
+        height *= 1.25;
+      }
+      else if(e.detail < 0) {
+        width *= 0.8;
+        height *= 0.8;
+      }
+      toUpdate.left = centerX - xSign * width / 2;
+      toUpdate.right = centerX + xSign * width / 2;
+      toUpdate.top = centerY - ySign * height / 2;
+      toUpdate.bottom = centerY + ySign * height / 2; 
+      if(after !== undefined) {
+        return after();
+      };
+  };
+};
 
 
 var forwardTypes = 
@@ -228,6 +253,9 @@ goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, toggler);
 goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, grabToggler);
 goog.events.listen(pip, forwardTypes, toggler);
 goog.events.listen(pip, forwardTypes, pip.virtualizeListener(boxUpdater(partial, redraw)));
+
+var mwheel = new goog.events.MouseWheelHandler(canvas.getElement());
+goog.events.listen(mwheel, goog.events.MouseWheelHandler.EventType.MOUSEWHEEL, boxScaler(partial, redraw));
 
 goog.events.listen(main, forwardTypes, grabToggler);
 goog.events.listen(main, forwardTypes, grabMover);

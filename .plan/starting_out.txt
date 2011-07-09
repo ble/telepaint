@@ -1,8 +1,8 @@
 x Describe the general idea of the project.
 
-o Create user story explaining generally how the app will be used.
+x Create user story explaining generally how the app will be used.
 
-o Add details to the user story to make it abundantly clear how interaction
+x Add details to the user story to make it abundantly clear how interaction
   will be structured.  Err on the side of something concrete, usable, and
   quickly implemented.
 

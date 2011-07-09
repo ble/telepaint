@@ -13,6 +13,10 @@ x Define the details of what requests will be made to the server, when,
 
 x Stub out the GET and POST requests in the web server.
 
+o Define the cookie setting and requirements for the different requests.
+
+o Do an experiment with chunked responses.
+
 o Form a general idea of how the server will be implemented; a general outline
   of the interaction of http server component, mural/game creation service,
   mural FSM, player FSM, how they service the various necessary requests.

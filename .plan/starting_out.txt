@@ -6,7 +6,7 @@ x Add details to the user story to make it abundantly clear how interaction
   will be structured.  Err on the side of something concrete, usable, and
   quickly implemented.
 
-o Describe the interactions possible in the browser-client.
+x Describe the interactions possible in the client.
 
 o Define the details of what requests will be made to the server, when,
   transmitting what, etc.

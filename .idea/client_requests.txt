@@ -1,0 +1,43 @@
+OMG chunked responses are so sexy.
+
+It's unclear how well they will work with the httpc module and/or the XHR
+interface, but I want 'em.  It's also unclear whether they can tell if the
+browser is still actually listening to the response...
+
+
+Okay,
+
+Creator:
+GET persistent chunked-response request (should it ever error or complete,
+start it again with a little time delay)
+POST image URL
+{chunk-back} server URL of the appropriate image OR
+             some manner of error indicating that the given url is bunk
+POST tile size in pixels, # of rows and columns
+{chunk-back} ok, URLs for participants and observers OR
+             error, your tile sizes are jacked bro try again
+Long period of chilling out while the following occur:
+[{chunk-back} somebody chats something OR
+             somebody starts observing OR
+             a participant picks a name OR
+             a participant draws a stroke,
+ POST chat message]
+POST "it's done!"
+{chunk-back} ok; here's the URL you should go to to view this lovely mural now
+that it's done!
+
+Participant:
+GET persistent chunked-response request
+{chunk-back} mural image URL (on mural server)
+             all strokes up to the current time
+POST the name (pseudonym, really) of this participant
+{chunk-back} okay, your pseudonym looks legit to me
+POST each stroke as it is drawn by the participant on the canvas
+POST chat message
+{chunk-back} each stroke as it is drawn by other participants on the canvas OR
+             chat messages OR
+             creator calling the mural done
+
+Observer:
+Same as the participant, only no posting strokes.
+

@@ -2,3 +2,5 @@
   for entirely too long. :(
 
 x make a basic mochiweb server with rebar on hand.
+
+o add handlers for the various get and post URLs previously described.

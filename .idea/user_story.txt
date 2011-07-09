@@ -1,0 +1,23 @@
+User authorized to start games goes to game creation URL.
+
+User provides an image that will form the basis of the mural.
+
+User determines the number of rows and columns the mural will be broken into.
+
+User is given a URL or URLs to distribute to potential participants.
+
+Participants are assigned to a chunk of the mural either automatically or
+through the actions of the mural creator.
+
+Participants begin drawing.  Their individual strokes are transmitted to the
+server and timestamped so that the drawing may be replayed.
+
+A participant may release a part of a mural or be booted from it; they may
+call their portion done, or they may fail to be connected to the server for an
+extended period of time, or the mural creator may boot them.
+
+The mural creator can call the mural done.  Now the drawings on all the tiles
+are rendered to canvas, transmitted back to server as images, stored for all
+time.  The strokes and their timing are also stored.
+
+People can view completed murals.

@@ -22,12 +22,36 @@ stop() ->
 
 loop(Req, DocRoot) ->
     "/" ++ Path = Req:get(path),
+    PathParts = string:tokens(Path, "/"),
+    HtmlHeader = {"content-type", "text/html"},
+    TextHeader = {"content-type", "text/plain"},
+    JsonHeader = {"content-type", "text/json"},
+    RespondText = fun(Text) ->
+      Req:respond({200, [TextHeader], Text}) end,
     try
         case Req:get(method) of
             Method when Method =:= 'GET'; Method =:= 'HEAD' ->
-                case Path of
-                    _ ->
-                        Req:serve_file(Path, DocRoot)
+                case PathParts of
+                  ["make_mural", MuralShortName] ->
+                    Req:respond({200,
+                                 [TextHeader],
+                                 MuralShortName});
+                  ["murals", MuralName] ->
+                    RespondText(["observer, ", MuralName]);
+                  ["murals", MuralName, "connect"] ->
+                    RespondText(["observer, connect, ", MuralName]);
+                  ["murals", MuralName, "reconnect"] ->
+                    RespondText(["observer, reconnect, ", MuralName]);
+                  ["murals", MuralName, UserId | Rest] ->
+                    Prefix = [MuralName, ", ", UserId],
+                    case Rest of
+                      [] -> RespondText(Prefix);
+                      ["connect"] -> RespondText([Prefix, ", connect"]);
+                      ["reconnect"] -> RespondText([Prefix, ", reconnect"]);
+                      _ -> Req:not_found()
+                    end;
+                  _ ->
+                      Req:serve_file(Path, DocRoot)
                 end;
             'POST' ->
                 case Path of
@@ -37,6 +61,21 @@ loop(Req, DocRoot) ->
             _ ->
                 Req:respond({501, [], []})
         end
+
+%        case Req:get(method) of
+%            Method when Method =:= 'GET'; Method =:= 'HEAD' ->
+%                case PathParts of
+%                    _ ->
+%                        Req:serve_file(Path, DocRoot)
+%                end;
+%            'POST' ->
+%                case Path of
+%                    _ ->
+%                        Req:not_found()
+%                end;
+%            _ ->
+%                Req:respond({501, [], []})
+%        end
     catch
         Type:What ->
             Report = ["web request failed",

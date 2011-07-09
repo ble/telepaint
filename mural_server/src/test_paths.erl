@@ -1,35 +1,30 @@
 
 -module(test_paths).
--export([run_test/0, test_paths/1]).
-
-run_test() ->
+-export([run_test/1, test_paths/1]).
+run_test(get) ->
   MuralName = "HorseComWebDotBiz",
-  {{get, GetPaths}, {post, PostPaths}} = test_paths(MuralName),
+  {{get, GetPaths}, {post, _PostPaths}} = test_paths(MuralName),
   GetUrls = [base() ++ GetPath || GetPath <- GetPaths],
-  PostUrls = [base() ++ PostPath || PostPath <- PostPaths],
   Gets = [httpc:request(GetUrl) ||
     GetUrl <- GetUrls],
-  Posts = [httpc:request(post, {PostUrl, []}, [], []) ||
+  [io:format("~p~n", [Item]) ||
+    Item <- Gets],
+  ok;
+
+run_test(post) ->
+  MuralName = "HorseComWebDotBiz",
+  {{get, _GetPaths}, {post, PostPaths}} = test_paths(MuralName),
+  PostUrls = [base() ++ PostPath || PostPath <- PostPaths],
+  Posts = [
+    begin
+      timer:sleep(50),
+      httpc:request(post, {PostUrl, [], "text/json", "'hi'"}, [], [])
+    end
+      ||
     PostUrl <- PostUrls],
-%    Result <- 
-%  [_Foo ||
-%    Item <- Gets ++ Posts,
-%    _Foo <- io:format("~p~n", Item)],
+  [io:format("~p~n", [Item]) ||
+    Item <- Posts],
   ok.
-%  GetResults =
-%    [httpc:request(Url) ||
-%      Path <- GetPaths,
-%      Url <- base() ++ Path,
-%      _ <- io:format("GET: ~p~n", [Url])],
-%  PostResults =
-%    [httpc:request(post, {Url, []}, [], []) ||
-%      Path <- PostPaths,
-%      Url <- base() ++ Path,
-%      _ <- io:format("POST: ~p~n", [Url])],
-%  Results =
-%    [Result ||
-%      {ok, Result} <- GetResults ++ PostResults],
-%  Results.
 
 base() ->
   "http://127.0.0.1:8080".
@@ -42,25 +37,25 @@ test_paths(MuralName) ->
   [Prefix ++ "/" ++ MuralName ++ Suffix ||
    {Prefix, Suffix} <- [
      {"/make_mural", ""},
-     {"", MuralHash ++ "/" ++ CreatorHash},
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/connect"},
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/reconnect"},
-     {"", MuralHash ++ "/" ++ ParticipantHash},
-     {"", MuralHash ++ "/" ++ ParticipantHash ++ "/connect"},
-     {"", MuralHash ++ "/" ++ ParticipantHash ++ "/reconnect"},
-     {"", ""},
-     {"", "/connect"},
-     {"", "/reconnect"} 
+     {"/murals", MuralHash ++ "/" ++ CreatorHash},
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/connect"},
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/reconnect"},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash ++ "/connect"},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash ++ "/reconnect"},
+     {"/murals", ""},
+     {"/murals", "/connect"},
+     {"/murals", "/reconnect"} 
    ]],
   PostURLs =
   [Prefix ++ "/" ++ MuralName ++ Suffix ||
     {Prefix, Suffix} <- [
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/choose_image"},
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/tile_size"},
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/chat"},
-     {"", MuralHash ++ "/" ++ CreatorHash ++ "/mural_done"},
-     {"", MuralHash ++ "/" ++ ParticipantHash ++ "/name"},
-     {"", MuralHash ++ "/" ++ ParticipantHash ++ "/chat"},
-     {"", MuralHash ++ "/" ++ ParticipantHash ++ "/stroke"}
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/choose_image"},
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/tile_size"},
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/chat"},
+     {"/murals", MuralHash ++ "/" ++ CreatorHash ++ "/mural_done"},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash ++ "/name"},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash ++ "/chat"},
+     {"/murals", MuralHash ++ "/" ++ ParticipantHash ++ "/stroke"}
    ]],
   {{get, GetURLs}, {post, PostURLs}}.

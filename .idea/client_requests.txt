@@ -45,18 +45,18 @@ Same as the participant, only no posting strokes.
 URLs:
 for creator:
 "secret" mural creation URL -> cookie + redirect to unique URL
-(cookie active for path /$mural_name2)
+(cookie active for path /murals/$mural_name2)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/make_mural/{$mural_name =~ [a-zA-Z0-9_]}
+/make_mural/{murals/$mural_name =~ [a-zA-Z0-9_]}
 
 unique creation URL -> client code for creation
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/{$mural_name2 == $mural_name + time}/{$creator == some hash of the time, the mural name, and something else too}
+/{murals/$mural_name2 == murals/$mural_name + time}/{$creator == some hash of the time, the mural name, and something else too}
 
 mural creation chunkback URL -> the aforementioned stream of messages
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name2/$creator/connect    and
-/$mural_name2/$creator/reconnect
+/murals/$mural_name2/$creator/connect    and
+/murals/$mural_name2/$creator/reconnect
 
 
 post image URL -> server acknowledge or error
@@ -64,29 +64,29 @@ post tile size -> server acknowledge or error
 post chat messages -> server acknowledge or error
 post mural done -> display completed URL
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name2/$creator/(choose_image|tile_size|chat|mural_done)
+/murals/$mural_name2/$creator/(choose_image|tile_size|chat|mural_done)
 
 
 for participant:
 unique edit mural chunk URL -> cookie + client code for participation
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name/{$participant == "chunk_" + some hash}
+/murals/$mural_name2/{$participant == "chunk_" + some hash}
 
 mural participant chunkback URL -> the aforementioned stream of messages
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name/$participant/(connect|reconnect)
+/murals/$mural_name2/$participant/(connect|reconnect)
 
 POST "hi, my name is"
 POST stroke
 POST chat message
-/$mural_name/$participant/(name|stroke|chat)
+/murals/$mural_name2/$participant/(name|stroke|chat)
 
 
 for observer:
 mural URL -> client code for observation
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name
+/murals/$mural_name2
 
 mural observer chunkback URL -> aforementioned stream of messages.
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/$mural_name/(connect|reconnect)
+/murals/$mural_name2/(connect|reconnect)

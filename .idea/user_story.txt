@@ -27,6 +27,8 @@ server and timestamped so that the drawing may be replayed.
 
 
 %{ NOPE NOT DOING THIS MAKES THINGS TOO COMPLICATED FOR A SHORT TIME
+% ALTHOUGH GOD KNOWS TO MAKE A REASONABLE GAME THAT CANNOT BE TROLLED TOO
+% TERRIBLY THIS WOULD BE AN UTTER NECESSITY
 A participant may release a part of a mural or be booted from it; they may
 call their portion done, or they may fail to be connected to the server for an
 extended period of time, or the mural creator may boot them.

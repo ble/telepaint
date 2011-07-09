@@ -11,6 +11,8 @@ x Describe the interactions possible in the client.
 x Define the details of what requests will be made to the server, when,
   transmitting what, etc.
 
+x Stub out the GET and POST requests in the web server.
+
 o Form a general idea of how the server will be implemented; a general outline
   of the interaction of http server component, mural/game creation service,
   mural FSM, player FSM, how they service the various necessary requests.

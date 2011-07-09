@@ -12,6 +12,7 @@
 
 start(Options) ->
     {DocRoot, Options1} = get_option(docroot, Options),
+    io:format("OPTIONS ARE ~p ~n", [Options1]),
     Loop = fun (Req) ->
                    ?MODULE:loop(Req, DocRoot)
            end,
@@ -23,19 +24,18 @@ stop() ->
 loop(Req, DocRoot) ->
     "/" ++ Path = Req:get(path),
     PathParts = string:tokens(Path, "/"),
+    ServerQuip = {"Server", "Mural on Mochiweb(\"Such is Mango!\")"},
     HtmlHeader = {"content-type", "text/html"},
     TextHeader = {"content-type", "text/plain"},
     JsonHeader = {"content-type", "text/json"},
     RespondText = fun(Text) ->
-      Req:respond({200, [TextHeader], Text}) end,
+      Req:respond({200, [ServerQuip, TextHeader], Text}) end,
     try
         case Req:get(method) of
             Method when Method =:= 'GET'; Method =:= 'HEAD' ->
                 case PathParts of
                   ["make_mural", MuralShortName] ->
-                    Req:respond({200,
-                                 [TextHeader],
-                                 MuralShortName});
+                    RespondText(MuralShortName);
                   ["murals", MuralName] ->
                     RespondText(["observer, ", MuralName]);
                   ["murals", MuralName, "connect"] ->
@@ -48,18 +48,29 @@ loop(Req, DocRoot) ->
                       [] -> RespondText(Prefix);
                       ["connect"] -> RespondText([Prefix, ", connect"]);
                       ["reconnect"] -> RespondText([Prefix, ", reconnect"]);
-                      _ -> Req:not_found()
+                      _ -> Req:not_found([ServerQuip])
                     end;
                   _ ->
-                      Req:serve_file(Path, DocRoot)
+                      Req:serve_file(Path, DocRoot, [ServerQuip])
                 end;
             'POST' ->
-                case Path of
+                case PathParts of
+                  ["murals", MuralName, UserId, RpcMethod] ->
+                    Prefix = [UserId, " on ", MuralName, " ", RpcMethod],
+                    case RpcMethod of
+                      "choose_image" -> RespondText(Prefix);
+                      "tile_size" -> RespondText(Prefix);
+                      "chat" -> RespondText(Prefix);
+                      "mural_done" -> RespondText(Prefix);
+                      "name" -> RespondText(Prefix);
+                      "stroke" -> RespondText(Prefix);
+                      _ -> Req:not_found([ServerQuip])
+                    end;
                     _ ->
-                        Req:not_found()
+                        Req:not_found([ServerQuip])
                 end;
             _ ->
-                Req:respond({501, [], []})
+                Req:respond({501, [ServerQuip], []})
         end
 
 %        case Req:get(method) of

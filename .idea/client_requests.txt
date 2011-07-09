@@ -70,7 +70,7 @@ post mural done -> display completed URL
 for participant:
 unique edit mural chunk URL -> cookie + client code for participation
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/murals/$mural_name2/{$participant == "chunk_" + some hash}
+/murals/$mural_name2/{$participant == some hash}
 
 mural participant chunkback URL -> the aforementioned stream of messages
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

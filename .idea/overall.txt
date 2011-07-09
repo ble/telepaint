@@ -15,6 +15,7 @@ code, taking advantage of Erlang's capabilities for launching a bazumptillion
 processes.
 
 Goal:
-Write some stuff that works, have fun.  Accept that any amount of progress is
-pretty stunning given that you will be spending most of this weekend with your
-lovely S.O., who for some reason tolerates your madness. :)
+Write some stuff that works, have fun.
+Accept that 5 hours out of 48 have passed and you won't write any code until
+you've slept, woken up, and eaten.
+Try to enjoy the process of planning this stuff.

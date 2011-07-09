@@ -1,10 +1,10 @@
-%% @author Mochi Media <dev@mochimedia.com>
-%% @copyright 2010 Mochi Media <dev@mochimedia.com>
+%% @author Ben Ellis <benjaminster@gmail.com>
+%% @copyright 2010 Ben Ellis <benjaminster@gmail.com>
 
 %% @doc Supervisor for the mural_server application.
 
 -module(mural_server_sup).
--author("Mochi Media <dev@mochimedia.com>").
+-author("Ben Ellis <benjaminster@gmail.com>").
 
 -behaviour(supervisor).
 

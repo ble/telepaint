@@ -1,10 +1,10 @@
-%% @author Mochi Media <dev@mochimedia.com>
-%% @copyright 2010 Mochi Media <dev@mochimedia.com>
+%% @author Ben Ellis <benjaminster@gmail.com>
+%% @copyright 2010 Ben Ellis <benjaminster@gmail.com>
 
 %% @doc Web server for mural_server.
 
 -module(mural_server_web).
--author("Mochi Media <dev@mochimedia.com>").
+-author("Ben Ellis <benjaminster@gmail.com>").
 
 -export([start/1, stop/0, loop/2]).
 

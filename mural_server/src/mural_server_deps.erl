@@ -1,12 +1,12 @@
-%% @author Mochi Media <dev@mochimedia.com>
-%% @copyright 2010 Mochi Media <dev@mochimedia.com>
+%% @author Ben Ellis <benjaminster@gmail.com>
+%% @copyright 2010 Ben Ellis <benjaminster@gmail.com>
 
 %% @doc Ensure that the relatively-installed dependencies are on the code
 %%      loading path, and locate resources relative
 %%      to this application's path.
 
 -module(mural_server_deps).
--author("Mochi Media <dev@mochimedia.com>").
+-author("Ben Ellis <benjaminster@gmail.com>").
 
 -export([ensure/0, ensure/1]).
 -export([get_base_dir/0, get_base_dir/1]).

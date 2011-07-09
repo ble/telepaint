@@ -1,10 +1,10 @@
-%% @author Mochi Media <dev@mochimedia.com>
-%% @copyright mural_server Mochi Media <dev@mochimedia.com>
+%% @author Ben Ellis <benjaminster@gmail.com>
+%% @copyright Ben Ellis <benjaminster@gmail.com>
 
 %% @doc Callbacks for the mural_server application.
 
 -module(mural_server_app).
--author("Mochi Media <dev@mochimedia.com>").
+-author("Ben Ellis <benjaminster@gmail.com>").
 
 -behaviour(application).
 -export([start/2,stop/1]).

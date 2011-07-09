@@ -1,0 +1,9 @@
+%% -*- erlang -*-
+{application, mural_server,
+ [{description, "mural_server"},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, []},
+  {mod, {'mural_server_app', []}},
+  {env, []},
+  {applications, [kernel, stdlib, crypto]}]}.

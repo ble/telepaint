@@ -1,7 +1,19 @@
 -module(mural_db).
 
--export([create_db_tables/1]).
+-export([do_once/1, create_db_tables/1, start/0, stop/0]).
 -include("records.hrl").
+
+start() ->
+  mnesia:start().
+
+stop() ->
+  mnesia:stop().
+
+do_once(Nodes) ->
+  mnesia:stop(),
+  mnesia:create_schema(Nodes),
+  mnesia:start(),
+  create_db_tables(Nodes).
 
 create_db_tables(Nodes) ->
   Tables = [

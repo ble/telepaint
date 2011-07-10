@@ -21,7 +21,7 @@ x Define the cookie setting and requirements for the different requests.
 
 x Outline the mnesia tables that will be used
 
-o Learn mnesia, implement the tables
+x Learn mnesia, implement the tables
 
 o Describe how the server will be implemented in terms of mnesia tables and
   chunked responses.

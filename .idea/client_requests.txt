@@ -47,7 +47,7 @@ for creator:
 "secret" mural creation URL -> cookie + redirect to unique URL
 (cookie active for path /murals/$mural_name2)
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/make_mural/{murals/$mural_name =~ [a-zA-Z0-9_]}
+/make_mural/{$mural_name =~ [a-zA-Z0-9_]}
 
 unique creation URL -> client code for creation
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

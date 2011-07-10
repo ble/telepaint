@@ -31,20 +31,44 @@ loop(Req, DocRoot) ->
     JsonHeader = {"content-type", "text/json"},
     RespondText = fun(Text) ->
       Req:respond({200, [ServerQuip, TextHeader], Text}) end,
+    RespondError = fun(Text) ->
+      Req:respond(
+        {500,
+         [ServerQuip, TextHeader],
+         ["Sorry! Code 500:", Text]})
+    end,
     try
         case Req:get(method) of
             Method when Method =:= 'GET'; Method =:= 'HEAD' ->
                 case PathParts of
                   ["make_mural", MuralShortName] ->
-                    RespondText(MuralShortName);
-                  ["murals", MuralName] ->
-                    RespondText(["observer, ", MuralName]);
-                  ["murals", MuralName, "connect"] ->
-                    RespondText(["observer, connect, ", MuralName]);
-                  ["murals", MuralName, "reconnect"] ->
-                    RespondText(["observer, reconnect, ", MuralName]);
-                  ["murals", MuralName, UserId | Rest] ->
-                    Prefix = [MuralName, ", ", UserId],
+                    case Validator:valid_mural_name(MuralShortName) of
+                      true ->
+                        case mural:make_mural(Req, MuralShortName) of
+                          {ok, MuralHash, CreatorHash} ->
+                            RedirectPath = "/murals/" ++ MuralHash ++ "/" ++ CreatorHash,
+                            Cookie = mochiweb_cookies:cookie(
+                              "UserHash",
+                              CreatorHash,
+                              [{path, RedirectPath}]),
+                            Code = 302,
+                            Redirect = {"Location", RedirectPath},
+                            Headers = [ServerQuip, Cookie, Redirect],
+                            Req:respond({302, Headers, ""});
+                          {error, Reason} ->
+                            RespondError(io_lib:write(Reason))
+                        end;
+                      false ->
+                        RespondText("bad mural name")
+                    end;
+                  ["murals", MuralHash] ->
+                    RespondText(["observer, ", MuralHash]);
+                  ["murals", MuralHash, "connect"] ->
+                    RespondText(["observer, connect, ", MuralHash]);
+                  ["murals", MuralHash, "reconnect"] ->
+                    RespondText(["observer, reconnect, ", MuralHash]);
+                  ["murals", MuralHash, UserId | Rest] ->
+                    Prefix = [MuralHash, ", ", UserId],
                     case Rest of
                       [] -> RespondText(Prefix);
                       ["connect"] -> RespondText([Prefix, ", connect"]);
@@ -56,8 +80,8 @@ loop(Req, DocRoot) ->
                 end;
             'POST' ->
                 case PathParts of
-                  ["murals", MuralName, UserId, RpcMethod] ->
-                    Prefix = [UserId, " on ", MuralName, " ", RpcMethod],
+                  ["murals", MuralHash, UserId, RpcMethod] ->
+                    Prefix = [UserId, " on ", MuralHash, " ", RpcMethod],
                     case RpcMethod of
                       "choose_image" -> RespondText(Prefix);
                       "tile_size" -> RespondText(Prefix);

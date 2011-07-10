@@ -3,4 +3,4 @@
 
 x make a basic mochiweb server with rebar on hand.
 
-o add handlers for the various get and post URLs previously described.
+x add handlers for the various get and post URLs previously described.

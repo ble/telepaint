@@ -34,6 +34,18 @@ loop(Req, DocRoot) ->
         case Req:get(method) of
             Method when Method =:= 'GET'; Method =:= 'HEAD' ->
                 case PathParts of
+                  ["test_chunked", Number] ->
+                    BytesPerChunk = erlang:list_to_integer(Number),
+                    Response = Req:respond({200, [ServerQuip, TextHeader], chunked}),
+                    TheChunk = [64 + (X rem 26) || X <- lists:seq(0, BytesPerChunk-1)],
+                    NumberOfChunks = 16384 div BytesPerChunk,
+                    Delay = 5000 div NumberOfChunks, 
+                    [ begin
+                        Response:write_chunk(TheChunk),
+                        timer:sleep(Delay)
+                      end || _X <- lists:seq(1, NumberOfChunks)],
+                    Response:write_chunk([]);
+
                   ["make_mural", MuralShortName] ->
                     RespondText(MuralShortName);
                   ["murals", MuralName] ->

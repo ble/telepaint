@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>
+      Chunk tester
+    </title>
+  </head>
+  <body>
+    <div id="insert_here">
+    </div>
+    <script type="text/javascript">
+      var results = {};
+    
+      var TestSize = function(BytesPerChunk, WhenDone) {
+        var count = 0;
+        var xhr = new XMLHttpRequest();
+        var handler = function() {
+          if(xhr.readyState == 3)
+            count++;
+          if(xhr.readyState == 4) {
+            results["bytes" + BytesPerChunk] = count;
+            WhenDone();
+          }
+        };
+        xhr.onreadystatechange = handler;
+        xhr.open("GET", "/test_chunked/" + BytesPerChunk);
+        xhr.send();
+      };
+
+      var sizeStart = 16;
+      var sizeEnd = 8192;
+      var size = sizeStart / 2;
+      var DoNext = function() {
+        if(size == sizeEnd)
+          return;
+        size *= 2;
+        console.log(size);
+        TestSize(size, DoNext);
+      };
+      DoNext(); 
+    </script>
+  </body>
+</html>

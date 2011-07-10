@@ -13,9 +13,11 @@ x Define the details of what requests will be made to the server, when,
 
 x Stub out the GET and POST requests in the web server.
 
-o Define the cookie setting and requirements for the different requests.
+x Do an experiment with chunked responses.
+-->So I totally overkilled it, but I was able to understand how I can use a
+   chunked response for comet in FF and Chrome.
 
-o Do an experiment with chunked responses.
+o Define the cookie setting and requirements for the different requests.  
 
 o Form a general idea of how the server will be implemented; a general outline
   of the interaction of http server component, mural/game creation service,

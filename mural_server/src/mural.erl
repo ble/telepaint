@@ -1,7 +1,10 @@
 -module(mural).
 
--export([hash/0, make_validator/0, make_mural/2]).
+-export([hash/0, make_validator/0]).
+-export([make_mural/2, get_mural/3]).
 -include("records.hrl").
+-include_lib("stdlib/include/qlc.hrl").
+
 
 make_validator() ->
   {ok, NameRegex} = re:compile("^[a-zA-Z0-9_]+$"),
@@ -15,7 +18,7 @@ hash() ->
 
 make_mural(Req, MuralName) ->
   Timestamp = erlang:now(),
-  Host = Req:get_header_value("host"),
+  Host = Req:get(peer),
   MuralHash = hash(),
   CreatorHash = hash(),
   MuralRecord = #mural{
@@ -40,4 +43,27 @@ make_mural(Req, MuralName) ->
     {aborted, Reason} ->
       {error, Reason}
   end.
+
+get_mural(Req, MuralHash, observer) ->
+  GetTransaction = fun() ->
+    Comprehension = qlc:q([
+      X#mural.mural_name ||
+      X <- mnesia:table(mural),
+      X#mural.mural_hash =:= MuralHash]),
+    qlc:e(Comprehension)
+  end,
+  mnesia:transaction(GetTransaction);
+
+get_mural(Req, MuralHash, UserHash) ->
+  GetTransaction = fun() ->
+    Comprehension = qlc:q([
+      {X#mural.mural_name, Y#user.user_type, Y#user.bound_host} ||
+      X <- mnesia:table(mural),
+      X#mural.mural_hash =:= MuralHash,
+      Y <- mnesia:table(user),
+      Y#user.mural_hash =:= MuralHash,
+      Y#user.user_hash =:= UserHash]),
+    qlc:e(Comprehension)
+  end,
+  mnesia:transaction(GetTransaction).
 

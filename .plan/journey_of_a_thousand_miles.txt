@@ -19,17 +19,12 @@ x Do an experiment with chunked responses.
 
 x Define the cookie setting and requirements for the different requests.  
 
-o Form a general idea of how the server will be implemented; a general outline
-  of the interaction of http server component, mural/game creation service,
-  mural FSM, player FSM, how they service the various necessary requests.
+x Outline the mnesia tables that will be used
 
-o Consider ways in which the webapp might be made partially failure tolerant,
-  primarily in the form of maintaining mural & player state in distributed
-  Mnesia and restarting the necessary FSMs etc. with the last good state from
-  the database when a process goes missing.  (My glaring ignorance of OTP
-  supervision is aching, slightly.)  Don't necessarily do anything with this,
-  except perhaps consider whether this idea is feasible and what sort of
-  design might make it easier or harder to add this sort of failure tolerance.
+o Learn mnesia, implement the tables
+
+o Describe how the server will be implemented in terms of mnesia tables and
+  chunked responses.
 
 o Make the server design more concrete and implement as much of it as
   possible.

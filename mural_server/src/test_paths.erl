@@ -1,6 +1,7 @@
 
 -module(test_paths).
 -export([run_test/1, test_paths/1]).
+
 run_test(get) ->
   MuralName = "HorseComWebDotBiz",
   {{get, GetPaths}, {post, _PostPaths}} = test_paths(MuralName),

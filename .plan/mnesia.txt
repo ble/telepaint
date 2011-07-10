@@ -1,0 +1,3 @@
+x Write the record types for each table.
+x Write code to create schema & tables on mnesia-less node
+o Write code to recognize whether tables are present

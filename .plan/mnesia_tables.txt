@@ -30,4 +30,4 @@ stroke#{UTimeStamp, MuralHash, UserHash, Row, Column, JSONBinary}
 
 %accumulator
 current_strokes#{MuralHash, LastCondenseTime, JSONIoList} %mem & disk
-complete_stokes#{MuralHash, JSONIoList} %disk only
+complete_strokes#{MuralHash, JSONIoList} %disk only

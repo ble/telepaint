@@ -3,7 +3,7 @@ incomplete murals and a disk only for the completed ones...
 I wonder if there's something in between, other than writing one's own caching
 system... not that mnesia would make that particularly challenging.
 You could do caching prioritized by the volume of requests for a given item...
-Or you could measure your _actual_ latencies, estimate
+Or you could measure your _actual_ latencies, estimate etc.
 
 mural#{MuralHash, MuralName, ImgFetchURL, ImgHash, Rows, Columns} %more?
 
@@ -22,12 +22,12 @@ chat#{UTimeStamp,
       JSONBinary} %<--not rdbms style, bake username into JSON
 
 %accumulator
-current_chat#{MuralHash, JSONIoList} %mem & disk
+current_chat#{MuralHash, LastCondenseTime, JSONIoList} %mem & disk
 complete_chat#{MuralHash, JSONIoList} %disk only?
 
 %transient
 stroke#{UTimeStamp, MuralHash, UserHash, Row, Column, JSONBinary}
 
 %accumulator
-current_strokes#{MuralHash, JSONIoList} %mem & disk
+current_strokes#{MuralHash, LastCondenseTime, JSONIoList} %mem & disk
 complete_stokes#{MuralHash, JSONIoList} %disk only

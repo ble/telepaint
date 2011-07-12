@@ -6,10 +6,19 @@
   </head>
   <body>
     <div id="dbg">
+      <div><a href="javascript:doPost()">Do post</a></div>
     </div>
     <script type="text/javascript">
       var baseUrl = window.location.toString();
       var msgStream = baseUrl + "/connect";
+      var postUrl = baseUrl + "/choose_image";
+
+      var doPost = function() {
+        var pxhr = new XMLHttpRequest();
+        pxhr.open("POST", postUrl);
+        pxhr.send();
+      }
+
       var container = document.getElementById("dbg");
       var show = function(text) {
         container.innerHTML += "<div>" + text + "</div>";

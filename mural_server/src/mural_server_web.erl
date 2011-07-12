@@ -90,10 +90,10 @@ loop(Req, DocRoot) ->
                   ["murals", MuralHash, "reconnect"] ->
                     respond_text(Req, ["observer, reconnect, ", MuralHash]);
 
-                  ["murals", MuralHash, UserId | Rest] ->
-                    case mural_transaction:get_user(MuralHash, UserId) of
+                  ["murals", MuralHash, UserHash | Rest] ->
+                    case mural_transaction:get_user(MuralHash, UserHash) of
                       {atomic, [User]} ->
-                        Resp0 = [MuralHash, " ", UserId, io_lib:write(User#user.user_type)],
+                        Resp0 = [MuralHash, " ", UserHash, io_lib:write(User#user.user_type)],
                         case Rest of
                           [] ->
                             Req:serve_file("client.html", "priv/static", [server_quip()]);
@@ -105,7 +105,11 @@ loop(Req, DocRoot) ->
                                 timer:sleep(1000),
                                 Response:write_chunk(eson_to_iolist({[{hi,bye},{good,day}]})),
                                 timer:sleep(1000),
-                                Response:write_chunk([]);
+%                                Response:write_chunk([]); 
+                                % should get the old user response and close it...
+                                OldResponse = User#user.resp_current,
+                                catch OldResponse:write_chunk([]),
+                                mural_transaction:update_user_response(UserHash, Response);
                                 
 %                                respond_eson(Req, mural_json:make_state(Mural, User));
                               {atomic, []} ->
@@ -129,22 +133,32 @@ loop(Req, DocRoot) ->
                       Req:serve_file(Path, DocRoot, [server_quip()])
                 end;
             'POST' ->
+                io:format("~p~n", [PathParts]),
                 case PathParts of
                   ["murals", MuralHash, UserId, RpcMethod] ->
-                    Prefix = [UserId, " on ", MuralHash, " ", RpcMethod],
-                    case RpcMethod of
-                      "choose_image" -> respond_text(Req, Prefix);
-                      "tile_size" -> respond_text(Req, Prefix);
-                      "chat" -> respond_text(Req, Prefix);
-                      "mural_done" -> respond_text(Req, Prefix);
-                      "name" -> respond_text(Req, Prefix);
-                      "stroke" -> respond_text(Req, Prefix);
-                      _ -> Req:not_found([server_quip()])
-                    end;
-                    _ ->
+                    case mural_transaction:get_user(MuralHash, UserId) of
+                      {atomic, [User]} ->
+                        Prefix = [UserId, " on ", MuralHash, " ", RpcMethod],
+                        case RpcMethod of
+                          "choose_image" ->
+                            CometResponse = User#user.resp_current,
+                            CometResponse:write_chunk(
+                              eson_to_iolist(<<"choose_image">>)),
+                            respond_text(Req, Prefix);
+                          "tile_size" -> respond_text(Req, Prefix);
+                          "chat" -> respond_text(Req, Prefix);
+                          "mural_done" -> respond_text(Req, Prefix);
+                          "name" -> respond_text(Req, Prefix);
+                          "stroke" -> respond_text(Req, Prefix);
+                          _ -> Req:not_found([server_quip()])
+                        end;
+                      _ ->
                         Req:not_found([server_quip()])
+                    end;
+                  _ ->
+                    Req:not_found([server_quip()])
                 end;
-            _ ->
+              _ ->
                 Req:respond({501, [server_quip()], []})
         end
 

@@ -1,7 +1,7 @@
 -module(mural_transaction).
 
 -export([hash/0]).
--export([make_mural/2, get_user/2, get_mural/1]).
+-export([make_mural/2, get_user/2, get_mural/1, update_user_response/2]).
 
 -include("records.hrl").
 -include_lib("stdlib/include/qlc.hrl").
@@ -54,5 +54,16 @@ get_mural(MuralHash) ->
       X <- mnesia:table(mural),
       X#mural.mural_hash =:= MuralHash]),
     qlc:e(C)
+  end,
+  mnesia:transaction(T).
+
+update_user_response(UserHash, Response) ->
+  T = fun() ->
+    case mnesia:read({user, UserHash}) of
+      [User] ->
+        mnesia:write(User#user{resp_current = Response});
+      _ ->
+        mnesia:abort(no_such_user)
+    end
   end,
   mnesia:transaction(T).

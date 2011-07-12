@@ -51,7 +51,6 @@ create_db_tables(Nodes) ->
   Results = [
     {Name, Result} ||
       {Name, TabDef} <- Tables,
-      _ <- [io:format("~p~n", [{Name, TabDef}])],
       Result <- [mnesia:create_table(Name, TabDef)]],
   Successes = [
     Name ||

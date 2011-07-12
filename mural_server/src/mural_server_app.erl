@@ -13,7 +13,7 @@
 %% @spec start(_Type, _StartArgs) -> ServerRet
 %% @doc application start callback for mural_server.
 start(_Type, _StartArgs) ->
-    ok = inets:start(),
+    mnesia:start(),
     mural_server_deps:ensure(),
     mural_server_sup:start_link().
 

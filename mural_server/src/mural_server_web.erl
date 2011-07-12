@@ -129,11 +129,9 @@ loop(Req, DocRoot) ->
                     end;
 
                   _ ->
-                      io:format("~p~n~p~n", [Path, DocRoot]),
                       Req:serve_file(Path, DocRoot, [server_quip()])
                 end;
             'POST' ->
-                io:format("~p~n", [PathParts]),
                 case PathParts of
                   ["murals", MuralHash, UserId, RpcMethod] ->
                     case mural_transaction:get_user(MuralHash, UserId) of

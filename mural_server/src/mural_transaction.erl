@@ -27,7 +27,6 @@ make_mural(MuralName, Peer) ->
     mural_hash = MuralHash,
     user_type = creator,
     last_msg_time = Timestamp},
-  io:format("~p~n~p~n", [MuralRecord, CreatorRecord]),
   Transaction = fun() ->
       mnesia:write(MuralRecord),
       mnesia:write(CreatorRecord),

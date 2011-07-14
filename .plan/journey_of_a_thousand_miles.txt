@@ -1,30 +1,13 @@
-x Describe the general idea of the project.
+x Review what you've done.
 
-x Create user story explaining generally how the app will be used.
+x Make an initial build/debug system for the client components.
 
-x Add details to the user story to make it abundantly clear how interaction
-  will be structured.  Err on the side of something concrete, usable, and
-  quickly implemented.
+x Test Closure CRMC with current server
 
-x Describe the interactions possible in the client.
+x Fix issues with the Closure CRMC
 
-x Define the details of what requests will be made to the server, when,
-  transmitting what, etc.
-
-x Stub out the GET and POST requests in the web server.
-
-x Do an experiment with chunked responses.
--->So I totally overkilled it, but I was able to understand how I can use a
-   chunked response for comet in FF and Chrome.
-
-x Define the cookie setting and requirements for the different requests.  
-
-x Outline the mnesia tables that will be used
-
-x Learn mnesia, implement the tables
-
-o Describe how the server will be implemented in terms of mnesia tables and
-  chunked responses.
+o Describe how the server will be implemented in terms of mnesia tables,
+  chunked responses, and processes / gen_server or gen_fsms
 
 o Make the server design more concrete and implement as much of it as
   possible.

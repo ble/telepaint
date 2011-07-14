@@ -3,76 +3,55 @@
     <title>
       Mural Client
     </title>
+
+    <script src="http://127.0.0.1:9810/compile?id=client-test&mode=RAW" type="text/javascript"></script>
   </head>
   <body>
     <div id="dbg">
       <div><a href="javascript:doPost()">Do post</a></div>
     </div>
     <script type="text/javascript">
-      var baseUrl = window.location.toString();
-      var msgStream = baseUrl + "/connect";
-      var postUrl = baseUrl + "/choose_image";
+      var channel;
+      var doPost;
+      var rest = function() {
+        var baseUrl = window.location.toString();
+        var msgStream = baseUrl + "/connect";
 
-      var doPost = function() {
-        var pxhr = new XMLHttpRequest();
-        pxhr.open("POST", postUrl);
-        pxhr.send();
-      }
+        var handleOpen = function() {
+          show("<b>OPEN</b>");
+        };
+        var handleHeaders = function() {
+          show("<b>HEADERS</b>");
+        };
+        var handleData = function(event) {
+          show("<i>" + goog.json.serialize(event.data) + "</i>");
+        };
+        var handleDone = function() {
+          show("<b>DONE</b>");
+        };
 
-      var container = document.getElementById("dbg");
-      var show = function(text) {
-        container.innerHTML += "<div>" + text + "</div>";
-      };
-
-      var xhr = new XMLHttpRequest();
-      var lastLength = 0;
-      var handler = function() {
-        if(xhr.readyState == 3 || xhr.readyState == 4) {
-          var fullResp = xhr.responseText;
-          var newPart = fullResp.substring(lastLength, fullResp.length);
-          var res = extractSegments(newPart);
-          lastLength = res.end;
-          var segments = res.segments;
-          for(var i = 0; i < segments.length; i++) {
-            console.log(JSON.parse(segments[i]));
-            show(segments[i]);
-          }
-/*          var start = newPart.indexOf(messageStart);
-          var end = newPart.indexOf(messageEnd);
-          if(start != -1 && end != -1) {
-            var json = newPart.substring(start + messageStart.length, end);
-            var obj = JSON.parse(json);
-            console.log(obj);
-          }*/
-          lastLength = fullResp.length;
-          if(xhr.readyState == 4) {
-            show("DONE");
-          }
+        var postUrl = baseUrl + "/choose_image";
+        
+        doPost = function() {
+          var pxhr = new XMLHttpRequest();
+          pxhr.open("POST", postUrl);
+          pxhr.send();
         }
-      };
 
+        var container = document.getElementById("dbg");
+        var show = function(text) {
+          container.innerHTML += "<div>" + text + "</div>";
+        };
 
-      var extractSegments = function(dataString) {
-        var header = "[{\"message_start\":null},";
-        var footer = ",{\"message_end\":null}]";
-        var begin = 0;
-        var segments = [];
-        do {
-          var start = dataString.indexOf(header, begin);
-          if(start == -1) break;
-          start += header.length;
-          var end = dataString.indexOf(footer, begin);
-          if(end == -1) break;
-          segments.push(dataString.substring(start, end));
-          begin = end + footer.length; 
-        } while(true);
-        var result = {end: begin, segments: segments};
-        return result;
-      };
-      xhr.onreadystatechange = handler;
-      xhr.open("GET", msgStream);
-      xhr.send();
-
+        channel = new ble.net.ChunkedChannel();
+        goog.events.listen(channel, ble.net.EventType.OPEN, handleOpen);
+        goog.events.listen(channel, ble.net.EventType.HEADERS, handleHeaders);
+        goog.events.listen(channel, ble.net.EventType.DATA, handleData);
+        goog.events.listen(channel, ble.net.EventType.DONE, handleDone);
+        channel.open("GET", msgStream);
+        channel.send();
+      }; 
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
     </script>
   </body>
 </html>

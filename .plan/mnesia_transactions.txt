@@ -1,6 +1,0 @@
-/make_mural/$mural_name
-
-Get timestamp
-Create mural record with mural_hash, timestamp, mural_name
-Create user record with user_hash, bound_host, mural_hash, user_type = creator, last_msg_time = timestamp, resp_current = undefined
-redirect to /murals/mural_name/$creator_hash, setting cookie with creator_hash

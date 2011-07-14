@@ -8,3 +8,4 @@
 /deps
 *.swp
 mnesia
+/priv/www/js

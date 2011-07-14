@@ -1,0 +1,10 @@
+Since the end of spawnfest, I have:
+x Write first javascript chunked response message channel client
+x Fiddled around with posting and chunked response replies, multiple chunked responses
+x Added mnesia start to app
+x Removed some debug prints
+x Added plovr-fetching script to project
+x Implemented simple Javascript receiver for chunked response message channel in Closure JS
+x Made makefile for compilation and plovr-running
+x Made example/debug file using the Closure crmc & plovr server
+x Made CRMC work

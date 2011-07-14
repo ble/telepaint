@@ -1,6 +1,0 @@
-! fuck around with rebar dependencies for a tiny part of the entire project
-  for entirely too long. :(
-
-x make a basic mochiweb server with rebar on hand.
-
-x add handlers for the various get and post URLs previously described.

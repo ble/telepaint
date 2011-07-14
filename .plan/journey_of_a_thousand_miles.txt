@@ -6,6 +6,8 @@ x Test Closure CRMC with current server
 
 x Fix issues with the Closure CRMC
 
+x Add unique part to 'connect' URL to prevent issues with multiple requests in same browser
+
 o Describe how the server will be implemented in terms of mnesia tables,
   chunked responses, and processes / gen_server or gen_fsms
 

@@ -15,7 +15,7 @@
       var doPost;
       var rest = function() {
         var baseUrl = window.location.toString();
-        var msgStream = baseUrl + "/connect";
+        var msgStream = baseUrl + "/connect/" + Date.now();
 
         var handleOpen = function() {
           show("<b>OPEN</b>");

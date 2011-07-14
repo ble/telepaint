@@ -84,9 +84,10 @@ loop(Req, DocRoot) ->
                   ["murals", MuralHash] ->
                     respond_text(Req, ["observer, ", MuralHash]);
 
-                  ["murals", MuralHash, "connect"] ->
+                  ["murals", MuralHash, "connect", _Ignored] ->
                     respond_text(Req, ["observer, connect, ", MuralHash]);
 
+                  %get rid of the reconnect URL?
                   ["murals", MuralHash, "reconnect"] ->
                     respond_text(Req, ["observer, reconnect, ", MuralHash]);
 
@@ -97,7 +98,7 @@ loop(Req, DocRoot) ->
                         case Rest of
                           [] ->
                             Req:serve_file("client.html", "priv/static", [server_quip()]);
-                          ["connect"] ->
+                          ["connect", _Ignored] ->
                             case mural_transaction:get_mural(MuralHash) of
                               {atomic, [Mural]} ->
                                 Response = Req:respond({200, [server_quip(), json_header()], chunked}),

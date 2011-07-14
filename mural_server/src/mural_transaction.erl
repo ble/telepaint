@@ -2,6 +2,7 @@
 
 -export([hash/0]).
 -export([make_mural/2, update_user_response/2]).
+-export([set_img/3]).
 -export([get_client/2]).
 
 -include("records.hrl").
@@ -59,5 +60,17 @@ update_user_response(UserHash, Response) ->
       _ ->
         mnesia:abort(no_such_user)
     end
+  end,
+  mnesia:transaction(T).
+
+set_img(MuralHash, FetchUrl, ImgLocal) ->
+  io:format("imglocal ~p~n", [ImgLocal]),
+  T = fun() ->
+      case mnesia:read({mural, MuralHash}) of
+        [Mural] when Mural#mural.img_local =:= undefined ->
+          mnesia:write(Mural#mural{img_fetch_url = FetchUrl, img_local = ImgLocal});
+        [] ->
+          missing
+      end
   end,
   mnesia:transaction(T).

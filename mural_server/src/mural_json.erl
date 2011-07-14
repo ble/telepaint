@@ -18,10 +18,15 @@ make_state(Mural, User) ->
         {row, z(Row)},
         {col, z(Col)}]}
   end,
-  #mural{mural_name = Name, img_fetch_url = Url, rows = Rows, columns = Cols} = Mural,
+  #mural{mural_name = Name,
+         img_fetch_url = Url,
+         img_local = LocalUrl,
+         rows = Rows,
+         columns = Cols} = Mural,
   MuralPart = {[
     {name, z(Name)},
     {img_url, z(Url)},
     {rows, z(Rows)},
-    {cols, z(Cols)}]},
+    {cols, z(Cols)},
+    {image_url, z(LocalUrl)}]},
   {[{mural, MuralPart}, {user, UserPart}]}.

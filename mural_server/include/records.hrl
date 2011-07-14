@@ -3,7 +3,7 @@
 
 
 -record(mural,
-  {mural_hash, timestamp, mural_name, img_fetch_url, img_hash, rows, columns}).
+  {mural_hash, timestamp, mural_name, img_fetch_url, img_local, rows, columns}).
 
 -type user_pseudonym() :: string().
 -type row() :: integer().
@@ -23,7 +23,7 @@
   {user_hash, bound_host, mural_hash, user_type, last_msg_time, resp_current}).
 
 -record(img,
-  {img_hash, img_binary}).
+  {img_local, img_binary}).
 
 -record(chat,
   {u_timestamp, mural_hash, json_binary}).

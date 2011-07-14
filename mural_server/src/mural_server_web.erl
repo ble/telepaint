@@ -46,6 +46,8 @@ loop(Req, DocRoot) ->
 
                   ["murals", MuralHash, UserHash | Rest] ->
                     handle_client(MuralHash, UserHash, Rest, Req); 
+                  ["img", Hash] ->
+                    Req:serve_file(Hash, "priv/mural_img", [server_quip()]);
                   _ ->
                       Req:serve_file(Path, DocRoot, [server_quip()])
                 end;
@@ -161,9 +163,35 @@ handle_client(MuralHash, UserHash, Rest, Req) ->
 
 
 handle_rpc0(User, Mural, "choose_image", Req) ->
-  CometResponse = User#user.resp_current,
-  CometResponse:write_chunk(chunked_message(<<"choose_image">>)),
-  respond_text(Req, <<"ok">>);
+  case Mural#mural.img_local of
+    undefined ->
+      Body = Req:recv_body(),
+      Url = jiffy:decode(Body),
+      Hash = mural_transaction:hash(),
+      SavePath = "priv/mural_img/" ++ Hash,
+      LocalUrl = erlang:list_to_binary("/img/" ++ Hash),
+      io:format("~p~n", [LocalUrl]),
+      case httpc:request(
+        get,
+        {erlang:binary_to_list(Url), []},
+        [],
+        [{stream, SavePath}]) of
+        {ok, saved_to_file} ->
+          case mural_transaction:set_img(Mural#mural.mural_hash, Url, LocalUrl) of
+            {atomic, ok} ->
+              CometResponse = User#user.resp_current,
+              CometResponse:write_chunk(chunked_message({[{image_url, LocalUrl}]})),
+              respond_text(Req, <<"ok">>);
+            _ ->
+              respond_error(Req, <<"failed to update db">>)
+          end;
+        _ ->
+          respond_text(Req, <<"failed to load image">>)
+      end;
+    _ ->
+      respond_error(Req, <<"image already selected.">>)
+  end;
+
 
 
 handle_rpc0(User, Mural, RpcMethod, Req) ->

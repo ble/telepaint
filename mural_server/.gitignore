@@ -8,4 +8,5 @@
 /deps
 *.swp
 mnesia
-/priv/www/js
+priv/www/js
+priv/mural_img

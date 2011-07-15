@@ -7,6 +7,17 @@
     <script src="http://127.0.0.1:9810/compile?id=client-test&mode=RAW" type="text/javascript"></script>
   </head>
   <body>
+    <div id="divvy">
+      <form>
+        <label for="rows">Rows:</label>
+        <input type="text" id="rows" value=""/>
+        <label for="columns">Columns:</label>
+        <input type="text" id="cols" value=""/>
+      </form>
+    </div>
+    <div id="img" style="position:relative">
+      <div id="overlay" style="position:absolute"></div>
+    </div>
     <div id="dbg">
       <div>
         <input type="text" id="img_url_text"/>
@@ -16,6 +27,7 @@
     <script type="text/javascript">
       var channel;
       var doPost;
+      var tmp;
       var rest = function() {
         var baseUrl = window.location.toString();
         var msgStream = baseUrl + "/connect/" + Date.now();
@@ -31,9 +43,9 @@
           show("<i>" + goog.json.serialize(event.data) + "</i>");
           for(var i = 0; i < data.length; i++) { 
             if(data[i].mural && data[i].mural.image_url) 
-              show("<img src=\"" + data[i].mural.image_url + "\"/>");
+              setImage(data[i].mural.image_url);
             if(data[i].image_url) 
-              show("<img src=\"" + data[i].image_url + "\"/>");
+              setImage(data[i].mural.image_url);
           }
         };
         var handleDone = function() {
@@ -50,6 +62,43 @@
           pxhr.send(goog.json.serialize(textBox.value));
         }
 
+        var imgspot = document.getElementById("img");
+        var dimensions;
+        var setImage = function(url) {
+          var style = 'left:0px;top:0px';
+          imgspot.innerHTML += '<img id="theImg" style="' + style + '" src = "' + url + '"/>';
+          var theImg = document.getElementById("theImg");
+          dimensions = {
+            'width': theImg.width,
+            'height': theImg.height
+          };
+          var overlay = document.getElementById("overlay");
+          var rows = 5;
+          var cols = 4;
+          var boxW = dimensions.width / cols;
+          var boxH = dimensions.height / rows;
+          overlay.innerHTML = "";
+          var borderWidth = 3;
+          var constantStyle = 'position:absolute;' +
+                              'background-color:rgba(255,255,255, 0.5);' +
+                              'border-style:solid;' +
+                              'border-width:' + borderWidth + ';' +
+                              'border-color:rgba(0, 0, 0, 0.5);' +
+                              'width:' + (boxW - 2 * borderWidth) + ';' +
+                              'height:' + (boxH - 2 * borderWidth) + ';' +
+                              'text-align:center;';
+
+          for(var col = 0; col < cols; col++) {
+            for(var row = 0; row < rows; row++) {
+              var top = row * boxH;
+              var left = col * boxW;
+              var posStyle = 'top:' + top + 'px;' +
+                             'left:' + left + 'px;'; 
+              var num = row * cols + col;
+              overlay.innerHTML += '<div style="' + constantStyle + posStyle + '">' + num + '</div>';
+            }
+          }
+        }
         var container = document.getElementById("dbg");
         var show = function(text) {
           container.innerHTML += "<div>" + text + "</div>";
@@ -64,6 +113,10 @@
         channel.send();
       }; 
       goog.events.listen(window, goog.events.EventType.LOAD, rest);
+      var rowsText = document.getElementById("rows");
+      var colsText = document.getElementById("cols");
+      goog.events.listen(rowsText, goog.events.EventType.INPUT, function(e) {console.log(rowsText.value);});
+      goog.events.listen(colsText, goog.events.EventType.INPUT, function(e) {console.log(colsText.value);});
     </script>
   </body>
 </html>

@@ -8,38 +8,8 @@ goog.require('goog.string.format');
 
 goog.provide('ble.mural.SplitImage');
 goog.provide('ble.mural.SplitEvent');
+goog.provide('ble.mural.EventTypes');
 goog.provide('ble.mural.ClippedImage');
-
-/**
- * @constructor
- * @extends {goog.events.Event}
- */
-ble.mural.SplitEvent = function(row, col, split) {
-  goog.events.Event.call(this, ble.mural.EventTypes.RECTANGLEHOVER);
-  this.row = row;
-  this.col = col;
-  this.split = split;
-};
-goog.inherits(ble.mural.SplitEvent, goog.events.Event);
-
-ble.mural.SplitEvent.prototype.getSourceRect = function() {
-  var src = this.split.getSourceBoxSize();
-  return {
-    left: src.width * this.col,
-    top: src.height * this.row,
-    right: src.width * (this.col + 1),
-    bottom: src.height * (this.row + 1),
-    width: src.width,
-    height: src.height
-  };
-};
-        
-
-
-ble.mural.EventTypes = {
-  RECTANGLEHOVER: 'rectanglehover'
-};
-
 
 /**
  * @constructor
@@ -107,10 +77,10 @@ ble.mural.SplitImage.prototype.rectStyle_ = function(row, col) {
 ble.mural.SplitImage.prototype.constrainSize = function(width, height) {
   var constraintAspect = this.maxDims[0] / this.maxDims[1];
   var aspect = width / height;
-  if(aspect >= constraintAspect) {
-    return [this.maxDims[0], this.maxDims[1] / aspect];
-  } else if(aspect < constraintAspect) {
-    return [aspect * this.maxDims[0], this.maxDims[1]];
+  if(aspect >= 1) {
+    return [this.maxDims[0], this.maxDims[0] / aspect];
+  } else if(aspect <= constraintAspect) {
+    return [aspect * this.maxDims[1], this.maxDims[1]];
   } else {
     throw "NaN in size constraint.";
   }
@@ -160,8 +130,9 @@ ble.mural.SplitImage.prototype.makeRects_ = function() {
   var boxWidth = this.getBoxWidth();
   var boxMap = new goog.structs.Map();
   var style = "width:" + this.getWidth() + ';' +
-              "height:" + this.getHeight() + ';';
-  var rectContainer = this.dom_.createDom("div", {'style': style, 'position': 'relative'});
+              "height:" + this.getHeight() + ';' +
+              "top:0px;left:0px;position:absolute;";
+  var rectContainer = this.dom_.createDom("div", {'style': style});
   for(var row = 0; row < this.rows; row++) {
     for(var col = 0; col < this.cols; col++) {
       var top = boxHeight * row;
@@ -177,3 +148,78 @@ ble.mural.SplitImage.prototype.makeRects_ = function() {
   this.map_ = boxMap;
   return rectContainer;
 };
+
+/**
+ * @constructor
+ * @extends {goog.events.Event}
+ */
+ble.mural.SplitEvent = function(row, col, split) {
+  goog.events.Event.call(this, ble.mural.EventTypes.RECTANGLEHOVER);
+  this.row = row;
+  this.col = col;
+  this.split = split;
+};
+goog.inherits(ble.mural.SplitEvent, goog.events.Event);
+
+ble.mural.SplitEvent.prototype.getSourceRect = function() {
+  var src = this.split.getSourceBoxSize();
+  return {
+    left: src.width * this.col,
+    top: src.height * this.row,
+    right: src.width * (this.col + 1),
+    bottom: src.height * (this.row + 1),
+    width: src.width,
+    height: src.height
+  };
+};
+        
+
+
+ble.mural.EventTypes = {
+  RECTANGLEHOVER: 'rectanglehover'
+};
+
+
+/**
+ * @constructor
+ * @extends {goog.ui.Component}
+ */
+
+ble.mural.ClippedImage = function(img_src, box) {
+  this.img_src = img_src;
+  this.box = box;
+  goog.ui.Component.call(this, new goog.dom.DomHelper());
+};
+
+goog.inherits(ble.mural.ClippedImage, goog.ui.Component);
+
+ble.mural.ClippedImage.prototype.createDom = function() {
+  if(this.element_ == null) {
+    this.img_ = this.dom_.createDom("img", {'src': this.img_src});
+    this.element_ = this.dom_.createDom("div", null, this.img_);
+    this.updateBox_();
+  }
+};
+
+ble.mural.ClippedImage.prototype.setBox = function(box) {
+  this.box = box;
+  this.updateBox_();
+}
+
+ble.mural.ClippedImage.prototype.updateBox_ = function() {
+  var cStyle = this.element_.style;
+  var box = this.box;
+  cStyle.width = box.right - box.left;
+  cStyle.height = box.bottom - box.top;
+  cStyle.position = "relative";
+  var iStyle = this.img_.style;
+  iStyle.clip = goog.string.format(
+    "rect(%dpx,%dpx,%dpx,%dpx)",
+    box.top,
+    box.right,
+    box.bottom,
+    box.left);
+  iStyle.left = -box.left;
+  iStyle.top = -box.top;
+  iStyle.position = "absolute";
+}

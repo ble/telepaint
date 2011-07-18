@@ -16,7 +16,6 @@
       </form>
     </div>
     <div id="img" style="position:relative">
-      <div id="overlay" style="position:absolute"></div>
     </div>
     <div id="dbg">
       <div>
@@ -64,25 +63,19 @@
         var domHelper = new goog.dom.DomHelper();
         splitImage = new ble.mural.SplitImage("file:///Users/ellis/Workspace/spawnfest/mural/mural_server/priv/mural_img/AFHqi70WbOKL", 5, 2);
         splitImage.render(domHelper.getElement("img"));
+        var clipImage = new ble.mural.ClippedImage(splitImage.img_url, {
+            'top':0,
+            'left':0,
+            'right':0,
+            'bottom':0
+            });
+        clipImage.render(domHelper.getElement("img"));
         goog.events.listen(
             splitImage,
             ble.mural.EventTypes.RECTANGLEHOVER,
             function(e) {
               var box = e.getSourceRect();
-              var style = goog.string.format(
-                "position:absolute;clip:rect(%dpx,%dpx,%dpx,%dpx);left:-%dpx;top:-%dpx",
-                box.top,
-                box.right,
-                box.bottom,
-                box.left,
-                box.left,
-                box.top);
-              var imgUrl = e.split.img_.src;
-              var divStyle = goog.string.format(
-                "position:relative;width:%dpx;height:%dpx;",
-                box.width,
-                box.height);
-              show('<div style="' + divStyle + '"><img src="' + imgUrl + '" style ="' + style + '"/></div>');
+              clipImage.setBox(box);
             });
         var container = document.getElementById("dbg");
         var show = function(text) {

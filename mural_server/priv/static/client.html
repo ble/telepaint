@@ -61,7 +61,7 @@
           pxhr.setRequestHeader("Content-Type", "text/json");
           pxhr.send(goog.json.serialize(textBox.value));
         }
-
+/*
         var imgspot = document.getElementById("img");
         var dimensions;
         var setImage = function(url) {
@@ -99,6 +99,40 @@
             }
           }
         }
+        */
+        var domHelper = new goog.dom.DomHelper();
+        splitImage = new ble.mural.SplitImage("file:///Users/ellis/Workspace/spawnfest/mural/mural_server/priv/mural_img/AFHqi70WbOKL", 5, 2);
+        splitImage.render(domHelper.getElement("img"));
+        goog.events.listen(
+            splitImage,
+            ble.mural.EventTypes.RECTANGLEHOVER,
+            function(e) {
+              var box = e.getSourceRect();
+              var style = goog.string.format(
+                "position:absolute;clip:rect(%dpx,%dpx,%dpx,%dpx);left:-%dpx;top:-%dpx",
+                box.top,
+                box.right,
+                box.bottom,
+                box.left,
+                box.left,
+                box.top);
+              var imgUrl = e.split.img_.src;
+              var divStyle = goog.string.format(
+                "position:relative;width:%dpx;height:%dpx;",
+                box.width,
+                box.height);
+              show('<div style="' + divStyle + '"><img src="' + imgUrl + '" style ="' + style + '"/></div>');
+            });
+        /*
+        goog.events.listen(splitImage.element_, goog.events.EventType.MOUSEOVER, function(e) {
+            tmp = e;
+            tmp2 = e.getBrowserEvent();
+            rc = splitImage.map_.get(goog.getUid(tmp2.srcElement));
+            console.log(rc);
+            console.log(e.type);
+        });
+        */
+
         var container = document.getElementById("dbg");
         var show = function(text) {
           container.innerHTML += "<div>" + text + "</div>";

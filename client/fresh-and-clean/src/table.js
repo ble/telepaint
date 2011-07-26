@@ -2,30 +2,77 @@ goog.require('goog.dom.DomHelper');
 goog.require('goog.ui.Component');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.color');
 
 
 goog.provide('ble.tpaint.TableUI');
 goog.provide('ble.tpaint.testTable');
+goog.provide('ble.tpaint.colorWheel');
 
 
-ble.tpaint.testTable = [
-  {'name': 'majestik bouftwo',
-   'color': '#8a8'},
-  {'name': 'implements cumtrapz',
-   'color': '#c0c'},
-  {'name': 'wizard without spaces',
-   'color': '#f08'}];
+ble.tpaint.colorWheel = function(radians, lum) {
+  if(lum === undefined)
+    lum = 1.0;
+  while(radians > 2 * Math.PI) {
+    radians -= 2 * Math.PI;
+  }
+  while(radians < 0) {
+    radians += 2 * Math.PI;
+  }
+  var ixMajor = Math.floor(radians / (2 * Math.PI / 3)) % 3;
+  var ixMinor = (8 - Math.floor(radians / (Math.PI / 3))) % 3;
+  var center = (1 + 2 * ixMajor) * Math.PI / 3;
+  var minor = 1.5 * Math.abs(radians - center);
+  var magMajor = Math.floor(lum * 255);
+  var magMinor = Math.floor(lum * 255 * Math.sin(minor));
+  var red = 0, green = 0, blue = 0;
+  console.log([radians, minor]);
+  console.log([ixMajor, ixMinor]);
+  switch(ixMajor) {
+    case 0: red = magMajor; break;
+    case 1: green = magMajor; break;
+    case 2: blue = magMajor; break;
+  }
+  switch(ixMinor) {
+    case 0: red = magMinor; break;
+    case 1: green = magMinor; break;
+    case 2: blue = magMinor; break; 
+  }
+  console.log([red, green, blue]);
+  return goog.color.rgbToHex(red, green, blue);
+}
 
+ble.tpaint.testNames = [
+  'majestic mapp',
+  'trumcapz',
+  'w/ospaces',
+  'brosophone',
+  'brosephone',
+  'scientific mapp',
+  'sir cloudsley shovel',
+  'gaston j. feeblebunny'];
 
+(function() {
+  ble.tpaint.testTable = [];
+  var deltaAngle = Math.PI * 2 / 5; 
+  var luminances = [1.0, 0.5, 0.7];
+  for(var i = 0; i < ble.tpaint.testNames.length; i++) {
+    var color = ble.tpaint.colorWheel(deltaAngle * i, luminances[i % luminances.length]);
+    ble.tpaint.testTable.push({
+      'name': ble.tpaint.testNames[i],
+      'color': color});
+  }
+})();
 
 /**
  * @constructor
  * @extends {goog.ui.Component}
  */
 
-ble.tpaint.TableUI = function(players) {
+ble.tpaint.TableUI = function(players, fContainer) {
   goog.ui.Component.call(this);
   this.players = players;
+  this.fContainer = fContainer;
 
 }
 goog.inherits(ble.tpaint.TableUI, goog.ui.Component);

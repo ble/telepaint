@@ -1,0 +1,19 @@
+%%-*- mode: erlang -*-
+{application, tpaint,
+ [
+  {description, "tpaint"},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  crypto,
+                  inets,
+                  mochiweb,
+                  webmachine,
+                  mnesia
+                 ]},
+  {mod, { tpaint_app, []}},
+  {env, []}
+ ]}.

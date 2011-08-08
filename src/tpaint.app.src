@@ -1,9 +1,0 @@
-%% -*- erlang -*-
-{application, tpaint,
- [{description, "tpaint"},
-  {vsn, "0.1"},
-  {modules, []},
-  {registered, []},
-  {mod, {'tpaint_app', []}},
-  {env, []},
-  {applications, [kernel, stdlib, crypto]}]}.

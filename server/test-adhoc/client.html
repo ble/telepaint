@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>Sheet test</title>
+    <script src="http://127.0.0.1:9810/compile?id=test&mode=RAW"></script>
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      var rest = function() {
+        ble.sheet.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+    </script>
+  </body>
+</html>

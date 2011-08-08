@@ -2,11 +2,16 @@
 
 -include("sheet.hrl").
 
--export([make_tables/1, make_sheet/2]).
+-export([make_tables/1, make_sheet/2, select_all/0]).
 
 make_sheet(Id, Access) ->
   fun() ->
       mnesia:write(#sheet{id=Id, session_access=Access})
+  end.
+
+select_all() ->
+  fun() ->
+      mnesia:select(sheet, [{'$1', [], ['$1']}])
   end.
 
 make_tables(NodeList) ->

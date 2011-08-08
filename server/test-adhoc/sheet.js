@@ -24,15 +24,16 @@ ble.sheet.Client = function(url) {
 goog.inherits(ble.sheet.Client, goog.events.EventTarget);
 
 var JSON;
-var console;
+//var console;
 
 ble.sheet.Client.prototype.sheetAppend = function(method, data) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', this.url);
   var rpc = ({'method': method, 'data': data});
   var onChange = goog.bind(function() {
-    if(xhr.readyState == xhr.DONE) {
-      console.log({'status': xhr.status, 'response': xhr.response});
+    console.log(xhr.readyState);
+    if(xhr.readyState == 4) {
+      console.log({'status': xhr.status, 'response': xhr.responseText});
       console.log('append status ' + xhr.status);
     }
   }, this);
@@ -44,11 +45,13 @@ ble.sheet.Client.prototype.read = function() {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', this.url);
   var onChange = goog.bind(function() {
-    if(xhr.readyState == xhr.DONE) {
+    console.log(xhr.readyState);
+    if(xhr.readyState == 4) {
       console.log('status ' + xhr.status);
       if(xhr.status == 200) {
         var e = new goog.events.Event(ble.sheet.EventType.FETCH);
-        var response = JSON.parse(xhr.response);
+        console.log(xhr);
+        var response = JSON.parse(xhr.responseText);
         e.fragments = response.fragments;
         this.dispatchEvent(e); 
       } 

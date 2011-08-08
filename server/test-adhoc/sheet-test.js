@@ -7,6 +7,10 @@ goog.require('goog.events.EventType');
 
 goog.provide('ble.sheet.run_test');
 
+var scene;
+var client;
+var canvas;
+
 ble.sheet.run_test = function() {
   var pxWidth = 640;
   var pxHeight = 480;
@@ -14,13 +18,13 @@ ble.sheet.run_test = function() {
 
   var domHelper = new goog.dom.DomHelper();
   var container = domHelper.getElement("outermost");
-  var canvas = new ble.scratch.Canvas(pxWidth, pxHeight);
+  canvas = new ble.scratch.Canvas(pxWidth, pxHeight);
   canvas.render(container);
   canvas.element_.style['background-color'] = "#FFD";
   container.appendChild(domHelper.createElement("br"));
 
   //Scene graph
-  var scene = {
+  scene = {
     beingDrawn: null,
     beingReplayed: null,
     startTimes: null,
@@ -66,10 +70,11 @@ ble.sheet.run_test = function() {
   {
     var sheetUrl = (function() {
       var loc = window.location;
-      return loc.origin + "/sheet" + loc.pathname;
+      return "/sheet" + loc.pathname;
     })(); 
-    var client = new ble.sheet.Client(sheetUrl);
+    client = new ble.sheet.Client(sheetUrl);
     goog.events.listen(client, ble.sheet.EventType.FETCH, function(e) {
+      console.log(e);
       var fragments = e.fragments;
       for(var i = 0; i < fragments.length; i++) {
         var f = fragments[i];

@@ -76,6 +76,13 @@ to_json(Req, {sheet, Sheet = #sheet{id = SheetId}}) ->
 process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   Body0 = wrq:req_body(Req),
   {ok, Body1} = jiffy:decode(Body0),
+  {ok, {Method0, Data}} = tpaint_rpc:plain(Body1),
+  Method = case Method0 of
+    <<"stroke">> -> stroke;
+    <<"undo">> -> undo;
+    <<"clear">> -> clear
+  end,
+  io:format("{method, data}: ~p~n", [{Method, Data}]),
   io:format("json: ~p~n", [Body1]),
   Stamp = now(),
   InsertT = fun() -> mnesia:write(#sheet_fragment{timestamp=now(), id=SheetId, json=Body1}) end,

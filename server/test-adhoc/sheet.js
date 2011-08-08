@@ -1,44 +1,59 @@
+goog.require('goog.events.EventTarget');
+goog.require('goog.events.Event');
 
+goog.provide('ble.sheet.Client');
+goog.provide('ble.sheet.EventType');
 
-var whenState = function(xhr, state, fn) {
-  return function() {
-    if(xhr.readyState == state) {
-      return fn(xhr.response);
-    }
-  }
+/**
+ * @enum {string}
+ */
+ble.sheet.EventType = {
+  SUCCESS: 'success',
+  FETCH: 'fetch'
 };
 
-var bind = function(fn, selfObj, var_args) {
-  if(!fn)
-    throw new Error();
-  if(arguments.length > 2) {
-    var boundArgs = Array.prototype.slice.call(arguments, 2);
-    return function() {
-      var newArgs = Array.prototype.slice.call(arguments);
-      Array.prototype.unshift.apply(newArgs, boundArgs);
-      return fn.apply(selfObj, newArgs);
-    };
-  } else {
-    return function() {
-      return fn.apply(selfObj, arguments);
-    };
-  }
-};
+/**
+ * @constructor
+ * @extends{goog.events.EventTarget}
+ */
+ble.sheet.Client = function(url) {
+  goog.events.EventTarget.call(this);
+  this.url = url;
+}
 
-var sheetAppend = function(method, data) {
+goog.inherits(ble.sheet.Client, goog.events.EventTarget);
+
+var JSON;
+var console;
+
+ble.sheet.Client.prototype.sheetAppend = function(method, data) {
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', document.location.toString());
+  xhr.open('POST', this.url);
   var rpc = ({'method': method, 'data': data});
-  var onDone = bind(console.log, console);
-  xhr.onreadystatechange = whenState(xhr, xhr.DONE, onDone);
+  var onChange = goog.bind(function() {
+    if(xhr.readyState == xhr.DONE) {
+      console.log({'status': xhr.status, 'response': xhr.response});
+      console.log('append status ' + xhr.status);
+    }
+  }, this);
+  xhr.onreadystatechange = onChange;
   xhr.send(JSON.stringify(rpc));
 };
 
-var sheetRead = function() {
+ble.sheet.Client.prototype.read = function() {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', document.location.toString());
-  var onDone = function(x) { console.log(JSON.parse(x)); };
-  xhr.onreadystatechange = whenState(xhr, xhr.DONE, onDone);
-  xhr.send();
+  xhr.open('GET', this.url);
+  var onChange = goog.bind(function() {
+    if(xhr.readyState == xhr.DONE) {
+      console.log('status ' + xhr.status);
+      if(xhr.status == 200) {
+        var e = new goog.events.Event(ble.sheet.EventType.FETCH);
+        var response = JSON.parse(xhr.response);
+        e.fragments = response.fragments;
+        this.dispatchEvent(e); 
+      } 
+    }
+  }, this);
+  xhr.onreadystatechange = onChange;
+  xhr.send(); 
 };
-

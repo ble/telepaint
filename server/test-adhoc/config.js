@@ -3,5 +3,5 @@
   "paths": ".",
   "mode": "SIMPLE",
   "level": "VERBOSE",
-  "inputs": ["subcanvas.js", "mocap.js", "sheet-test.js"]
+  "inputs": ["subcanvas.js", "mocap.js", "gfx.js", "sheet.js", "sheet-test.js"]
 }

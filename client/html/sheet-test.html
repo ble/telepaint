@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <title>Sheet test</title>
+    <!--<script src="http://127.0.0.1:9810/compile?id=test&mode=RAW"></script>-->
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      window.onload = function() {
+        var head = document.getElementsByTagName("head")[0];
+        var L = window.location;
+        var loc = L.protocol + "//" + L.hostname + ":9810/compile?id=test&mode=RAW";
+        alert(loc);
+        var scriptTag = document.createElement("script");
+        var src = document.createAttribute("src");
+        src.nodeValue = loc;
+        scriptTag.setAttributeNode(src);
+        head.appendChild(scriptTag);
+        var afterwards = "ble.sheet.run_test()";
+        var script2 = document.createElement("script");
+        var scriptText = document.createTextNode(afterwards);
+        script2.appendChild(scriptText);
+        head.appendChild(script2);
+      }
+/*      var rest = function() {
+        ble.sheet.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+      */
+    </script>
+  </body>
+</html>

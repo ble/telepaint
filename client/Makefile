@@ -8,6 +8,12 @@ STATIC_DIR=../server/priv/www/static-compiled
 #compile:
 #	@if [ ! -e target ]; then mkdir target; fi
 #	@$(PLOVR) build config.js > target/compiled.js
+
+
+sheet-test-debug:
+	cp configs/sheet-test.js src/config.js
+	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
+
 clean:
 	rm target/*
 	rm $(STATIC_DIR)/js/*

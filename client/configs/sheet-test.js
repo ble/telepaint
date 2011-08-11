@@ -1,5 +1,5 @@
 {
-  "id": "test",
+  "id": "sheet-test",
   "paths": ".",
   "mode": "SIMPLE",
   "level": "VERBOSE",

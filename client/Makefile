@@ -1,7 +1,6 @@
 
-SRV_DIR=../mural_server
-
 PLOVR=java -jar ./plovr.jar
+STATIC_DIR=../server/priv/www/static-compiled
 
 #serve:
 #	@$(PLOVR) serve --listen localhost config.js
@@ -11,6 +10,8 @@ PLOVR=java -jar ./plovr.jar
 #	@$(PLOVR) build config.js > target/compiled.js
 clean:
 	rm target/*
+	rm $(STATIC_DIR)/js/*
+	rm $(STATIC_DIR)/html/*
 
 target/sheet-test.js:
 	cp configs/sheet-test.js src/config.js
@@ -18,5 +19,8 @@ target/sheet-test.js:
 	rm src/config.js
 
 deploy: target/sheet-test.js
-	cp target/*.js ../deploy/static/js/
+	mkdir -p $(STATIC_DIR)/js
+	mkdir -p $(STATIC_DIR)/html
+	cp target/*.js $(STATIC_DIR)/js/
+	cp html/*.html $(STATIC_DIR)/html/
 

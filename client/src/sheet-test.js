@@ -69,8 +69,9 @@ ble.sheet.run_test = function() {
 
   {
     var sheetUrl = (function() {
-      var loc = window.location;
-      return "/sheet" + loc.pathname;
+      var parts = window.location.toString().split("/");
+      var sheetName = parts[parts.length - 1];
+      return "/sheet/" + sheetName;
     })(); 
     client = new ble.sheet.Client(sheetUrl);
     goog.events.listen(client, ble.sheet.EventType.FETCH, function(e) {

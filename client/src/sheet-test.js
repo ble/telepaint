@@ -29,6 +29,20 @@ ble.sheet.run_test = function() {
   container.appendChild(domHelper.createElement("br"));
   var linkOut = domHelper.createDom('a', {'href': 'javascript:undo()'}, 'undo');
   container.appendChild(linkOut);
+  container.appendChild(domHelper.createElement("br"));
+
+  var methodIndex = 0;
+  var methods = ["stroke", "erase"];
+  var currentMethod = methods[methodIndex];
+  var getCurrentMethod = function() { return methods[methodIndex]; };
+  var getMethodLabel = function() { return "currently: " + getCurrentMethod(); };
+  var toggler = domHelper.createDom('a', {'href': 'javascript:toggleMethod()'}, getMethodLabel());
+  container.appendChild(toggler);
+  toggleMethod = function() {
+    methodIndex = (methodIndex + 1) % methods.length;
+    console.log([methodIndex, getMethodLabel()]);
+    goog.dom.setTextContent(toggler, getMethodLabel());
+  }
 
   undo = function() {
     client.undo().send();
@@ -42,12 +56,26 @@ ble.sheet.run_test = function() {
     complete: []
   };
 
+  var drawOne = function(ctx, item) {
+    var coords;
+    if(goog.isDef(item.data))
+      coords = item.data.coordinates;
+    if(!goog.isDef(coords))
+      coords = item.coordinates;
+
+    if(item.method == "stroke") { 
+      ble.gfx.strokeCoords(ctx, coords);
+    } else if(item.method == "erase") {
+      ctx.save();
+      ctx.globalCompositeOperation = "copy";
+      ctx.strokeStyle = "rgba(0,0,0,0.0)";
+      ble.gfx.strokeCoords(ctx, coords);
+      ctx.restore(); 
+    }
+  }
   redraw = function(ctx) {
     var now = Date.now();
     ctx.clearRect(0, 0, pxWidth, pxHeight);
-    if(!goog.isNull(scene.beingDrawn)) {
-      ble.gfx.strokeCoords(ctx, scene.beingDrawn.coordinates);
-    }
     
     var complete = client.fragments.getValues();
     goog.array.forEach(
@@ -61,37 +89,12 @@ ble.sheet.run_test = function() {
     complete = client.fragments.getValues();
     goog.array.forEach(
         complete,
-        function(item) {
-          if(item.method = "stroke") {
-            ble.gfx.strokeCoords(ctx, item.data.coordinates);
-          }
-        });
+        goog.bind(drawOne, this, ctx));
 
-    if(!goog.isNull(scene.beingReplayed)) {
-      var replayRemaining = [];
-      var startTimeRemaining = [];
-      while(scene.beingReplayed.length > 0) {
-        var replay = scene.beingReplayed.pop();
-        var startTime = scene.startTimes.pop();
-        var timeDelta = now - startTime;
-        var indices = replay.betweenTimes(0, timeDelta);
-        ble.gfx.strokeCoordsWithin(ctx, replay.coordinates, indices[0], indices[1]);
-        var lastTime = replay.times[replay.times.length - 1];
-        if(timeDelta <= lastTime) {
-          replayRemaining.unshift(replay);
-          startTimeRemaining.unshift(startTime);
-        } else {
-          scene.complete.unshift(replay);
-        }
-      }
-      if(replayRemaining.length > 0) {
-        scene.beingReplayed = replayRemaining;
-        scene.startTimes = startTimeRemaining;
-      } else {
-        scene.beingReplayed = null;
-        scene.startTimes = null;
-      }
+    if(!goog.isNull(scene.beingDrawn)) {
+      drawOne(ctx, scene.beingDrawn);
     }
+
   }
 
   {
@@ -120,6 +123,7 @@ ble.sheet.run_test = function() {
       return;
 
     if(event.type == ble.mocap.EventType.BEGIN) {
+      event.capture.method = getCurrentMethod();
       scene.beingDrawn = event.capture;
       canvas.withContext(redraw);
     } else if(event.type == ble.mocap.EventType.PROGRESS ||
@@ -132,7 +136,7 @@ ble.sheet.run_test = function() {
         scene.startTimes = [];
       }
       enabled = false;
-      var req = client.append('stroke', event.capture);
+      var req = client.append(event.capture.method, event.capture);
 
       
 

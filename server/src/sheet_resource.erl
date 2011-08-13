@@ -101,7 +101,8 @@ process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   Method = case Method0 of
     <<"stroke">> -> stroke;
     <<"undo">> -> undo;
-    <<"clear">> -> clear
+    %<<"clear">> -> clear;
+    <<"erase">> -> erase 
   end,
   io:format("{method, data}: ~p~n", [{Method, Data}]),
   Stamp = now(),

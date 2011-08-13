@@ -1,5 +1,6 @@
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
+goog.require('goog.net.XhrIo');
 
 goog.provide('ble.sheet.Client');
 goog.provide('ble.sheet.EventType');
@@ -27,36 +28,30 @@ var JSON;
 var console;
 
 ble.sheet.Client.prototype.sheetAppend = function(method, data) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', this.url);
-  var rpc = ({'method': method, 'data': data});
-  var onChange = goog.bind(function() {
-    console.log(xhr.readyState);
-    if(xhr.readyState == 4) {
-      console.log({'status': xhr.status, 'response': xhr.responseText});
-      console.log('append status ' + xhr.status);
-    }
-  }, this);
-  xhr.onreadystatechange = onChange;
-  xhr.send(JSON.stringify(rpc));
-};
+  var xhrIo = new goog.net.XhrIo();
+  var rpc = {'method': method, 'data': data};
+  var send = goog.bind(xhrIo.send, xhrIo, this.url, 'POST', JSON.stringify(rpc));
+  xhrIo.send = send;
+  return xhrIo;
+}
 
 ble.sheet.Client.prototype.read = function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', this.url);
-  var onChange = goog.bind(function() {
-    console.log(xhr.readyState);
-    if(xhr.readyState == 4) {
-      console.log('status ' + xhr.status);
-      if(xhr.status == 200) {
-        var e = new goog.events.Event(ble.sheet.EventType.FETCH);
-        console.log(xhr);
-        var response = JSON.parse(xhr.responseText);
-        e.fragments = response.fragments;
-        this.dispatchEvent(e); 
-      } 
+  var xhrIo = new goog.net.XhrIo();
+  var send = goog.bind(xhrIo.send, xhrIo, this.url, 'GET');
+  xhrIo.send = send;
+
+  var client = this;
+  goog.events.listenOnce(xhrIo, goog.net.EventType.COMPLETE, function(e) {
+    if(this.isSuccess()) {
+      console.log(this.getResponse());
+      var json = this.getResponseJson();
+      var e = new goog.events.Event(ble.sheet.EventType.FETCH);
+      e.json = json;
+      client.dispatchEvent(e);
+    } else {
+      alert('error on Client.read');
     }
-  }, this);
-  xhr.onreadystatechange = onChange;
-  xhr.send(); 
+    this.dispose();
+  });
+  return xhrIo;
 };

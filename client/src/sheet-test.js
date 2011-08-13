@@ -4,12 +4,15 @@ goog.require('ble.sheet.Client');
 goog.require('ble.sheet.EventType');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.net.EventType');
 
 goog.provide('ble.sheet.run_test');
 
 var scene;
 var client;
 var canvas;
+
+var _this_;
 
 ble.sheet.run_test = function() {
   var pxWidth = 640;
@@ -74,9 +77,10 @@ ble.sheet.run_test = function() {
       return "/sheet/" + sheetName;
     })(); 
     client = new ble.sheet.Client(sheetUrl);
-    goog.events.listen(client, ble.sheet.EventType.FETCH, function(e) {
+    goog.events.listenOnce(client, ble.sheet.EventType.FETCH, function(e) {
       console.log(e);
-      var fragments = e.fragments;
+
+      var fragments = e.json.fragments;
       for(var i = 0; i < fragments.length; i++) {
         var f = fragments[i];
         if(goog.isDef(f.method) && f.method == "stroke" && goog.isDef(f.data)) {
@@ -87,12 +91,15 @@ ble.sheet.run_test = function() {
         canvas.withContext(redraw);
       }
     });
-    client.read();
+    client.read().send();
   }
 
   var mocapHandler = new goog.events.EventTarget();
-
+  var enabled = true;
   mocapHandler.handler0 = function(event) {
+    if(!enabled)
+      return;
+
     if(event.type == ble.mocap.EventType.BEGIN) {
       scene.beingDrawn = event.capture;
       canvas.withContext(redraw);
@@ -105,8 +112,23 @@ ble.sheet.run_test = function() {
         scene.beingReplayed = [];
         scene.startTimes = [];
       }
-      scene.complete.push(event.capture);
-      client.sheetAppend('stroke', event.capture);
+      enabled = false;
+      console.log(event.capture);
+      var req = client.sheetAppend('stroke', event.capture);
+
+      goog.events.listenOnce(req, goog.net.EventType.COMPLETE,
+          function(e){
+            _this_ = this;
+            if(this.isSuccess()) {
+              scene.complete.push(event.capture);
+            } else {
+              alert('failed to draw stroke');
+              canvas.withContext(redraw);
+            }
+            enabled = true;
+            this.dispose();
+          });
+      req.send();
     }
   };
 

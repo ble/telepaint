@@ -79,7 +79,7 @@ process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   Body0 = wrq:req_body(Req),
   Body1 = jiffy:decode(Body0),
   io:format("json: ~p~n", [Body1]),
-  {ok, {Method0, Data}} = tpaint_rpc:plain(Body1),
+  {ok, {Method0, Data, _}} = tpaint_rpc:plain(Body1),
   Method = case Method0 of
     <<"stroke">> -> stroke;
     <<"undo">> -> undo;

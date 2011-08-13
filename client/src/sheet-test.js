@@ -11,6 +11,8 @@ goog.provide('ble.sheet.run_test');
 var scene;
 var client;
 var canvas;
+var redraw;
+var undo;
 
 var _this_;
 
@@ -25,6 +27,12 @@ ble.sheet.run_test = function() {
   canvas.render(container);
   canvas.element_.style['background-color'] = "#FFD";
   container.appendChild(domHelper.createElement("br"));
+  var linkOut = domHelper.createDom('a', {'href': 'javascript:undo()'}, 'undo');
+  container.appendChild(linkOut);
+
+  undo = function() {
+    client.undo().send();
+  };
 
   //Scene graph
   scene = {
@@ -34,15 +42,31 @@ ble.sheet.run_test = function() {
     complete: []
   };
 
-  var redraw = function(ctx) {
+  redraw = function(ctx) {
     var now = Date.now();
     ctx.clearRect(0, 0, pxWidth, pxHeight);
     if(!goog.isNull(scene.beingDrawn)) {
       ble.gfx.strokeCoords(ctx, scene.beingDrawn.coordinates);
     }
-    for(var i = 0; i < scene.complete.length; i++) {
-      ble.gfx.strokeCoords(ctx, scene.complete[i].coordinates);
-    }
+    
+    var complete = client.fragments.getValues();
+    goog.array.forEach(
+      complete,
+      function(item) {
+        if(item.method == "undo") {
+          client.fragments.remove(item['data']['clientTimeToUndo']);
+          client.fragments.remove(item['clientTime']);
+        }
+      });
+    complete = client.fragments.getValues();
+    goog.array.forEach(
+        complete,
+        function(item) {
+          if(item.method = "stroke") {
+            ble.gfx.strokeCoords(ctx, item.data.coordinates);
+          }
+        });
+
     if(!goog.isNull(scene.beingReplayed)) {
       var replayRemaining = [];
       var startTimeRemaining = [];
@@ -77,21 +101,16 @@ ble.sheet.run_test = function() {
       return "/sheet/" + sheetName;
     })(); 
     client = new ble.sheet.Client(sheetUrl);
-    goog.events.listenOnce(client, ble.sheet.EventType.FETCH, function(e) {
-      console.log(e);
-
-      var fragments = e.json.fragments;
-      for(var i = 0; i < fragments.length; i++) {
-        var f = fragments[i];
-        if(goog.isDef(f.method) && f.method == "stroke" && goog.isDef(f.data)) {
-          scene.complete.push(f.data);
-        }
-      }
-      if(fragments.length > 0) {
-        canvas.withContext(redraw);
-      }
-    });
+    goog.events.listenOnce(
+      client,
+      ble.sheet.EventType.FETCH,
+      goog.bind(canvas.withContext, canvas, redraw));
     client.read().send();
+
+    goog.events.listen(
+      client,
+      ble.sheet.EventType.UPDATE,
+      goog.bind(canvas.withContext, canvas, redraw));
   }
 
   var mocapHandler = new goog.events.EventTarget();
@@ -113,20 +132,13 @@ ble.sheet.run_test = function() {
         scene.startTimes = [];
       }
       enabled = false;
-      console.log(event.capture);
-      var req = client.sheetAppend('stroke', event.capture);
+      var req = client.append('stroke', event.capture);
+
+      
 
       goog.events.listenOnce(req, goog.net.EventType.COMPLETE,
           function(e){
-            _this_ = this;
-            if(this.isSuccess()) {
-              scene.complete.push(event.capture);
-            } else {
-              alert('failed to draw stroke');
-              canvas.withContext(redraw);
-            }
             enabled = true;
-            this.dispose();
           });
       req.send();
     }

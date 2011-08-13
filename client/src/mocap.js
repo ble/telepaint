@@ -43,6 +43,23 @@ ble.mocap.Capture = function(startTime) {
   this.controlPoints = [];
 }
 
+ble.mocap.Capture.prototype.getControlCoordinates = function() {
+  var result = [];
+  for(var i = 0; i < this.controlTimeIndices.length; i++) {
+    var ix = this.controlTimeIndices[i];
+    result.push(this.coordinates[2*ix], this.coordinates[2*ix+1]);
+  }
+  return result;
+};
+
+ble.mocap.Capture.prototype.getControlCoordinatesAndHead = function() {
+  var result = this.getControlCoordinates();
+  var L = this.coordinates.length;
+  var C = this.coordinates;
+  result.push(C[L-2], C[L-1]);
+  return result;
+};
+
 ble.mocap.Capture.blessJSONObject = function(obj) {
   var result = new ble.mocap.Capture(obj.startTime);
   result.coordinates = obj.coordinates;

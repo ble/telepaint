@@ -9,6 +9,8 @@ goog.provide('ble.snowflake.Painter');
 goog.provide('ble.snowflake.Client');
 goog.provide('ble.snowflake.EventType');
 
+goog.require('ble.gfx');
+
 var JSON;
 
 /**
@@ -25,11 +27,13 @@ ble.snowflake.Painter = function(surface) {
 /**
  * @override
  */
-ble.snowflake.Painter.prototype.drawTo = function(context) {
-  context.fillStyle = "#fff";
-  context.beginPath();
-  context.arc(0, 0, 1, 0, 2 * Math.PI);
-  context.fill();
+ble.snowflake.Painter.prototype.drawTo = function(ctx) {
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+  ctx.fill();
+  if(this.currentInteraction != null) 
+    this.drawFragment(ctx, this.currentInteraction); 
 };
 
 /**
@@ -58,6 +62,32 @@ ble.snowflake.Painter.prototype.setCurrentInteraction = function(interaction) {
 ble.snowflake.Painter.prototype.repaint = function() {
   this.surface.withContext(goog.bind(this.drawTo, this));
 };
+
+ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
+  if(fragment.method == "erase-polyline") {
+    var coordinates = fragment.getControlCoordinatesAndHead();
+    if(!goog.isDef(coordinates))
+      return; 
+    console.log(coordinates);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.0)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+    ctx.lineWidth *= 3.0;
+    ctx.globalCompositeOperation = "copy";
+    if(coordinates.length == 0)
+      return;
+    for(var flip = 0; flip < 2; flip++) {
+      for(var rot = 0; rot < 6; rot++) {
+        ble.gfx.pathCoords(ctx, coordinates);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.rotate(Math.PI / 3.0);
+      }
+      ctx.scale(-1, 1);
+    }
+  }
+};
+
 /**
  * Constants for client event names
  * @enum {string}

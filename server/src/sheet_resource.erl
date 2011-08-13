@@ -70,12 +70,14 @@ to_json(Req, {sheet, Sheet = #sheet{id = SheetId}}) ->
   T = mnesia:transaction(FragT),
   case T of
     {atomic, JsonFragments} ->
-      {assemble_json(Sheet, JsonFragments), Req, Sheet}
+      {assemble_json(Sheet, JsonFragments), Req, Sheet};
+    {error, Reason} ->
+      {io_lib:format("'~p'", [Reason]), Req, Sheet}
   end.
 
 process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   Body0 = wrq:req_body(Req),
-  {ok, Body1} = jiffy:decode(Body0),
+  Body1 = jiffy:decode(Body0),
   io:format("json: ~p~n", [Body1]),
   {ok, {Method0, Data}} = tpaint_rpc:plain(Body1),
   Method = case Method0 of
@@ -88,10 +90,10 @@ process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   InsertT = fun() -> mnesia:write(#sheet_fragment{timestamp=now(), id=SheetId, json=Body1}) end,
       case mnesia:transaction(InsertT) of
     {atomic, ok} ->
-      {ok, SuccessBody} = jiffy:encode({[{status, ok}, {stamp, tuple_to_list(Stamp)}]}),
+      SuccessBody = jiffy:encode({[{status, ok}, {stamp, tuple_to_list(Stamp)}]}),
       {true, wrq:set_resp_body(SuccessBody, Req), stateless};
     _ ->
-      {ok, EBody} = jiffy:encode({[{status, error}]}),
+      EBody = jiffy:encode({[{status, error}]}),
       {false, wrq:set_resp_body(EBody, Req), stateless}
   end.
 
@@ -123,8 +125,8 @@ get_session_id(Req) ->
   wrq:get_cookie_value("session", Req).
 
 assemble_json(Sheet, Fragments) ->
+  io:format("foo~n", []),
   FragmentJson = [F#sheet_fragment.json || F <- Fragments],
   Eson = {[{<<"id">>, Sheet#sheet.id}, {<<"fragments">>, FragmentJson}]},
   io:format("eson output: ~p~n", [Eson]),
-  {ok, Result} = jiffy:encode(Eson),
-  Result.
+  jiffy:encode(Eson).

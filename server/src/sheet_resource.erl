@@ -4,6 +4,7 @@
 
 -module(sheet_resource).
 -export([init/1, content_types_provided/2, allowed_methods/2, forbidden/2]).
+-export([encodings_provided/2]).
 -export([resource_exists/2, previously_existed/2, moved_permanently/2]).
 -export([to_json/2, process_post/2]).
 
@@ -15,6 +16,15 @@ init([]) -> {ok, stateless}.
 content_types_provided(Req, State) ->
   {[{"application/json", to_json}, {"text/json", to_json}], Req, State}.
 
+encodings_provided(Req, State) ->
+  Encs = case wrq:method(Req) of
+    'GET' ->
+      [{"identity", fun(X) -> X end},
+       {"gzip", fun(X) -> zlib:gzip(X) end}];
+    _ ->
+      [{"identity", fun(X) -> X end}]
+  end,
+  {Encs, Req, State}.
 
 allowed_methods(Req, stateless) ->
   {['GET', 'HEAD', 'POST'], Req, stateless}.

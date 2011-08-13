@@ -48,7 +48,6 @@ ble.sheet.Client.prototype.append = function(appendType, data) {
     } else {
       alert('error on Client.append');
     }
-    this.dispose();
   });
   return xhrIo;
 };
@@ -64,7 +63,6 @@ ble.sheet.Client.prototype.undo = function() {
     } else {
       alert('error on Client.undo');
     }
-    this.dispose();
   });
   return xhrIo;
 };
@@ -82,7 +80,7 @@ ble.sheet.Client.prototype.insert_ = function(fragment) {
   if(!goog.isDef(clientTime))
     return;
   this.fragments.set(clientTime, fragment);
-}
+};
 
 ble.sheet.Client.prototype.read = function() {
   var xhrIo = new goog.net.XhrIo();
@@ -99,7 +97,6 @@ ble.sheet.Client.prototype.read = function() {
     } else {
       alert('error on Client.read');
     }
-    this.dispose();
   });
   return xhrIo;
 };

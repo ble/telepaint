@@ -12,6 +12,7 @@ var scene;
 var client;
 var canvas;
 var redraw;
+var undo;
 
 var _this_;
 

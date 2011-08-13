@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Snowflake test</title>
+    <style type="text/css">
+      body { background-color: #000000; }
+    </style>
+    <script src="http://127.0.0.1:9810/compile?id=snowflake-test&mode=RAW"></script>
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      var rest = function() {
+        ble.snowflake.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+    </script>
+  </body>
+</html>

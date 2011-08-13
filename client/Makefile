@@ -14,6 +14,10 @@ sheet-test-debug:
 	cp configs/sheet-test.js src/config.js
 	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
 
+snowflake-test-debug:
+	cp configs/snowflake-test.js src/config.js
+	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
+
 clean:
 	rm target/*
 	rm $(STATIC_DIR)/js/*

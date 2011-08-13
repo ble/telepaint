@@ -120,4 +120,8 @@ ble.snowflake.run_test = function() {
     req.send();
   });
   //attach canvas and undo link to the document
+  var container = domHelper.getElement("outermost");
+  canvas.render(container);
+  container.appendChild(domHelper.createElement("br"));
+  container.appendChild(linkUndo);
 };

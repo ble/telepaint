@@ -124,51 +124,20 @@ ble.mocap.binarySearch0 = function(array, ix0, ixF, ix, value) {
 /**
  * Abstract class providing motion-capture functionality for mouse events.
  * @constructor
+ * @extends {goog.events.EventTarget}
  */
 
 ble.mocap.Mocap = function() {
   this.startTime = null;
   this.capture = null;
-  /**
-   * Targets which will receive mocap events.
-   * @type {Object.<string,Array.<goog.events.EventTarget>>}
-   */
-  this.targets = {};
+  goog.events.EventTarget.call(this);
 }
+goog.inherits(ble.mocap.Mocap, goog.events.EventTarget);
 
 ble.mocap.Mocap.prototype.dispatchMocap = function(type) {
-  var targets = this.targets[type];
-  if(goog.isNull(targets))
-    return;
-  var dispatchMocap = new goog.events.Event(type);
-  dispatchMocap.capture = this.capture;
-  for(var i = 0; i < targets.length; i++) {
-    var result = targets[i].dispatchEvent(dispatchMocap);
-    if(result === false)
-      return;
-  }
-}
-
-ble.mocap.Mocap.prototype.forwardingListener = goog.abstractMethod;
-
-/**
- * @param {goog.events.EventTarget} target
- * @param {string} type
- */
-ble.mocap.Mocap.prototype.addTarget = function(target, type) {
-  if(goog.isArray(type)) {
-    for(var i = 0; i < type.length; i++)
-      this.addTarget(target, type[i]);
-  } else {
-    if(!(type in this.targets))
-      this.targets[type] = [];
-    var targets = this.targets[type];
-    for(var i = 0; i < targets.length; i++) {
-      if(targets[i] === target)
-        return;
-    }
-    targets.unshift(target);
-  }
+  var event = new goog.events.Event(type);
+  event.capture = this.capture;
+  this.dispatchEvent(event);
 }
 
 ble.mocap.Mocap.prototype.beginCapture = function(event) {

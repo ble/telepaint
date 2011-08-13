@@ -147,6 +147,16 @@ ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
   event.virtualY = virtualCoords[1];
 }
 
+ble.scratch.Subcanvas.prototype.virtualizeListener_replaceOffset = function(listener) {
+  var subcanvas = this;
+  return function(event) {
+    subcanvas.virtualizeEvent(event);
+    event.offsetX = event.virtualX;
+    event.offsetY = event.virtualY;
+    return listener.call(this, event);
+  };
+}
+
 ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
   var subcanvas = this;
   return function(event) {

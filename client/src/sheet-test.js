@@ -13,7 +13,7 @@ var client;
 var canvas;
 var redraw;
 var undo;
-
+var toggleMethod;
 var _this_;
 
 ble.sheet.run_test = function() {
@@ -116,38 +116,7 @@ ble.sheet.run_test = function() {
       goog.bind(canvas.withContext, canvas, redraw));
   }
 
-  var mocapHandler = new goog.events.EventTarget();
-  var enabled = true;
-  mocapHandler.handler0 = function(event) {
-    if(!enabled)
-      return;
-
-    if(event.type == ble.mocap.EventType.BEGIN) {
-      event.capture.method = getCurrentMethod();
-      scene.beingDrawn = event.capture;
-      canvas.withContext(redraw);
-    } else if(event.type == ble.mocap.EventType.PROGRESS ||
-              event.type == ble.mocap.EventType.CONTROLPOINT) {
-      canvas.withContext(redraw);
-    } else if(event.type == ble.mocap.EventType.END) {
-      scene.beingDrawn = null;
-      if(goog.isNull(scene.beingReplayed)) {
-        scene.beingReplayed = [];
-        scene.startTimes = [];
-      }
-      enabled = false;
-      var req = client.append(event.capture.method, event.capture);
-
-      
-
-      goog.events.listenOnce(req, goog.net.EventType.COMPLETE,
-          function(e){
-            enabled = true;
-          });
-      req.send();
-    }
-  };
-
+  //create motion capture and wire it to the canvas
   var motionCapture = new ble.mocap.Stroke();
   goog.events.listen(
       canvas.getElement(),
@@ -156,9 +125,37 @@ ble.sheet.run_test = function() {
       false,
       motionCapture);
 
-  motionCapture.addTarget(mocapHandler, ble.mocap.EventType.ALL);
+  //create the handler for motion capture events and
+  //wire it to the motion capture
+
+  var mocapHandler = (function() {
+    var enabled = true;
+    return function(event) {
+      if(!enabled)
+        return;
+
+      if(event.type == ble.mocap.EventType.BEGIN) {
+        event.capture.method = getCurrentMethod();
+        scene.beingDrawn = event.capture;
+        canvas.withContext(redraw);
+      } else if(event.type == ble.mocap.EventType.PROGRESS ||
+                event.type == ble.mocap.EventType.CONTROLPOINT) {
+        canvas.withContext(redraw);
+      } else if(event.type == ble.mocap.EventType.END) {
+        scene.beingDrawn = null; 
+        enabled = false;
+        var req = client.append(event.capture.method, event.capture);
+        goog.events.listenOnce(req, goog.net.EventType.COMPLETE,
+            function(e){
+              enabled = true;
+            });
+        req.send();
+      }
+    };
+  }());
+
   goog.events.listen(
-      mocapHandler,
+      motionCapture,
       ble.mocap.EventType.ALL,
-      mocapHandler.handler0);
+      mocapHandler);
 };

@@ -24,7 +24,12 @@ target/sheet-test.js:
 	@$(PLOVR) build src/config.js > target/sheet-test.js
 	rm src/config.js
 
-deploy: target/sheet-test.js
+target/snowflake-test.js:
+	cp configs/snowflake-test.js src/config.js
+	@$(PLOVR) build src/config.js > target/snowflake-test.js
+	rm src/config.js
+
+deploy: target/sheet-test.js target/snowflake-test.js
 	mkdir -p $(STATIC_DIR)/js
 	mkdir -p $(STATIC_DIR)/html
 	cp target/*.js $(STATIC_DIR)/js/

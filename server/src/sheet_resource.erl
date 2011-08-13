@@ -5,6 +5,7 @@
 -module(sheet_resource).
 -export([init/1, content_types_provided/2, allowed_methods/2, forbidden/2]).
 -export([encodings_provided/2]).
+-export([content_types_accepted/2, from_json/2]).
 -export([resource_exists/2, previously_existed/2, moved_permanently/2]).
 -export([to_json/2, process_post/2]).
 
@@ -15,6 +16,13 @@ init([]) -> {ok, stateless}.
 
 content_types_provided(Req, State) ->
   {[{"application/json", to_json}, {"text/json", to_json}], Req, State}.
+
+content_types_accepted(Req, State) ->
+  {[{"application/json", from_json}], Req, State}.
+
+from_json(Req, State) ->
+  io:format("content type recognized~n", []),
+  {process_post(Req, State), Req, State}.
 
 encodings_provided(Req, State) ->
   Encs = case wrq:method(Req) of

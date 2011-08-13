@@ -24,6 +24,9 @@ ble.sheet.Client = function(url) {
   this.fragments = new goog.structs.LinkedMap();
 }
 
+ble.sheet.Client.prototype.headers = {};
+ble.sheet.Client.prototype.headers[goog.net.XhrIo.CONTENT_TYPE_HEADER] = "application/json";
+
 goog.inherits(ble.sheet.Client, goog.events.EventTarget);
 
 var JSON;

@@ -22,6 +22,7 @@ var JSON;
 ble.snowflake.Painter = function(surface) {
   this.surface = surface;
   this.currentInteraction = null;
+  this.cuts = [];
 };
 
 /**
@@ -32,6 +33,9 @@ ble.snowflake.Painter.prototype.drawTo = function(ctx) {
   ctx.beginPath();
   ctx.arc(0, 0, 1, 0, 2 * Math.PI);
   ctx.fill();
+  for(var i = 0; i < this.cuts.length; i++) {
+    this.drawFragment(ctx, this.cuts[i]);
+  }
   if(this.currentInteraction != null) 
     this.drawFragment(ctx, this.currentInteraction); 
 };
@@ -41,14 +45,29 @@ ble.snowflake.Painter.prototype.drawTo = function(ctx) {
  * @param {goog.events.Event} event
  */
 ble.snowflake.Painter.prototype.initClient = function(client, event) {
-
+  var fragments = client.visibleFragments.getValues();
+  for(var i = 0; i < fragments.length; i++) {
+    this.appendFragment(fragments[i]);
+  }
+  this.repaint();
 };
+
+ble.snowflake.Painter.prototype.appendFragment = function(fragment) {
+  var f = ble.mocap.Capture.blessJSONObject(fragment.data);
+  var ff = {'method': fragment.method, 'data': f};
+  this.cuts.push(ff);
+}
+
 
 /**
  * @param {ble.snowflake.Client} client
  * @param {goog.events.Event} event
  */
 ble.snowflake.Painter.prototype.updateClient = function(client, event) {
+  var mocap = ble.mocap.Capture.blessJSONObject(event.fragment.data);
+  var fragment = event.fragment;
+  fragment.data = mocap;
+  this.cuts.push(fragment);
 
 };
 
@@ -65,13 +84,10 @@ ble.snowflake.Painter.prototype.repaint = function() {
 
 ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
   if(fragment.method == "erase-polyline") {
-    var coordinates = fragment.getControlCoordinatesAndHead();
+    var coordinates = fragment.data.getControlCoordinatesAndHead();
     if(!goog.isDef(coordinates))
       return; 
-    console.log(coordinates);
     ctx.fillStyle = "rgba(0, 0, 0, 0.0)";
-    ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-    ctx.lineWidth *= 3.0;
     ctx.globalCompositeOperation = "copy";
     if(coordinates.length == 0)
       return;
@@ -165,7 +181,6 @@ ble.snowflake.Client.prototype.readState = function() {
   goog.events.listenOnce(xhr, goog.net.EventType.COMPLETE,  function(e) {
     if(this.isSuccess()) {
       var json = this.getResponseJson();
-
       if(!goog.isDef(json.fragments))
         return;
 
@@ -176,7 +191,8 @@ ble.snowflake.Client.prototype.readState = function() {
       alert('error on Client.readState');
     } 
   });
-}
+  return xhr;
+};
 
 ble.snowflake.Client.prototype.append_ = function(fragment) {
   if(fragment.method != "undo")

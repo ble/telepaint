@@ -91,8 +91,9 @@ ble.snowflake.run_test = function() {
       return;
 
     if(event.type == ble.mocap.EventType.BEGIN) {
-      event.capture.method = getCurrentMethod();
-      painter.setCurrentInteraction(event.capture);
+      var method = getCurrentMethod();
+      event.capture.method = method;
+      painter.setCurrentInteraction({'method': method, 'data': event.capture});
       painter.repaint();
     }
 
@@ -130,4 +131,5 @@ ble.snowflake.run_test = function() {
     req.send();
   });
   painter.repaint();
+  client.readState().send();
 };

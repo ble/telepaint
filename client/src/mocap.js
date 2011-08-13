@@ -62,14 +62,10 @@ ble.mocap.Capture.prototype.getControlCoordinatesAndHead = function() {
 
 ble.mocap.Capture.blessJSONObject = function(obj) {
   var result = new ble.mocap.Capture(obj.startTime);
-  result.coordinates = obj.coordinates;
-  result.times = obj.times;
-  result.controlTimeIndices = obj.controlTimeIndices;
-  result.controlPoints = obj.controlPoints;
-  delete obj.coordinates;
-  delete obj.times;
-  delete obj.controlTimeIndices;
-  delete obj.controlPoints;
+  result.coordinates = obj.coordinates.slice();
+  result.times = obj.times.slice();
+  result.controlTimeIndices = obj.controlTimeIndices.slice();
+  result.controlPoints = obj.controlPoints.slice();
   return result;
 }
 

@@ -8,7 +8,9 @@ goog.require('ble.snowflake.EventType');
 goog.require('goog.dom.DomHelper');
 goog.require('goog.math.Box');
 
-ble.snowflake.run_test = function() {
+ble.snowflake.run_test = function() { 
+  var domHelper = new goog.dom.DomHelper();
+  var container = domHelper.getElement("outermost");
   var canvas, subcanvas;
   //Create the canvas and subcanvas and wire them together so that the
   //subcanvas will emit events when its.
@@ -23,6 +25,7 @@ ble.snowflake.run_test = function() {
   var subRectPixels = new goog.math.Box(0, width, height, 0);
   var subRectVirtual = new goog.math.Box(scaleUp, scaleUp/aspect, -scaleUp, -scaleUp/aspect);
   canvas = new ble.scratch.Canvas(width, height);
+  canvas.render(container);
   subcanvas = new ble.scratch.Subcanvas(canvas, subRectPixels, subRectVirtual);
 
   })();
@@ -30,11 +33,18 @@ ble.snowflake.run_test = function() {
   var motionCapture = new ble.mocap.Polyline(true);
   var mouseTypes = motionCapture.eventTypesOfInterest;
   canvas.forwardEvents(subcanvas, mouseTypes);
-  goog.events.listen(canvas, mouseTypes, canvas.forwardingListener);
+  //This next line created problems:
+  //have to remember to listen to canvas.getElement(), but execute callback in
+  //context of canvas.
+  goog.events.listen(canvas.getElement(), mouseTypes, goog.bind(canvas.forwardingListener, canvas));
+
 
   //Create the undo link
-  var domHelper = new goog.dom.DomHelper();
   var linkUndo = domHelper.createDom('a', null, 'undo');
+  container.appendChild(domHelper.createElement("br"));
+  container.appendChild(linkUndo);
+
+
 
   //Figure out the URL to interact with
   var flakeUrl;
@@ -119,9 +129,5 @@ ble.snowflake.run_test = function() {
       function() { drawEnabled = true; });
     req.send();
   });
-  //attach canvas and undo link to the document
-  var container = domHelper.getElement("outermost");
-  canvas.render(container);
-  container.appendChild(domHelper.createElement("br"));
-  container.appendChild(linkUndo);
+  painter.repaint();
 };

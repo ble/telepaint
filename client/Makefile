@@ -20,8 +20,6 @@ snowflake-test-debug:
 
 clean:
 	rm target/*
-	rm $(STATIC_DIR)/js/*
-	rm $(STATIC_DIR)/html/*
 
 target/sheet-test.js:
 	cp configs/sheet-test.js src/config.js

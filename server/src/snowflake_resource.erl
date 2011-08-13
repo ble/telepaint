@@ -99,10 +99,8 @@ process_post(Req, {snowflake, #snowflake{id = SnowflakeId}}) ->
   io:format("json: ~p~n", [Body1]),
   {ok, {Method0, Data, _}} = tpaint_rpc:plain(Body1),
   Method = case Method0 of
-    <<"stroke">> -> stroke;
-    <<"undo">> -> undo;
-    %<<"clear">> -> clear;
-    <<"erase">> -> erase 
+    <<"erase-polyline">> -> stroke;
+    <<"undo">> -> undo
   end,
   io:format("{method, data}: ~p~n", [{Method, Data}]),
   Stamp = now(),

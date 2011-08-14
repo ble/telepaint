@@ -18,7 +18,7 @@ var JSON;
  */
 ble.snowflake.Painter = function() {};
 
-ble.snowflake.Painter.prototype.drawTo = function(ctx, state) {
+ble.snowflake.Painter.prototype.drawTo = function(state, ctx) {
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   //Firefox treats the optional "anticlockwise" argument as mandatory! argh!
@@ -28,10 +28,10 @@ ble.snowflake.Painter.prototype.drawTo = function(ctx, state) {
     this.drawFragment(ctx, state.cuts[i]);
   }
   if(state.currentInteraction != null) 
-    this.drawFragment(ctx, state.currentInteraction); 
+    this.drawFragment(ctx, state.currentInteraction, true); 
 };
 
-ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
+ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment, stroked) {
   if(fragment.method == "erase-polyline") {
     var coordinates = fragment.data.getControlCoordinatesAndHead();
     if(!goog.isDef(coordinates))
@@ -45,7 +45,8 @@ ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
         ble.gfx.pathCoords(ctx, coordinates);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
+        if(stroked)
+          ctx.stroke();
         ctx.rotate(Math.PI / 3.0);
       }
       ctx.scale(-1, 1);
@@ -78,7 +79,7 @@ ble.snowflake.State.prototype.handleEvent = function(event) {
  * @override
  */
 ble.snowflake.State.prototype.drawTo = function(ctx) {
-  this.painter.drawTo(ctx, this);
+  this.painter.drawTo(this, ctx);
 };
 
 /**

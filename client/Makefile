@@ -18,6 +18,10 @@ snowflake-test-debug:
 	cp configs/snowflake-test.js src/config.js
 	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
 
+blizzard-test-debug:
+	cp configs/blizzard-test.js src/config.js
+	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
+
 clean:
 	rm target/*
 
@@ -31,7 +35,12 @@ target/snowflake-test.js:
 	@$(PLOVR) build src/config.js > target/snowflake-test.js
 	rm src/config.js
 
-deploy: target/sheet-test.js target/snowflake-test.js
+target/blizzard-test.js:
+	cp configs/blizzard-test.js src/config.js
+	@$(PLOVR) build src/config.js > target/blizzard-test.js
+	rm src/config.js
+
+deploy: target/sheet-test.js target/snowflake-test.js target/blizzard-test.js
 	mkdir -p $(STATIC_DIR)/js
 	mkdir -p $(STATIC_DIR)/html
 	cp target/*.js $(STATIC_DIR)/js/

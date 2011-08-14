@@ -14,21 +14,11 @@ goog.require('ble.gfx');
 var JSON;
 
 /**
- * @param {ble.scratch.DrawSurface} surface
  * @constructor
- * @implements {ble.scratch.Drawable}
  */
+ble.snowflake.Painter = function() {};
 
-ble.snowflake.Painter = function(surface) {
-  this.surface = surface;
-  this.currentInteraction = null;
-  this.cuts = [];
-};
-
-/**
- * @override
- */
-ble.snowflake.Painter.prototype.drawTo = function(ctx) {
+ble.snowflake.Painter.prototype.drawTo = function(ctx, state) {
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.arc(0, 0, 1, 0, 2 * Math.PI);
@@ -40,11 +30,53 @@ ble.snowflake.Painter.prototype.drawTo = function(ctx) {
     this.drawFragment(ctx, this.currentInteraction); 
 };
 
+ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
+  if(fragment.method == "erase-polyline") {
+    var coordinates = fragment.data.getControlCoordinatesAndHead();
+    if(!goog.isDef(coordinates))
+      return; 
+    ctx.fillStyle = "rgba(0, 0, 0, 0.0)";
+    ctx.globalCompositeOperation = "copy";
+    if(coordinates.length == 0)
+      return;
+    for(var flip = 0; flip < 2; flip++) {
+      for(var rot = 0; rot < 6; rot++) {
+        ble.gfx.pathCoords(ctx, coordinates);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.rotate(Math.PI / 3.0);
+      }
+      ctx.scale(-1, 1);
+    }
+  }
+};
+
+/**
+ * @param {ble.scratch.DrawSurface} surface
+ * @constructor
+ * @implements {ble.scratch.Drawable}
+ */
+
+ble.snowflake.State = function(surface) {
+  this.surface = surface;
+  this.currentInteraction = null;
+  this.cuts = [];
+  this.painter = new ble.snowflake.Painter();
+};
+
+/**
+ * @override
+ */
+ble.snowflake.State.prototype.drawTo = function(ctx) {
+  this.painter.drawTo(ctx, this);
+};
+
 /**
  * @param {ble.snowflake.Client} client
  * @param {goog.events.Event} event
  */
-ble.snowflake.Painter.prototype.initClient = function(client, event) {
+ble.snowflake.State.prototype.initClient = function(client, event) {
   var fragments = client.visibleFragments.getValues();
   for(var i = 0; i < fragments.length; i++) {
     this.appendFragment(fragments[i]);
@@ -52,7 +84,7 @@ ble.snowflake.Painter.prototype.initClient = function(client, event) {
   this.repaint();
 };
 
-ble.snowflake.Painter.prototype.appendFragment = function(fragment) {
+ble.snowflake.State.prototype.appendFragment = function(fragment) {
   var f = ble.mocap.Capture.blessJSONObject(fragment.data);
   var ff = {'method': fragment.method, 'data': f};
   this.cuts.push(ff);
@@ -82,27 +114,6 @@ ble.snowflake.Painter.prototype.repaint = function() {
   this.surface.withContext(goog.bind(this.drawTo, this));
 };
 
-ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
-  if(fragment.method == "erase-polyline") {
-    var coordinates = fragment.data.getControlCoordinatesAndHead();
-    if(!goog.isDef(coordinates))
-      return; 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.0)";
-    ctx.globalCompositeOperation = "copy";
-    if(coordinates.length == 0)
-      return;
-    for(var flip = 0; flip < 2; flip++) {
-      for(var rot = 0; rot < 6; rot++) {
-        ble.gfx.pathCoords(ctx, coordinates);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate(Math.PI / 3.0);
-      }
-      ctx.scale(-1, 1);
-    }
-  }
-};
 
 /**
  * Constants for client event names

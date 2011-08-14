@@ -54,20 +54,20 @@ ble.snowflake.run_test = function() {
     flakeUrl = "/snowflake/" + flakeName;
   })();
 
-  //Create the painter and the client objects
-  var painter = new ble.snowflake.Painter(subcanvas);
+  //Create the state and the client objects
+  var state = new ble.snowflake.State(subcanvas);
   var client = new ble.snowflake.Client(flakeUrl);
 
-  //Wire the client to the painter
+  //Wire the client to the state
   goog.events.listen(
     client,
     ble.snowflake.EventType.INIT,
-    goog.bind(painter.initClient, painter, client));
+    goog.bind(state.initClient, state, client));
 
   goog.events.listen(
     client,
     ble.snowflake.EventType.UPDATE,
-    goog.bind(painter.updateClient, painter, client));
+    goog.bind(state.updateClient, state, client));
 
   //wire the motion capture object to receive virtual coordinates events from
   //the subcanvas.
@@ -93,17 +93,17 @@ ble.snowflake.run_test = function() {
     if(event.type == ble.mocap.EventType.BEGIN) {
       var method = getCurrentMethod();
       event.capture.method = method;
-      painter.setCurrentInteraction({'method': method, 'data': event.capture});
-      painter.repaint();
+      state.setCurrentInteraction({'method': method, 'data': event.capture});
+      state.repaint();
     }
 
     else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
-      painter.repaint();
+      state.repaint();
     }
 
     else if(event.type == ble.mocap.EventType.END) {
-      painter.setCurrentInteraction(null);
+      state.setCurrentInteraction(null);
       drawEnabled = false;
       var req = client.rpcAppend(event.capture.method, event.capture);
       goog.events.listenOnce(

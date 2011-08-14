@@ -21,13 +21,14 @@ ble.snowflake.Painter = function() {};
 ble.snowflake.Painter.prototype.drawTo = function(ctx, state) {
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+  //Firefox treats the optional "anticlockwise" argument as mandatory! argh!
+  ctx.arc(0, 0, 1, 0, 2 * Math.PI, true);
   ctx.fill();
-  for(var i = 0; i < this.cuts.length; i++) {
-    this.drawFragment(ctx, this.cuts[i]);
+  for(var i = 0; i < state.cuts.length; i++) {
+    this.drawFragment(ctx, state.cuts[i]);
   }
   if(this.currentInteraction != null) 
-    this.drawFragment(ctx, this.currentInteraction); 
+    this.drawFragment(ctx, state.currentInteraction); 
 };
 
 ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment) {
@@ -95,7 +96,7 @@ ble.snowflake.State.prototype.appendFragment = function(fragment) {
  * @param {ble.snowflake.Client} client
  * @param {goog.events.Event} event
  */
-ble.snowflake.Painter.prototype.updateClient = function(client, event) {
+ble.snowflake.State.prototype.updateClient = function(client, event) {
   var mocap = ble.mocap.Capture.blessJSONObject(event.fragment.data);
   var fragment = event.fragment;
   fragment.data = mocap;
@@ -106,11 +107,11 @@ ble.snowflake.Painter.prototype.updateClient = function(client, event) {
 /**
  * @param {Object} interaction
  */
-ble.snowflake.Painter.prototype.setCurrentInteraction = function(interaction) {
+ble.snowflake.State.prototype.setCurrentInteraction = function(interaction) {
   this.currentInteraction = interaction;
 };
 
-ble.snowflake.Painter.prototype.repaint = function() {
+ble.snowflake.State.prototype.repaint = function() {
   this.surface.withContext(goog.bind(this.drawTo, this));
 };
 

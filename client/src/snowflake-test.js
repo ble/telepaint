@@ -26,17 +26,14 @@ ble.snowflake.run_test = function() {
   var subRectVirtual = new goog.math.Box(scaleUp, scaleUp/aspect, -scaleUp, -scaleUp/aspect);
   canvas = new ble.scratch.Canvas(width, height);
   canvas.render(container);
-  subcanvas = new ble.scratch.Subcanvas(canvas, subRectPixels, subRectVirtual);
+  subcanvas = new ble.scratch.Subcanvas(canvas, subRectPixels, subRectVirtual, true);
 
   })();
 
   var motionCapture = new ble.mocap.Polyline(true);
   var mouseTypes = motionCapture.eventTypesOfInterest;
   canvas.forwardEvents(subcanvas, mouseTypes);
-  //This next line created problems:
-  //have to remember to listen to canvas.getElement(), but execute callback in
-  //context of canvas.
-  goog.events.listen(canvas.getElement(), mouseTypes, goog.bind(canvas.forwardingListener, canvas));
+  goog.events.listen(canvas.getElement(), mouseTypes, canvas);
 
 
   //Create the undo link
@@ -61,21 +58,14 @@ ble.snowflake.run_test = function() {
   //Wire the client to the state
   goog.events.listen(
     client,
-    ble.snowflake.EventType.INIT,
-    goog.bind(state.initClient, state, client));
-
-  goog.events.listen(
-    client,
-    ble.snowflake.EventType.UPDATE,
-    goog.bind(state.updateClient, state, client));
+    [ble.snowflake.EventType.INIT, ble.snowflake.EventType.UPDATE],
+    state);
 
   //wire the motion capture object to receive virtual coordinates events from
   //the subcanvas.
   goog.events.listen(
       subcanvas,
       motionCapture.eventTypesOfInterest,
-      subcanvas.virtualizeListener_replaceOffset(motionCapture.forwardingListener),
-      false,
       motionCapture);
 
   var getCurrentMethod = function() {
@@ -123,6 +113,7 @@ ble.snowflake.run_test = function() {
   goog.events.listen(linkUndo, goog.events.EventType.CLICK, function(e) {
     if(!drawEnabled)
       return;
+    drawEnabled = false;
     var req = client.rpcUndo();
     goog.events.listenOnce(
       req,

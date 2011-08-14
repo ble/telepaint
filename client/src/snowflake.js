@@ -27,7 +27,7 @@ ble.snowflake.Painter.prototype.drawTo = function(ctx, state) {
   for(var i = 0; i < state.cuts.length; i++) {
     this.drawFragment(ctx, state.cuts[i]);
   }
-  if(this.currentInteraction != null) 
+  if(state.currentInteraction != null) 
     this.drawFragment(ctx, state.currentInteraction); 
 };
 
@@ -66,6 +66,14 @@ ble.snowflake.State = function(surface) {
   this.painter = new ble.snowflake.Painter();
 };
 
+ble.snowflake.State.prototype.handleEvent = function(event) {
+  if(event.type == ble.snowflake.EventType.INIT) {
+    this.initClient(event);
+  } else if(event.type == ble.snowflake.EventType.UPDATE) {
+    this.updateClient(event); 
+  }
+};
+
 /**
  * @override
  */
@@ -74,10 +82,10 @@ ble.snowflake.State.prototype.drawTo = function(ctx) {
 };
 
 /**
- * @param {ble.snowflake.Client} client
  * @param {goog.events.Event} event
  */
-ble.snowflake.State.prototype.initClient = function(client, event) {
+ble.snowflake.State.prototype.initClient = function(event) {
+  var client = event.client;
   var fragments = client.visibleFragments.getValues();
   for(var i = 0; i < fragments.length; i++) {
     this.appendFragment(fragments[i]);
@@ -93,10 +101,9 @@ ble.snowflake.State.prototype.appendFragment = function(fragment) {
 
 
 /**
- * @param {ble.snowflake.Client} client
  * @param {goog.events.Event} event
  */
-ble.snowflake.State.prototype.updateClient = function(client, event) {
+ble.snowflake.State.prototype.updateClient = function(event) {
   var mocap = ble.mocap.Capture.blessJSONObject(event.fragment.data);
   var fragment = event.fragment;
   fragment.data = mocap;
@@ -159,6 +166,7 @@ ble.snowflake.Client.prototype.rpcAppend = function(method, data) {
       client.append_(this.rpc);
       var event = new goog.events.Event(ble.snowflake.EventType.UPDATE);
       event.fragment = this.rpc;
+      event.client = client;
       client.dispatchEvent(event);
     } else {
       alert('error on Client.rpcAppend');
@@ -177,6 +185,7 @@ ble.snowflake.Client.prototype.rpcUndo = function() {
       client.remove_(toUndo);
       var event = new goog.events.Event(ble.snowflake.EventType.UPDATE);
       event.fragment = this.rpc;
+      event.client = client;
       client.dispatchEvent(event);
     } else {
       alert('error on Client.rpcUndo');
@@ -198,7 +207,9 @@ ble.snowflake.Client.prototype.readState = function() {
 
       client.clear_();
       client.insertAll_(json.fragments);
-      client.dispatchEvent(new goog.events.Event(ble.snowflake.EventType.INIT));
+      var event = new goog.events.Event(ble.snowflake.EventType.INIT);
+      event.client = client;
+      client.dispatchEvent(event);
     } else {
       alert('error on Client.readState');
     } 
@@ -233,5 +244,4 @@ ble.snowflake.Client.prototype.insertAll_ = function(fragments) {
       this.remove_(fragment.data.clientTimeToUndo);
     }
   } 
-  this.dispatchEvent(new goog.events.Event(ble.snowflake.EventType.INIT)); 
 };

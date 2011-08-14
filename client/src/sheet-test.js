@@ -121,8 +121,6 @@ ble.sheet.run_test = function() {
   goog.events.listen(
       canvas.getElement(),
       motionCapture.eventTypesOfInterest,
-      motionCapture.forwardingListener,
-      false,
       motionCapture);
 
   //create the handler for motion capture events and

@@ -95,8 +95,8 @@ ble.sheet.Client.prototype.read = function() {
     if(this.isSuccess()) {
       var json = this.getResponseJson();
       client.insertAll_(json.fragments);
-      var e = new goog.events.Event(ble.sheet.EventType.FETCH);
-      client.dispatchEvent(e);
+      var event = new goog.events.Event(ble.sheet.EventType.FETCH);
+      client.dispatchEvent(event);
     } else {
       alert('error on Client.read');
     }

@@ -72,12 +72,13 @@ ble.scratch.EventRegion.prototype.getTarget = function() {};
  * @param {ble.scratch.Canvas} parentCanvas
  * @param {goog.math.Box} pixelCoords
  * @param {goog.math.Box=} virtualCoords
+ * @param {boolean=} virtualizeOffset
  * @constructor
  * @extends {goog.events.EventTarget}
  * @implements {ble.scratch.DrawSurface}
  * @implements {ble.scratch.EventRegion}
  */
-ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
+ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords, virtualizeOffset) {
   this.parentCanvas_ = parentCanvas;
   this.pixelCoords_ = pixelCoords;
   this.pixelSize_ = sizeOfBox(this.pixelCoords_);
@@ -92,6 +93,8 @@ ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
   this.pixelToVirtualRatio = new goog.math.Size(
     this.pixelSize_.width / this.virtualSize_.width,
     this.pixelSize_.height / this.virtualSize_.height);
+
+  this.virtualizeOffset = goog.isDef(virtualizeOffset) ? virtualizeOffset : false;
   goog.events.EventTarget.call(this);
 };
 goog.inherits(ble.scratch.Subcanvas, goog.events.EventTarget);
@@ -137,6 +140,20 @@ ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
   transform.translate(-this.pixelCoords_.left, -this.pixelCoords_.top);
   return transform;
 }
+
+/**
+ * @override
+ */
+ble.scratch.Subcanvas.prototype.dispatchEvent = function(event) {
+  if(goog.isDef(event.offsetX) && goog.isDef(event.offsetY)) {
+    this.virtualizeEvent(event);
+    if(this.virtualizeOffset) {
+      event.offsetX = event.virtualX;
+      event.offsetY = event.virtualY;
+    } 
+  }
+  return goog.base(this, "dispatchEvent", event);
+};
 
 ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
   var affine = this.affinePixelToVirtual();
@@ -215,7 +232,7 @@ ble.scratch.Canvas.prototype.forwardEvents = function(region, eventType) {
   }
 }
 
-ble.scratch.Canvas.prototype.forwardingListener = function(event) {
+ble.scratch.Canvas.prototype.handleEvent = function(event) {
   var regions = this.regions_[event.type];
   if(goog.isDef(regions)) {
     for(var i = 0; i < regions.length; i++) {

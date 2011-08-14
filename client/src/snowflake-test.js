@@ -130,6 +130,5 @@ ble.snowflake.run_test = function() {
       function() { drawEnabled = true; });
     req.send();
   });
-  painter.repaint();
   client.readState().send();
 };

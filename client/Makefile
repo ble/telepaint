@@ -22,6 +22,10 @@ blizzard-test-debug:
 	cp configs/blizzard-test.js src/config.js
 	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
 
+foo-debug:
+	cp configs/foo.js src/config.js
+	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
+
 clean:
 	rm target/*
 

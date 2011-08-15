@@ -11,6 +11,7 @@
 
 -include_lib("webmachine/include/webmachine.hrl").
 -include("snowflake.hrl").
+-include("tpaint_util.hrl").
 
 init([]) -> {ok, stateless}.
 
@@ -21,7 +22,7 @@ content_types_accepted(Req, State) ->
   {[{"application/json", from_json}], Req, State}.
 
 from_json(Req, State) ->
-  io:format("content type recognized~n", []),
+  debug_msg("content type recognized~n", []),
   {process_post(Req, State), Req, State}.
 
 encodings_provided(Req, State) ->
@@ -39,7 +40,7 @@ allowed_methods(Req, stateless) ->
 
 forbidden(Req, stateless) ->
   Snowflakes = get_snowflake(Req),
-  io:format("Requested snowflake: ~p~n", [Snowflakes]),
+  debug_msg("Requested snowflake: ~p~n", [Snowflakes]),
   case Snowflakes of
     bad_path ->
       {false, Req, {snowflake, undefined}};
@@ -47,14 +48,14 @@ forbidden(Req, stateless) ->
       {false, Req, {snowflake, undefined}}; 
     [Snowflake] ->
       SessionId = get_session_id(Req), 
-      io:format("snowflake access: ~p~n", [Snowflake#snowflake.session_access]),
+      debug_msg("snowflake access: ~p~n", [Snowflake#snowflake.session_access]),
       Access = case Snowflake#snowflake.session_access of
         AccessList when is_list(AccessList) ->
           proplists:get_value(SessionId, AccessList);
         AccessType ->
           AccessType
       end,
-      io:format("access: ~p~nmethod: ~p~n", [Access, wrq:method(Req)]),
+      debug_msg("access: ~p~nmethod: ~p~n", [Access, wrq:method(Req)]),
       Forbidden = case {Access, wrq:method(Req)} of
         {write, _} -> false;
         {read, 'POST'} -> true;
@@ -84,7 +85,7 @@ moved_permanently(Req, State = {snowflake, #snowflake{complete_url = Url}}) ->
 
 to_json(Req, {snowflake, Snowflake = #snowflake{id = SnowflakeId}}) ->
   FragT = fun() -> mnesia:index_read(snowflake_fragment, SnowflakeId, #snowflake_fragment.id) end,
-  io:format("#snowflake_fragment.id -> ~p~n", [#snowflake_fragment.id]),
+  debug_msg("#snowflake_fragment.id -> ~p~n", [#snowflake_fragment.id]),
   T = mnesia:transaction(FragT),
   case T of
     {atomic, JsonFragments} ->
@@ -96,13 +97,13 @@ to_json(Req, {snowflake, Snowflake = #snowflake{id = SnowflakeId}}) ->
 process_post(Req, {snowflake, #snowflake{id = SnowflakeId}}) ->
   Body0 = wrq:req_body(Req),
   Body1 = jiffy:decode(Body0),
-  io:format("json: ~p~n", [Body1]),
+  debug_msg("json: ~p~n", [Body1]),
   {ok, {Method0, Data, _}} = tpaint_rpc:plain(Body1),
   Method = case Method0 of
     <<"erase-polyline">> -> stroke;
     <<"undo">> -> undo
   end,
-  io:format("{method, data}: ~p~n", [{Method, Data}]),
+  debug_msg("{method, data}: ~p~n", [{Method, Data}]),
   Stamp = now(),
   InsertT = fun() -> mnesia:write(#snowflake_fragment{timestamp=now(), id=SnowflakeId, json=Body1}) end,
       case mnesia:transaction(InsertT) of
@@ -118,7 +119,7 @@ process_post(Req, {snowflake, #snowflake{id = SnowflakeId}}) ->
 get_snowflake(Req) ->
   Dp = wrq:disp_path(Req),
   Pir = wrq:path_info(snowflake_id, Req),
-  io:format("disp_path -> ~p~npath_info(snowflake_id) -> ~p~n", [Dp, Pir]),
+  debug_msg("disp_path -> ~p~npath_info(snowflake_id) -> ~p~n", [Dp, Pir]),
   case wrq:disp_path(Req) of
     [] ->
       case wrq:path_info(snowflake_id, Req) of
@@ -126,7 +127,7 @@ get_snowflake(Req) ->
           no_snowflake;
         SnowflakeId0 ->
           SnowflakeId = erlang:list_to_binary(SnowflakeId0),
-          io:format("Requested snowflake id: ~p~n", [SnowflakeId]),
+          debug_msg("Requested snowflake id: ~p~n", [SnowflakeId]),
           case mnesia:transaction(fun() -> mnesia:read({snowflake, SnowflakeId}) end) of
             {atomic, Result} ->
               Result;
@@ -142,8 +143,8 @@ get_session_id(Req) ->
   wrq:get_cookie_value("session", Req).
 
 assemble_json(Snowflake, Fragments) ->
-  io:format("foo~n", []),
+  debug_msg("foo~n", []),
   FragmentJson = [F#snowflake_fragment.json || F <- Fragments],
   Eson = {[{<<"id">>, Snowflake#snowflake.id}, {<<"fragments">>, FragmentJson}]},
-  io:format("eson output: ~p~n", [Eson]),
+  debug_msg("eson output: ~p~n", [Eson]),
   jiffy:encode(Eson).

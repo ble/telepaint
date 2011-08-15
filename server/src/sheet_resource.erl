@@ -11,6 +11,7 @@
 
 -include_lib("webmachine/include/webmachine.hrl").
 -include("sheet.hrl").
+-include("tpaint_util.hrl").
 
 init([]) -> {ok, stateless}.
 
@@ -21,7 +22,7 @@ content_types_accepted(Req, State) ->
   {[{"application/json", from_json}], Req, State}.
 
 from_json(Req, State) ->
-  io:format("content type recognized~n", []),
+  debug_msg("content type recognized~n", []),
   {process_post(Req, State), Req, State}.
 
 encodings_provided(Req, State) ->
@@ -39,7 +40,7 @@ allowed_methods(Req, stateless) ->
 
 forbidden(Req, stateless) ->
   Sheets = get_sheet(Req),
-  io:format("Requested sheet: ~p~n", [Sheets]),
+  debug_msg("Requested sheet: ~p~n", [Sheets]),
   case Sheets of
     bad_path ->
       {false, Req, {sheet, undefined}};
@@ -47,14 +48,14 @@ forbidden(Req, stateless) ->
       {false, Req, {sheet, undefined}}; 
     [Sheet] ->
       SessionId = get_session_id(Req), 
-      io:format("sheet access: ~p~n", [Sheet#sheet.session_access]),
+      debug_msg("sheet access: ~p~n", [Sheet#sheet.session_access]),
       Access = case Sheet#sheet.session_access of
         AccessList when is_list(AccessList) ->
           proplists:get_value(SessionId, AccessList);
         AccessType ->
           AccessType
       end,
-      io:format("access: ~p~nmethod: ~p~n", [Access, wrq:method(Req)]),
+      debug_msg("access: ~p~nmethod: ~p~n", [Access, wrq:method(Req)]),
       Forbidden = case {Access, wrq:method(Req)} of
         {write, _} -> false;
         {read, 'POST'} -> true;
@@ -84,7 +85,7 @@ moved_permanently(Req, State = {sheet, #sheet{complete_url = Url}}) ->
 
 to_json(Req, {sheet, Sheet = #sheet{id = SheetId}}) ->
   FragT = fun() -> mnesia:index_read(sheet_fragment, SheetId, #sheet_fragment.id) end,
-  io:format("#sheet_fragment.id -> ~p~n", [#sheet_fragment.id]),
+  debug_msg("#sheet_fragment.id -> ~p~n", [#sheet_fragment.id]),
   T = mnesia:transaction(FragT),
   case T of
     {atomic, JsonFragments} ->
@@ -96,7 +97,7 @@ to_json(Req, {sheet, Sheet = #sheet{id = SheetId}}) ->
 process_post(Req, {sheet, #sheet{id = SheetId}}) ->
   Body0 = wrq:req_body(Req),
   Body1 = jiffy:decode(Body0),
-  io:format("json: ~p~n", [Body1]),
+  debug_msg("json: ~p~n", [Body1]),
   {ok, {Method0, Data, _}} = tpaint_rpc:plain(Body1),
   Method = case Method0 of
     <<"stroke">> -> stroke;
@@ -104,7 +105,7 @@ process_post(Req, {sheet, #sheet{id = SheetId}}) ->
     %<<"clear">> -> clear;
     <<"erase">> -> erase 
   end,
-  io:format("{method, data}: ~p~n", [{Method, Data}]),
+  debug_msg("{method, data}: ~p~n", [{Method, Data}]),
   Stamp = now(),
   InsertT = fun() -> mnesia:write(#sheet_fragment{timestamp=now(), id=SheetId, json=Body1}) end,
       case mnesia:transaction(InsertT) of
@@ -120,7 +121,7 @@ process_post(Req, {sheet, #sheet{id = SheetId}}) ->
 get_sheet(Req) ->
   Dp = wrq:disp_path(Req),
   Pir = wrq:path_info(sheet_id, Req),
-  io:format("disp_path -> ~p~npath_info(sheet_id) -> ~p~n", [Dp, Pir]),
+  debug_msg("disp_path -> ~p~npath_info(sheet_id) -> ~p~n", [Dp, Pir]),
   case wrq:disp_path(Req) of
     [] ->
       case wrq:path_info(sheet_id, Req) of
@@ -128,7 +129,7 @@ get_sheet(Req) ->
           no_sheet;
         SheetId0 ->
           SheetId = erlang:list_to_binary(SheetId0),
-          io:format("Requested sheet id: ~p~n", [SheetId]),
+          debug_msg("Requested sheet id: ~p~n", [SheetId]),
           case mnesia:transaction(fun() -> mnesia:read({sheet, SheetId}) end) of
             {atomic, Result} ->
               Result;
@@ -144,8 +145,8 @@ get_session_id(Req) ->
   wrq:get_cookie_value("session", Req).
 
 assemble_json(Sheet, Fragments) ->
-  io:format("foo~n", []),
+  debug_msg("foo~n", []),
   FragmentJson = [F#sheet_fragment.json || F <- Fragments],
   Eson = {[{<<"id">>, Sheet#sheet.id}, {<<"fragments">>, FragmentJson}]},
-  io:format("eson output: ~p~n", [Eson]),
+  debug_msg("eson output: ~p~n", [Eson]),
   jiffy:encode(Eson).

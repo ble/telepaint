@@ -15,9 +15,9 @@
 
 -define(FILE_ROOT, "priv/www/").
 -record(context, {root,path=undefined,response_body=undefined,metadata=[]}).
-
 -include_lib("kernel/include/file.hrl").
 -include_lib("webmachine/include/webmachine.hrl").
+-include("tpaint_util.hrl").
 
 init([]) ->
   {ok, #context{root=?FILE_ROOT}};

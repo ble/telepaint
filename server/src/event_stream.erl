@@ -8,7 +8,8 @@
 %%% External API- getting messages from streams.
 -export([get_stream_messages/4]).
 
-
+%%% Time until messages in the queue go stale
+-define(STALE_TIME_MICROSECONDS, 30 * 1000 * 1000). 
 
 %%% Behaviour exports
 -export([init/1, terminate/2, code_change/3]).
@@ -46,7 +47,6 @@ get_stream_messages(Pid, Id, LastReqTime, Timeout) ->
   end.
 %%%.
 %%%' Internal definitions
--define(STALE_TIME_MICROSECONDS, 5 * 1000 * 1000). 
 -record(
   stream_state,
   { stream_id = undefined,

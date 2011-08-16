@@ -5,8 +5,8 @@
 -export([start_container/0, stop_container/1, add_stream/3, delete_stream/2]).
 -export([add_stream_handler/3, remove_stream_handler/3]).
 
-%%% External API- getting messages from streams.
--export([get_stream_messages/4]).
+%%% External API- sending events / getting messages
+-export([get_stream_messages/4, send_event/2]).
 
 %%% Time until messages in the queue go stale
 -define(STALE_TIME_MICROSECONDS, 30 * 1000 * 1000). 
@@ -14,6 +14,27 @@
 %%% Behaviour exports
 -export([init/1, terminate/2, code_change/3]).
 -export([handle_event/2, handle_call/2, handle_info/2]).
+
+%%% Test export
+-export([test/0]).
+test() ->
+  {ok, Pid} = event_stream:start_container(),
+  Id = foobar,
+  A = event_stream:add_stream(Pid, Id, [fun(I, E) -> {ok, [{I, E}]} end]),
+  B = event_stream:send_event(Pid, <<"hello there, friend">>),
+  C = event_stream:get_stream_messages(Pid, Id, {0,0,0}, 500),
+  T1 = case C of
+    {T, _} ->
+      T;
+    _ ->
+      {0, 0, 0}
+  end,
+  D = event_stream:get_stream_messages(Pid, Id, T1, 500),
+  E = event_stream:send_event(Pid, <<"howdang">>),
+  F = event_stream:get_stream_messages(Pid, Id, T1, 500),
+  G = event_stream:stop_container(Pid),
+  {A,B,C,D,E,F,G}.
+
 
 %%%' Creating and managing streams
 start_container() ->
@@ -34,7 +55,7 @@ add_stream_handler(Pid, Id, Handler) ->
 remove_stream_handler(Pid, Id, Handler) ->
   gen_event:call(Pid, {event_stream, Id}, {remove_handler, Handler}).
 %%%.
-%%%' Getting messages from streams
+%%%' Sending events / getting messages
 get_stream_messages(Pid, Id, LastReqTime, Timeout) ->
   Handler = {event_stream, Id},
   Ref = make_ref(),
@@ -48,6 +69,9 @@ get_stream_messages(Pid, Id, LastReqTime, Timeout) ->
     Timeout ->
       timeout
   end.
+
+send_event(Pid, Event) ->
+  gen_event:notify(Pid, Event).
 %%%.
 %%%' Internal definitions
 -record(
@@ -93,9 +117,12 @@ handle_call({remove_handler, Handler}, State = #stream_state{handlers = Handlers
   {ok, Reply, State#stream_state{handlers = Handlers1}};
 
 
-handle_call({park, Pid, Ref, LastInstant}, State = #stream_state{parked_requests = Requests0}) ->
+handle_call({park, Pid, Ref, LastInstant}, State0 = #stream_state{parked_requests = Requests0}) ->
   Requests1 = [{LastInstant, Pid, Ref} | Requests0], 
-  {ok, parked, State#stream_state{parked_requests = Requests1}}.
+  State1 = discard_stale(State0),
+  State2 = State1#stream_state{parked_requests = Requests1},
+  State3 = dispatch_responses(State2),
+  {ok, parked, State3}.
 
 handle_info(_Msg, State) ->
   {ok, State}.
@@ -148,11 +175,22 @@ process_message_generation({Ms0, Hs0}, Id, Event, [Handler | Handlers]) ->
   end,
   process_message_generation({Ms1, Hs1}, Id, Event, Handlers).
 
-dispatch_responses(State = #stream_state{messages = Messages0, parked_requests = Requests}) ->  
-  [Pid ! {event_stream, Ref, Messages1} ||
-    {Stamp, Pid, Ref} <- Requests,
-    Messages1 <- [queue:to_list(messages_after(Stamp, Messages0))]],
-  State#stream_state{parked_requests = []}.
+dispatch_responses(State = #stream_state{messages = Messages, parked_requests = Requests0}) ->  
+  Requests1 = dispatch_responses(Messages, Requests0, []),
+  State#stream_state{parked_requests = Requests1}.
+
+dispatch_responses(Messages, [Req = {Stamp, Pid, Ref} | Requests], ReqRemaining) ->
+  MessagesToSend = queue:to_list(messages_after(Stamp, Messages)),
+  case MessagesToSend of
+    [] ->
+      dispatch_responses(Messages, Requests, [Req | ReqRemaining]);
+    _ ->
+      Pid ! {event_stream, Ref, MessagesToSend},
+      dispatch_responses(Messages, Requests, ReqRemaining)
+  end;
+
+dispatch_responses(_, [], ReqRemaining) ->
+  ReqRemaining.
 
 messages_after(Cutoff, Queue) ->
   queue:filter(fun({Stamp, _}) -> timer:now_diff(Stamp, Cutoff) > 0 end, Queue).

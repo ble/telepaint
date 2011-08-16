@@ -2,7 +2,7 @@
 -behaviour(gen_event).
 
 %%% External API- creating and managing streams.
--export([start_container/0, add_stream/3, delete_stream/2]).
+-export([start_container/0, stop_container/1, add_stream/3, delete_stream/2]).
 -export([add_stream_handler/3, remove_stream_handler/3]).
 
 %%% External API- getting messages from streams.
@@ -18,6 +18,9 @@
 %%%' Creating and managing streams
 start_container() ->
   gen_event:start().
+
+stop_container(Pid) ->
+  gen_event:stop(Pid).
 
 add_stream(Pid, Id, Handlers) ->
   gen_event:add_handler(Pid, {event_stream, Id}, [Id, Handlers]).

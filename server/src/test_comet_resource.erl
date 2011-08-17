@@ -6,10 +6,20 @@
 -define(COMET_TIMEOUT, (30 * 1000)).
 
 %%%repl example:
-%event_stream:add_stream(test_comet_stream, <<"bifflesnort">>, []). 
-%event_stream:add_stream_handler(test_comet_stream, <<"bifflesnort">>, fun (Id, X) -> {ok, [X]} end).
+%{ok, Pid} = event_stream:start_container().
+%register(test_comet_stream, Pid).
+%event_stream:add_stream(test_comet_stream, <<"streamid">>, []). 
+%event_stream:add_stream_handler(test_comet_stream, <<"streamid">>, fun (Id, X) -> {ok, [X]} end).
 % %--request 'http://127.0.0.1:8000/comet-test/bifflesnort/0/0/0' now--
-%event_stream:send_event(test_comet_stream, <<"heyooooo">>).
+% %or better yet, request 'http://127.0.0.1:8000/comet-test-debug', fire up
+% %the JS console and type the following:
+% %  var loop = new ble.net.MACometLoop("http://127.0.0.1:8000/comet-test/streamid", 45000, [0,0,0]);
+% %  var types = [goog.net.EventType.COMPLETE, goog.net.EventType.ERROR];
+% %  goog.events.listen(loop, types, function(e) {console.log(e);});
+% %  loop.start();
+% % and then
+%event_stream:send_event(test_comet_stream, insert_eson_here).
+
 
 init(Ctx) ->
   io:format("in init~n", []),

@@ -37,7 +37,7 @@ ble.net.MACometLoop.prototype.errorType = goog.net.EventType.ERROR;
 
 ble.net.MACometLoop.prototype.url = function() {
   var L = this.lastFetched;
-  return this.baseUrl + L[0] + "/" + L[1] + "/" + L[2];
+  return this.baseUrl + "/" + L[0] + "/" + L[1] + "/" + L[2];
 };
 
 ble.net.MACometLoop.prototype.handleEvent = function(e) {
@@ -52,6 +52,9 @@ ble.net.MACometLoop.prototype.handleEvent = function(e) {
       event.data = json.data;
     }
     this.dispatchEvent(event);
+    this.xhr = new goog.net.XhrIo();
+    this.xhr.setTimeoutInterval(this.timeout);
+    goog.events.listenOnce(this.xhr, goog.net.EventType.COMPLETE, this); 
     this.getAgain_();
   } else {
     var errorEvent = new goog.events.Event(this.errorType);
@@ -64,7 +67,7 @@ ble.net.MACometLoop.prototype.start = function() {
     return;
   this.xhr = new goog.net.XhrIo();
   this.xhr.setTimeoutInterval(this.timeout);
-  goog.events.listen(this.xhr, goog.net.EventType.COMPLETE, this);
+  goog.events.listenOnce(this.xhr, goog.net.EventType.COMPLETE, this);
   this.running = true;
   this.getAgain_();
 };

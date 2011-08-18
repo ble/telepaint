@@ -30,6 +30,10 @@ comet-test-debug:
 	cp configs/comet-test.js src/config.js
 	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
 
+icon-test-debug:
+	cp configs/icon-test.js src/config.js
+	@$(PLOVR) serve src/config.js --listen 127.0.0.1 --port 9810
+
 clean:
 	rm target/*
 

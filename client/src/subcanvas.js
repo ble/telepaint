@@ -18,6 +18,7 @@ goog.require('goog.graphics.AffineTransform');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.events.EventTarget');
 goog.require('goog.events.MouseWheelHandler');
 goog.require('goog.style');
 goog.require('goog.ui.Component');

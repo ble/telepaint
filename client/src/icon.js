@@ -1,18 +1,93 @@
 goog.require('goog.math.Box');
+goog.require('goog.events.EventTarget');
+
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
 
 goog.provide('ble.icon');
 
-ble.icon.render = function(container, icon) {
-  var bSize = 40;
-  var canvas = new ble.scratch.Canvas(bSize, bSize);
+/**
+ * @constructor
+ * @extends {goog.events.EventTarget}
+ */
+ble.icon.Style = function(color1, color2, strokeWidth) {
+  goog.events.EventTarget.call(this);
+  this.color1 = color1;
+  this.color2 = color2;
+  this.strokeWidth = strokeWidth;
+};
+goog.inherits(ble.icon.Style, goog.events.EventTarget);
+
+ble.icon.Icons = function(style) {
+  this.style = style;
+  this.subcanvases = [];
+};
+
+ble.icon.Icons.prototype.addIcon = function(container, size, toDraw) {
+  var canvas = new ble.scratch.Canvas(size, size);
   canvas.render(container);
-  var pxBox = new goog.math.Box(0, bSize, bSize, 0);
+  var pxBox = new goog.math.Box(0, size, size, 0);
   var vBox = new goog.math.Box(1.125, 1.125, -0.125, -0.125);
   var subcanvas = new ble.scratch.Subcanvas(canvas, pxBox, vBox);
-  subcanvas.withContext(icon); 
+  subcanvas.withContext(toDraw); 
+  this.subcanvases.push([subcanvas, toDraw]);
   return canvas;
+};
+
+ble.icon.Icons.prototype.setIcon = function(index, toDraw) {
+  if(index < this.subcanvases.length) {
+    this.subcanvases[index][1] = toDraw;
+  }
+}
+
+ble.icon.Icons.prototype.redraw = function() {
+  for(var i = 0; i < this.subcanvases.length; i++) {
+    var subcanvas = this.subcanvases[i][0];
+    var toDraw = this.subcanvases[i][1];
+    subcanvas.withContext(toDraw);
+  }
+};
+
+ble.icon.Icons.prototype.stroke = function(ctx) {
+  clearBack(ctx);
+  ctx.beginPath();
+  ctx.strokeStyle = this.style.color1;
+  ctx.lineWidth *= this.style.strokeWidth;
+  doStroke(ctx);
+};
+
+ble.icon.Icons.prototype.polyline = function(ctx) {
+  clearBack(ctx);
+  ctx.beginPath();
+  ctx.strokeStyle = this.style.color1;
+  ctx.lineWidth *= this.style.strokeWidth;
+  doPolyline(ctx, false); 
+};
+
+ble.icon.Icons.prototype.polylineFill = function(ctx) {
+  clearBack(ctx);
+  ctx.beginPath();
+  ctx.strokeStyle = this.style.color1;
+  ctx.fillStyle = this.style.color2;
+  ctx.lineWidth *= this.style.strokeWidth;
+  doPolyline(ctx, true); 
+};
+
+ble.icon.Icons.prototype.erase = function(ctx) {
+  ctx.beginPath();
+  ctx.rect(-0.25, -0.25, 1.5, 15);
+  ctx.fillStyle = "48f";
+  ctx.fill();
+
+  ctx.lineWidth *= this.style.strokeWidth;
+  ctx.globalCompositeOperation = "copy";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.0)"
+  ctx.beginPath();
+  doStroke(ctx);
+
+  ctx.beginPath();
+  ctx.globalCompositeOperation = "destination-over";
+  clearBack(ctx); 
 };
 
 var wiggle = function(t) { 
@@ -26,7 +101,7 @@ var waggle = function(t) {
 };
 
 
-var clearBackStyle = function(ctx) {
+var clearBack = function(ctx) {
   var N = 4;
   for(var i = -1; i < N+1; i++) {
     for(var j = -1; j < N+1; j++) {
@@ -36,10 +111,7 @@ var clearBackStyle = function(ctx) {
       ctx.fill();
     }
   }
-  ctx.beginPath();
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 0.075; 
-}
+};
 
 var doStroke = function(ctx) {
   ctx.moveTo(0, 0);
@@ -50,7 +122,7 @@ var doStroke = function(ctx) {
     ctx.lineTo(loc[0], loc[1]);
   }
   ctx.stroke();
-}
+};
 
 var doPolyline = function(ctx, fill, color) {
   var loc0 = waggle(0);
@@ -61,44 +133,9 @@ var doPolyline = function(ctx, fill, color) {
     ctx.lineTo(loc[0], loc[1]);
   }
   if(fill) {
-    ctx.fillStyle = color;
     ctx.fill();
   }
   ctx.stroke();
-
-}
-
-ble.icon.stroke = function(ctx) {
-  clearBackStyle(ctx);
-  doStroke(ctx);
 };
-
-ble.icon.polyline = function(ctx) {
-  clearBackStyle(ctx);
-  doPolyline(ctx, false);
-}
-
-ble.icon.polylineFill = function(ctx) {
-  clearBackStyle(ctx);
-  doPolyline(ctx, true, "#48f");
-};
-
-ble.icon.erase = function(ctx) {
-  ctx.beginPath();
-  ctx.rect(-0.25, -0.25, 1.5, 15);
-  ctx.fillStyle = "48f";
-  ctx.fill();
-
-  ctx.lineWidth = 0.3;
-  ctx.globalCompositeOperation = "copy";
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.0)"
-  ctx.beginPath();
-  doStroke(ctx);
-
-  ctx.beginPath();
-  ctx.globalCompositeOperation = "destination-over";
-  clearBackStyle(ctx);
-};
-
 
 

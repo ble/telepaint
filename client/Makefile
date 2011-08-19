@@ -55,6 +55,8 @@ target/blizzard-test.js:
 deploy: target/sheet-test.js target/snowflake-test.js target/blizzard-test.js
 	mkdir -p $(STATIC_DIR)/js
 	mkdir -p $(STATIC_DIR)/html
+	mkdir -p $(STATIC_DIR)/css
 	cp target/*.js $(STATIC_DIR)/js/
 	cp html/*.html $(STATIC_DIR)/html/
+	cp -r css/* $(STATIC_DIR)/css/
 

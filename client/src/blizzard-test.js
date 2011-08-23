@@ -13,7 +13,7 @@ ble.blizzard.run_test = function() {
   var container = domHelper.getElement("outermost");
 
   var aspect = 0.75;
-  var width = 800;
+  var width = 1920;
   var height = aspect * width;
   var canvas = new ble.scratch.Canvas(width, height);
   canvas.render(container);  

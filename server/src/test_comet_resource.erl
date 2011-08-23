@@ -1,9 +1,11 @@
 -module(test_comet_resource).
 
--export([ping/2, init/1, to_json/2, content_types_provided/2]).
+-export([init/1, to_json/2, content_types_provided/2]).
 
 -define(STREAM, test_comet_stream).
 -define(COMET_TIMEOUT, (30 * 1000)).
+
+-include_lib("webmachine/include/webmachine.hrl").
 
 %%%repl example:
 %{ok, Pid} = event_stream:start_container().
@@ -36,10 +38,6 @@ init(Ctx) ->
     _ ->
       Success
   end.
-
-ping(X, Y) ->
-  {pong, X, Y}.
-
 
 content_types_provided(Req, Ctx) ->
   io:format("in content_types_provided~n", []),

@@ -18,6 +18,7 @@ goog.require('goog.graphics.AffineTransform');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.events.EventTarget');
 goog.require('goog.events.MouseWheelHandler');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
@@ -72,29 +73,41 @@ ble.scratch.EventRegion.prototype.getTarget = function() {};
  * @param {ble.scratch.Canvas} parentCanvas
  * @param {goog.math.Box} pixelCoords
  * @param {goog.math.Box=} virtualCoords
+ * @param {boolean=} virtualizeOffset
  * @constructor
  * @extends {goog.events.EventTarget}
  * @implements {ble.scratch.DrawSurface}
  * @implements {ble.scratch.EventRegion}
  */
-ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords) {
+ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords, virtualizeOffset) {
   this.parentCanvas_ = parentCanvas;
   this.pixelCoords_ = pixelCoords;
-  this.pixelSize_ = sizeOfBox(this.pixelCoords_);
 
-  if(virtualCoords !== undefined) {
+  if(goog.isDef(virtualCoords)) {
     this.virtualCoords_ = virtualCoords;
-    this.virtualSize_ = sizeOfBox(this.virtualCoords_);
   } else {
-    this.virtualSize_ = this.pixelSize_;
-    this.virtualCoords_ = new goog.math.Box(0, this.virtualSize_.width, this.virtualSize_.height, 0);
+    var pSz = this.pixelSize_();
+    this.virtualCoords_ = new goog.math.Box(0, pSz.width, pSz.height, 0);
   }
-  this.pixelToVirtualRatio = new goog.math.Size(
-    this.pixelSize_.width / this.virtualSize_.width,
-    this.pixelSize_.height / this.virtualSize_.height);
+
+  this.virtualizeOffset = goog.isDef(virtualizeOffset) ? virtualizeOffset : false;
   goog.events.EventTarget.call(this);
 };
 goog.inherits(ble.scratch.Subcanvas, goog.events.EventTarget);
+
+ble.scratch.Subcanvas.prototype.pixelSize_ = function() {
+  return sizeOfBox(this.pixelCoords_);
+};
+
+ble.scratch.Subcanvas.prototype.virtualSize_ = function() {
+  return sizeOfBox(this.virtualCoords_);
+};
+
+ble.scratch.Subcanvas.prototype.pixelToVirtualRatio_ = function() {
+  var pSz = this.pixelSize_();
+  var vSz = this.virtualSize_();
+  return new goog.math.Size(pSz.width / vSz.width, pSz.height / vSz.height);
+};
 
 ble.scratch.Subcanvas.prototype.inRegion = function(event) {
   var coord = new goog.math.Coordinate(event.offsetX, event.offsetY);
@@ -119,11 +132,12 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
   context.closePath();
   context.clip();
   context.translate(this.pixelCoords_.left, this.pixelCoords_.top); 
-  context.scale( this.pixelToVirtualRatio.width,
-                 this.pixelToVirtualRatio.height );
+  var ratio = this.pixelToVirtualRatio_();
+  context.scale( ratio.width,
+                 ratio.height );
   context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
-  context.lineWidth /= hypot( this.pixelToVirtualRatio.width,
-                              this.pixelToVirtualRatio.height);
+  context.lineWidth /= hypot( ratio.width,
+                              ratio.height);
 
   action.call(this, context);
 
@@ -131,12 +145,27 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
 }
 
 ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
+  var ratio = this.pixelToVirtualRatio_();
   var transform = new goog.graphics.AffineTransform();
   transform.translate(this.virtualCoords_.left, this.virtualCoords_.top);
-  transform.scale(1.0 / this.pixelToVirtualRatio.width, 1.0 / this.pixelToVirtualRatio.height);
+  transform.scale(1.0 / ratio.width, 1.0 / ratio.height);
   transform.translate(-this.pixelCoords_.left, -this.pixelCoords_.top);
   return transform;
 }
+
+/**
+ * @override
+ */
+ble.scratch.Subcanvas.prototype.dispatchEvent = function(event) {
+  if(goog.isDef(event.offsetX) && goog.isDef(event.offsetY)) {
+    this.virtualizeEvent(event);
+    if(this.virtualizeOffset) {
+      event.offsetX = event.virtualX;
+      event.offsetY = event.virtualY;
+    } 
+  }
+  return goog.base(this, "dispatchEvent", event);
+};
 
 ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
   var affine = this.affinePixelToVirtual();
@@ -145,6 +174,16 @@ ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
   affine.transform(pixelCoords, 0, virtualCoords, 0, 1);
   event.virtualX = virtualCoords[0];
   event.virtualY = virtualCoords[1];
+}
+
+ble.scratch.Subcanvas.prototype.virtualizeListener_replaceOffset = function(listener) {
+  var subcanvas = this;
+  return function(event) {
+    subcanvas.virtualizeEvent(event);
+    event.offsetX = event.virtualX;
+    event.offsetY = event.virtualY;
+    return listener.call(this, event);
+  };
 }
 
 ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
@@ -205,7 +244,7 @@ ble.scratch.Canvas.prototype.forwardEvents = function(region, eventType) {
   }
 }
 
-ble.scratch.Canvas.prototype.forwardingListener = function(event) {
+ble.scratch.Canvas.prototype.handleEvent = function(event) {
   var regions = this.regions_[event.type];
   if(goog.isDef(regions)) {
     for(var i = 0; i < regions.length; i++) {

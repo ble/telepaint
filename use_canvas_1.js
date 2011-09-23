@@ -11,8 +11,9 @@ var nearestPowerOf10 = function(x) {
 
 var getTickSpacing = function(subcanvas, pixelSpacingX, pixelSpacingY) {
   var factors = [1, 2, 5];
-  var exactSpacingX = Math.abs(pixelSpacingX / subcanvas.pixelToVirtualRatio.width);
-  var exactSpacingY = Math.abs(pixelSpacingY / subcanvas.pixelToVirtualRatio.height);
+  var ratio = subcanvas.pixelToVirtualRatio_();
+  var exactSpacingX = Math.abs(pixelSpacingX / ratio.width);
+  var exactSpacingY = Math.abs(pixelSpacingY / ratio.height);
   var best = [Infinity, Infinity];
   for(var i = 0; i < factors.length; i++) {
     var factor = factors[i];
@@ -67,8 +68,9 @@ var axes = function(tickSpacingPixels, lineWidthMutator, strokeStyle, tickLength
     var middleYTick = nearestWholeMultiple( (this.virtualCoords_.top + this.virtualCoords_.bottom) / 2, spacings[1]);
     var xTickLocs = fillRange(middleXTick, this.virtualCoords_.left, this.virtualCoords_.right, spacings[0]);
     var yTickLocs = fillRange(middleYTick, this.virtualCoords_.top, this.virtualCoords_.bottom, spacings[1]);
-    var xTickHeightVirtual = tickLengthPixels / this.pixelToVirtualRatio.height / 2;
-    var yTickWidthVirtual = tickLengthPixels / this.pixelToVirtualRatio.width / 2;
+    var ratio = this.pixelToVirtualRatio_();
+    var xTickHeightVirtual = tickLengthPixels / ratio.height / 2;
+    var yTickWidthVirtual = tickLengthPixels / ratio.width / 2;
     context.save(); {
       context.lineWidth = lineWidthMutator(context.lineWidth);
       context.beginPath();
@@ -108,6 +110,20 @@ var sinusoid = function(offset, amplitude, frequency) {
   };
 };
 
+var supersquiggle = function(offset, amplitude, frequency) {
+  return function(context) {
+    var start = this.virtualCoords_.left;
+    var end = this.virtualCoords_.right;
+    var step = (end - start) / 2000;
+    context.beginPath();
+    context.moveTo(start, offset + amplitude * Math.sin(frequency * start));
+    for(var x = start; x <= end; x += step) {
+      context.lineTo(x, offset + amplitude * x * Math.sin(frequency * 1/Math.sqrt(Math.abs(x))));
+    }
+    context.stroke();
+  };
+}
+
 var domHelper = new goog.dom.DomHelper();
 var container = domHelper.getElement("outermost");
 var canvas = new ble.scratch.Canvas(640, 480);
@@ -115,7 +131,7 @@ canvas.render(container);
 
 
 var fullView = new goog.math.Box(1, 1, -1, -1);
-var partial = new goog.math.Box(0.20, 0.30, -0.10, -0.10);
+var partial = new goog.math.Box(0.15, 0.2, -0.15, -0.2);
 
 var pipBox = new goog.math.Box(360, 120, 480, 0);
 var mainBox = new goog.math.Box(0, 640, 480, 0);
@@ -126,6 +142,7 @@ var main = new ble.scratch.Subcanvas(canvas, mainBox, partial);
 var bigAxes = axes(40, function(x) { return x * 0.95; }, "000", 20);
 var smallerAxes = axes(10, function(x) { return x * 0.95; }, "000", 10);
 var squiggler = sinusoid(0, 0.1, Math.PI * 2 * 5);
+var ss = supersquiggle(0, 0.8, 0.0001);
 
 var strokeBox = function(box, strokeStyle, lineWidthMutator) {
   return function(context) {
@@ -150,11 +167,13 @@ var redraw = function() {
   canvas.withContext(function(context) { context.clearRect(0, 0, this.width_px, this.height_px); });
   main.withContext(bigAxes);
   main.withContext(squiggler);
+  main.withContext(ss);
   main.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
   pip.withContext(fillBox(fullView, "fff"));
   pip.withContext(strokeBox(fullView, "0ff", function(x) { return x * 1.5; }));
   pip.withContext(smallerAxes);
   pip.withContext(squiggler);
+  pip.withContext(ss);
   pip.withContext(strokeBox(partial, "f00", function(x) { return x * 1.5; }));
   return false;
 };
@@ -238,8 +257,9 @@ var grabMover = function(e) {
   if(grabState.grabbed) {
     var pxDeltaX = grabState.pxX - e.offsetX;
     var pxDeltaY = grabState.pxY - e.offsetY;
-    var deltaX = pxDeltaX / this.pixelToVirtualRatio.width;
-    var deltaY = pxDeltaY / this.pixelToVirtualRatio.height;
+    var ratio = this.pixelToVirtualRatio_();
+    var deltaX = pxDeltaX / ratio.width;
+    var deltaY = pxDeltaY / ratio.height;
     partial.top = grabState.box.top + deltaY;
     partial.bottom = grabState.box.bottom + deltaY;
     partial.left = grabState.box.left + deltaX;
@@ -248,7 +268,7 @@ var grabMover = function(e) {
     return false;
   }
 }
-goog.events.listen(canvas.getElement(), forwardTypes, canvas.forwardingListener, false, canvas);
+goog.events.listen(canvas.getElement(), forwardTypes, canvas, false, canvas);
 goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, toggler);
 goog.events.listen(canvas.getElement(), goog.events.EventType.MOUSEUP, grabToggler);
 goog.events.listen(pip, forwardTypes, toggler);

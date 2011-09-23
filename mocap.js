@@ -4,6 +4,8 @@ goog.provide('ble.mocap.Mocap');
 goog.provide('ble.mocap.Replayer');
 goog.provide('ble.mocap.EventType');
 goog.provide('ble.mocap.Capture');
+goog.provide('ble.mocap.Stroke');
+goog.provide('ble.mocap.Polyline');
 
 goog.require('goog.events');
 goog.require('goog.events.EventType');
@@ -41,16 +43,29 @@ ble.mocap.Capture = function(startTime) {
   this.controlPoints = [];
 }
 
+ble.mocap.Capture.prototype.getControlCoordinates = function() {
+  var result = [];
+  for(var i = 0; i < this.controlTimeIndices.length; i++) {
+    var ix = this.controlTimeIndices[i];
+    result.push(this.coordinates[2*ix], this.coordinates[2*ix+1]);
+  }
+  return result;
+};
+
+ble.mocap.Capture.prototype.getControlCoordinatesAndHead = function() {
+  var result = this.getControlCoordinates();
+  var L = this.coordinates.length;
+  var C = this.coordinates;
+  result.push(C[L-2], C[L-1]);
+  return result;
+};
+
 ble.mocap.Capture.blessJSONObject = function(obj) {
   var result = new ble.mocap.Capture(obj.startTime);
-  result.coordinates = obj.coordinates;
-  result.times = obj.times;
-  result.controlTimeIndices = obj.controlTimeIndices;
-  result.controlPoints = obj.controlPoints;
-  delete obj.coordinates;
-  delete obj.times;
-  delete obj.controlTimeIndices;
-  delete obj.controlPoints;
+  result.coordinates = obj.coordinates.slice();
+  result.times = obj.times.slice();
+  result.controlTimeIndices = obj.controlTimeIndices.slice();
+  result.controlPoints = obj.controlPoints.slice();
   return result;
 }
 
@@ -122,51 +137,22 @@ ble.mocap.binarySearch0 = function(array, ix0, ixF, ix, value) {
 /**
  * Abstract class providing motion-capture functionality for mouse events.
  * @constructor
+ * @extends {goog.events.EventTarget}
  */
 
 ble.mocap.Mocap = function() {
   this.startTime = null;
   this.capture = null;
-  /**
-   * Targets which will receive mocap events.
-   * @type {Object.<string,Array.<goog.events.EventTarget>>}
-   */
-  this.targets = {};
+  goog.events.EventTarget.call(this);
 }
+goog.inherits(ble.mocap.Mocap, goog.events.EventTarget);
+
+ble.mocap.Mocap.prototype.handleEvent = goog.abstractMethod;
 
 ble.mocap.Mocap.prototype.dispatchMocap = function(type) {
-  var targets = this.targets[type];
-  if(goog.isNull(targets))
-    return;
-  var dispatchMocap = new goog.events.Event(type);
-  dispatchMocap.capture = this.capture;
-  for(var i = 0; i < targets.length; i++) {
-    var result = targets[i].dispatchEvent(dispatchMocap);
-    if(result === false)
-      return;
-  }
-}
-
-ble.mocap.Mocap.prototype.forwardingListener = goog.abstractMethod;
-
-/**
- * @param {goog.events.EventTarget} target
- * @param {string} type
- */
-ble.mocap.Mocap.prototype.addTarget = function(target, type) {
-  if(goog.isArray(type)) {
-    for(var i = 0; i < type.length; i++)
-      this.addTarget(target, type[i]);
-  } else {
-    if(!(type in this.targets))
-      this.targets[type] = [];
-    var targets = this.targets[type];
-    for(var i = 0; i < targets.length; i++) {
-      if(targets[i] === target)
-        return;
-    }
-    targets.unshift(target);
-  }
+  var event = new goog.events.Event(type);
+  event.capture = this.capture;
+  this.dispatchEvent(event);
 }
 
 ble.mocap.Mocap.prototype.beginCapture = function(event) {
@@ -207,7 +193,7 @@ ble.mocap.Stroke = function() {
 };
 goog.inherits(ble.mocap.Stroke, ble.mocap.Mocap);
 
-ble.mocap.Stroke.prototype.forwardingListener = function(event) {
+ble.mocap.Stroke.prototype.handleEvent = function(event) { 
   if(this.midStroke) {
     if(event.type === goog.events.EventType.MOUSEMOVE) {
       this.progressCapture(event);
@@ -220,7 +206,7 @@ ble.mocap.Stroke.prototype.forwardingListener = function(event) {
     this.midStroke = true;
     this.beginCapture(event);
   } 
-}
+};
 
 ble.mocap.Stroke.prototype.eventTypesOfInterest =
   [goog.events.EventType.MOUSEDOWN,
@@ -250,7 +236,7 @@ ble.mocap.Polyline.prototype.eventTypesOfInterest0 = function() {
   return types;
 };
 
-ble.mocap.Polyline.prototype.forwardingListener = function(event) {
+ble.mocap.Polyline.prototype.handleEvent = function(event) {
   if(this.drawing) {
     if(this.captureMove && event.type == goog.events.EventType.MOUSEMOVE) {
       this.progressCapture(event);

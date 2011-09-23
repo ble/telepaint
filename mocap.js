@@ -43,6 +43,10 @@ ble.mocap.Capture = function(startTime) {
   this.controlPoints = [];
 }
 
+ble.mocap.Capture.prototype.endTime = function() {
+  return this.startTime + this.times[this.times.length - 1];
+}; 
+
 ble.mocap.Capture.prototype.getControlCoordinates = function() {
   var result = [];
   for(var i = 0; i < this.controlTimeIndices.length; i++) {

@@ -1,168 +1,171 @@
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
+goog.require('ble.gfx');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 
-var pxWidth = 640;
-var pxHeight = 480;
-var aspect = pxHeight / pxWidth;
 
-var domHelper = new goog.dom.DomHelper();
-var container = domHelper.getElement("outermost");
-var canvas = new ble.scratch.Canvas(pxWidth, pxHeight);
-canvas.render(container);
-container.appendChild(domHelper.createElement("br"));
-var link = domHelper.createElement("a");
-link.setAttribute("href", "javascript:replayAll()");
-link.appendChild(domHelper.createTextNode("replay all"));
-container.appendChild(link);
+/**
+ * @constructore
+ * @extends {ble.scratch.Canvas}
+ */
+ble.Scribble = function(width, height) {
+  ble.scratch.Canvas.call(this, width, height);
+  this.scene = {
+    beingDrawn: null,
+    complete: []
+  };
+  this.animating = false;
+};
+goog.inherits(ble.Scribble, ble.scratch.Canvas);
 
-
-var replayAll = function() {
-  var startTime = Date.now();
-  var toReplay = [];
-  if(scene.beingDrawn != null)
-    toReplay.push(beingDrawn);
-  while(scene.beingReplayed != null && scene.beingReplayed.length > 0)
-    toReplay.push(scene.beingReplayed.pop());
-  while(scene.complete.length > 0)
-    toReplay.push(scene.complete.pop());
-  scene.startTimes = [];
-  while(scene.startTimes.length < toReplay.length)
-    scene.startTimes.push(startTime);
-  scene.beingDrawn = null;
-  scene.beingReplayed = toReplay;
-  update();
-}
-
-var dehydrate = function() {
-  var tmp = scene.complete;
-  scene.complete = [];
-  canvas.withContext(redraw);
-  return JSON.stringify(tmp);
-}
-
-var rehydrate = function(spaceIceCream) {
-  var objs = JSON.parse(spaceIceCream);
-  scene.complete = [];
-  for(var i = 0; i < objs.length; i++) {
-    scene.complete.push(ble.mocap.Capture.blessJSONObject(objs[i]));
+ble.Scribble.prototype.repaintComplete = function(ctx) {
+  var scene = this.scene;
+  ctx.clearRect(0, 0, this.width_px, this.height_px);
+  if(!goog.isNull(scene.beingDrawn)) {
+    pathCoords(ctx, scene.beingDrawn.coordinates);
+    ctx.stroke();
   }
-  canvas.withContext(redraw);
-}
+  for(var i = 0; i < scene.complete.length; i++) {
+    pathCoords(ctx, scene.complete[i].coordinates);
+    ctx.stroke();
+  }
+};
+
+ble.Scribble.prototype.repaintAt = function(time) {
+  return function(ctx) {
+    var scene = this.scene;
+    ctx.clearRect(0, 0, this.width_px, this.height_px);
+    if(!goog.isNull(scene.beingDrawn)) { 
+      pathCoords(ctx, scene.beingDrawn.coordinates);
+      ctx.stroke();
+    }
+    for(var i = 0; i < scene.complete.length; i++) {
+      var replay = scene.complete[i];
+      if(time > replay.endTime()) {
+        pathCoords(ctx, replay.coordinates);
+      } else {
+        var indices = replay.betweenTimes(-replay.startTime, time-replay.startTime);
+        pathCoordsWithin(ctx, replay.coordinates, indices[0], indices[1]); 
+      }
+        ctx.stroke();
+    }
+  };
+};
+
+ble.Scribble.prototype.finishAnimation = function() {
+  this.animating = false;
+};
+
+ble.Scribble.prototype.replayAll = function(duration_millis) {
+  if(this.animating)
+    return;
+  this.animating = true;
+  var complete = this.scene.complete;
+  var real_duration = complete[complete.length - 1].endTime();
+  if(window.webkitRequestAnimationFrame) {
+    this.animateRAF(duration_millis, real_duration);
+  } else {
+    this.animateInterval(duration_millis, real_duration, 32); 
+  }
+};
+
+ble.Scribble.prototype.animateRAF = function(replay_dur, capture_dur) {
+  var start = Date.now();
+  var redraw = goog.bind(function(now) {
+    var delta = now - start;
+    if(delta > replay_dur) {
+      this.withContext(this.repaintComplete);
+      this.finishAnimation();
+    } else {
+      var effective_time = capture_dur * (delta / replay_dur);
+      this.withContext(this.repaintAt(effective_time));
+      window.webkitRequestAnimationFrame(redraw);
+    }
+  }, this);
+  redraw(Date.now());
+};
+
+ble.Scribble.prototype.animateInterval = function(replay_dur, capture_dur, interval) {
+  var start = Date.now();
+  var handle;
+  var redraw = goog.bind(function() {
+    var now = Date.now();
+    var delta = now - start;
+    if(delta > replay_dur) {
+      this.withContext(this.repaintComplete);
+      this.finishAnimation();
+      window.clearInterval(handle);
+    } else {
+      var effective_time = capture_dur * (delta / replay_dur);
+      this.withContext(this.repaintAt(effective_time));
+    }
+  }, this);
+  handle = window.setInterval(redraw, interval); 
+};
+
+ble.Scribble.prototype.handleEvent = function(event) {
+  var res = goog.base(this, "handleEvent", event);
+  if(res === false)
+    return false;
+  var scene = this.scene;
+  if(event.type == ble.mocap.EventType.BEGIN) {
+    scene.beingDrawn = event.capture;
+    this.withContext(this.repaintComplete);
+  } else if(event.type == ble.mocap.EventType.PROGRESS ||
+            event.type == ble.mocap.EventType.CONTROLPOINT) {
+    this.withContext(this.repaintComplete);
+  } else if(event.type == ble.mocap.EventType.END) {
+    scene.beingDrawn = null; 
+    if(scene.complete.length == 0) {
+      event.capture.startTime = 0;
+    } else {
+      event.capture.startTime = scene.complete[scene.complete.length - 1].endTime();
+    }
+    scene.complete.push(event.capture);
+  }
+
+};
 
 
 //Scene graph
-var scene = {
-  beingDrawn: null,
-  beingReplayed: null,
-  startTimes: null,
-  complete: []
-};
-
 //Utility drawing
-var strokeCoords = function(ctx, coords) {
-  if(coords.length == 0)
-    return;
-  ctx.beginPath();
-  ctx.moveTo(coords[0], coords[1]);
-  for(var i = 1; i < coords.length / 2; i++)
-    ctx.lineTo(coords[2*i], coords[2*i+1]);
-  ctx.stroke();
-}
+var pathCoords = ble.gfx.pathCoords;
+var pathCoordsWithin = ble.gfx.pathCoordsWithin;
+var pxWidth = 640;
+var pxHeight = 480;
 
-var strokeCoordsWithin = function(ctx, coords, start, last) {
-  if(coords.length == 0)
-    return;
-  ctx.beginPath();
-  ctx.moveTo(coords[2*start], coords[2*start+1]);
-  for(var i = start+1; i <= last; i++)
-    ctx.lineTo(coords[2*i], coords[2*i+1]);
-  ctx.stroke();
-}
+var domHelper = new goog.dom.DomHelper();
+var container = domHelper.getElement("outermost");
+var canvas = new ble.Scribble(pxWidth, pxHeight);
+canvas.render(container);
+container.appendChild(domHelper.createElement("br"));
+var link = domHelper.createElement("a");
+link.setAttribute("href", "javascript:void(null)");
+link.appendChild(domHelper.createTextNode("replay all"));
+container.appendChild(link);
 
-
-//Redraw strokes at various stages of progress
-var redraw = function(ctx) {
-  var now = Date.now();
-  ctx.clearRect(0, 0, pxWidth, pxHeight);
-  if(!goog.isNull(scene.beingDrawn)) {
-    strokeCoords(ctx, scene.beingDrawn.coordinates);
-  }
-  for(var i = 0; i < scene.complete.length; i++) {
-    strokeCoords(ctx, scene.complete[i].coordinates);
-  }
-  if(!goog.isNull(scene.beingReplayed)) {
-    var replayRemaining = [];
-    var startTimeRemaining = [];
-    while(scene.beingReplayed.length > 0) {
-      var replay = scene.beingReplayed.pop();
-      var startTime = scene.startTimes.pop();
-      var timeDelta = now - startTime;
-      var indices = replay.betweenTimes(0, timeDelta);
-      strokeCoordsWithin(ctx, replay.coordinates, indices[0], indices[1]);
-      var lastTime = replay.times[replay.times.length - 1];
-      if(timeDelta <= lastTime) {
-        replayRemaining.unshift(replay);
-        startTimeRemaining.unshift(startTime);
-      } else {
-        scene.complete.unshift(replay);
-      }
-    }
-    if(replayRemaining.length > 0) {
-      scene.beingReplayed = replayRemaining;
-      scene.startTimes = startTimeRemaining;
-    } else {
-      scene.beingReplayed = null;
-      scene.startTimes = null;
-    }
-  }
-}
-
-var delay = 10;
-
-var scheduleUpdate = function() {
-  return window.setTimeout(update, delay);
-}
-var update = function() {
-  canvas.withContext(redraw);
-  if(!goog.isNull(scene.beingReplayed)) {
-    scheduleUpdate();
-  }
-}
-
-
-var mocapHandler = new goog.events.EventTarget();
-
-mocapHandler.handler0 = function(event) {
-  if(event.type == ble.mocap.EventType.BEGIN) {
-    scene.beingDrawn = event.capture;
-    canvas.withContext(redraw);
-  } else if(event.type == ble.mocap.EventType.PROGRESS ||
-            event.type == ble.mocap.EventType.CONTROLPOINT) {
-    canvas.withContext(redraw);
-  } else if(event.type == ble.mocap.EventType.END) {
-    scene.beingDrawn = null;
-    if(goog.isNull(scene.beingReplayed)) {
-      scene.beingReplayed = [];
-      scene.startTimes = [];
-    }
-    scene.beingReplayed.push(event.capture);
-    scene.startTimes.push(Date.now() - 50);
-    update();
-  }
-};
+goog.events.listenOnce(
+    link,
+    goog.events.EventType.CLICK,
+    function() {
+      var doReplay = function() { 
+        var replayLength = canvas.scene.complete.length * 500;
+        canvas.replayAll(replayLength);
+        window.setTimeout(doReplay, 5000 + replayLength);
+      };
+      doReplay();
+      
+    });
 
 var motionCapture = new ble.mocap.Stroke();
 goog.events.listen(
     canvas.getElement(),
     motionCapture.eventTypesOfInterest,
-    motionCapture.forwardingListener,
-    false,
     motionCapture);
 
-motionCapture.addTarget(mocapHandler, ble.mocap.EventType.ALL);
 goog.events.listen(
-    mocapHandler,
+    motionCapture,
     ble.mocap.EventType.ALL,
-    mocapHandler.handler0);
+    canvas);
+

@@ -88,6 +88,6 @@ ble.use_canvas_3 = function() {
       canvas.withContext(canvas.repaintComplete);
     });
 
-
- 
 };
+
+goog.exportSymbol('ble.use_canvas_3', ble.use_canvas_3);

@@ -18,6 +18,10 @@ ble.use_canvas_3 = function() {
   var canvas = new ble.Scribble(pxWidth, pxHeight);
   canvas.render(container);
 
+  var console = window.console;
+  var JSON = window.JSON;
+
+
   var storage = new goog.storage.mechanism.HTML5LocalStorage();
   var key = "scribble";
   var saveState = function() { 

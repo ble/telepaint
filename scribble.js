@@ -108,9 +108,9 @@ ble.Scribble.prototype.animateInterval = function(replay_dur, capture_dur, inter
 };
 
 ble.Scribble.prototype.handleEvent = function(event) {
-  var res = goog.base(this, "handleEvent", event);
-  if(res === false)
-    return false;
+  goog.base(this, "handleEvent", event);
+  if(event.propagationStopped_)
+    return;
   var scene = this.scene;
   if(event.type == ble.mocap.EventType.BEGIN) {
     scene.beingDrawn = event.capture;

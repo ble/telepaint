@@ -4,10 +4,141 @@ goog.require('ble.Scribble');
 goog.require('ble.mocap.EventType');
 goog.require('ble.mocap.Capture');
 goog.require('goog.events');
+goog.require('goog.events.EventTarget');
+goog.require('goog.ui.Component.EventType');
+
+goog.require('goog.ui.Menu');
+goog.require('goog.ui.MenuItem');
 
 goog.require('goog.storage.mechanism.HTML5LocalStorage');
-goog.require('goog.iter');
 
+var console = window.console;
+var JSON = window.JSON;
+
+/**
+ * @constructor
+ * @extends {goog.events.EventTarget}
+ */
+ble.Scribbles = function() {
+  goog.events.EventTarget.call(this);
+  this.storage = new goog.storage.mechanism.HTML5LocalStorage();
+  this.initialize_();
+};
+goog.inherits(ble.Scribbles, goog.events.EventTarget);
+
+/**
+ * @enum{string}
+ */
+ble.Scribbles.EventType = ({
+  UPDATE: 'update'
+});
+
+/**
+ * @private
+ */
+ble.Scribbles.prototype.update_ = function() {
+  this.dispatchEvent(new goog.events.Event(ble.Scribbles.EventType.UPDATE));
+};
+
+/**
+ * @private
+ */
+ble.Scribbles.prototype.initialize_ = function() {
+  var keys = this.read_(this.indexKey_);  
+  if(goog.isNull(keys) || !goog.isDef(keys)) {
+    keys = [];
+    this.write_(this.indexKey_, keys); 
+  }
+  this.keys = [];
+  this.data = {};
+  for(var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var scribble = this.read_(key);
+    if(!goog.isDefAndNotNull(scribble))
+      continue;
+    var blessed = this.blessScribble(scribble);
+    if(!goog.isDefAndNotNull(blessed))
+      continue;
+    this.data[key] = blessed;
+    this.keys.unshift(key);
+  }
+  if(this.keys.length > 0) {
+    this.currentKey = this.keys[0];
+    this.update_();
+  } else {
+    this.currentKey = null;
+  }
+};
+
+ble.Scribbles.prototype.blessScribble = function(s) {
+  if(!goog.isArray(s))
+    return null;
+  var result = [];
+  for(var i = 0; i < s.length; i++) {
+    try {
+      var toAdd = ble.mocap.Capture.blessJSONObject(s[i]);
+      result.push(toAdd);
+    } catch(error) {
+      console.log("bless error");
+      console.log(error);
+    }
+  }
+  return result;
+};
+
+ble.Scribbles.prototype.save = function(scribble) {
+  if(!this.currentKey) {
+    this.currentKey = Date.now();
+    this.keys.unshift(this.currentKey);
+    this.update_();
+  }
+  this.data[this.currentKey] = scribble;
+  this.write_(this.currentKey, this.data[this.currentKey]);
+  this.write_(this.indexKey_, this.keys)
+};
+
+ble.Scribbles.prototype.makeNew = function() {
+  this.currentKey = Date.now();
+  this.keys.unshift(this.currentKey);
+  this.data[this.currentKey] = [];
+  this.write_(this.currentKey, this.data[this.currentKey]);
+  this.write_(this.indexKey_, this.keys);
+  this.update_();
+}
+
+/**
+ * @private
+ * @const
+ */
+ble.Scribbles.prototype.indexKey_ = "times";
+
+/**
+ * @private
+ */ 
+ble.Scribbles.prototype.read_ = function(key) {
+  try {
+    var value = JSON.parse(this.storage.get(key));
+    return value;
+  } catch(error) { 
+    console.log("read error");
+    console.log(error);
+    return undefined;
+  } 
+};
+
+/**
+ * @private
+ */
+ble.Scribbles.prototype.write_ = function(key, value) {
+  try {  
+    this.storage.set(key, JSON.stringify(value));
+    return true;
+  } catch(error) {
+    console.log("write error");
+    console.log(error);
+    return false;
+  }
+};
 
 ble.use_canvas_3 = function() {
   var pxWidth = 640;
@@ -18,75 +149,63 @@ ble.use_canvas_3 = function() {
   var canvas = new ble.Scribble(pxWidth, pxHeight);
   canvas.render(container);
 
-  var console = window.console;
-  var JSON = window.JSON;
+  var scribbles = new ble.Scribbles();
 
-
-  var storage = new goog.storage.mechanism.HTML5LocalStorage();
-  var key = "scribble";
-  var saveState = function() { 
-    storage.set(key, JSON.stringify(canvas.scene.complete));
+  var drawCurrent = function() {
+    if(scribbles.currentKey != null) {
+      canvas.scene.complete = scribbles.data[scribbles.currentKey];
+      canvas.withContext(canvas.repaintComplete);
+    } 
   };
 
-  var restoreState = function() {
-    try {
-      var complete = JSON.parse(storage.get(key));
-    } catch(error) {
-      console.log("Unparseable JSON found in local storage; clearing.");
-      storage.remove(key);
-      complete = null;
+  drawCurrent();
+
+  var menu = new goog.ui.Menu();
+  var makeNew = new goog.ui.MenuItem('New');
+  var replay = new goog.ui.MenuItem('Replay');
+  var save = new goog.ui.MenuItem('Save');
+  menu.addChild(save, true);
+  menu.addChild(makeNew, true);
+  menu.addChild(replay, true);
+  menu.addChild(new goog.ui.MenuSeparator(), true);
+
+  menu.render(container);
+  var scribbleMenuItems = [];
+  var updateMenu = function() {
+    for(var i = 0; i < scribbleMenuItems.length; i++) {
+      menu.removeChild(scribbleMenuItems[i], true);
     }
-
-    if(goog.isNull(complete))
-      canvas.scene.complete = [];
-
-    var result = [];
-    for(var i = 0; i < complete.length; i++) {
-      try {
-        var toAdd = ble.mocap.Capture.blessJSONObject(complete[i]);
-        result.push(toAdd);
-      } catch(error) {
-        console.log("Failed to convert item to motion capture, ignoring.");
-      }
-    };
-    canvas.scene.complete = result;
+    scribbleMenuItems = [];
+    for(var i = 0; i < scribbles.keys.length; i++) {
+      var key = scribbles.keys[i];
+      var label = new Date(key).toString();
+      var item = new goog.ui.MenuItem(label);
+      item._key_ = key;
+      menu.addChild(item, true);
+      scribbleMenuItems.push(item);
+    }
   };
+  updateMenu();
+  goog.events.listen(scribbles, ble.Scribbles.EventType.UPDATE, updateMenu);
+  goog.events.listen(menu, goog.ui.Component.EventType.ACTION, function(e) {
 
-
-  restoreState();
-  canvas.withContext(canvas.repaintComplete);
-
-  var debug = true;
-  if(debug) {
-    window.canvas = canvas;
-    window.saveState = saveState;
-    window.restoreState = restoreState;
-    window.storage = storage;
-  }
-  goog.events.listen(canvas, ble.mocap.EventType.END, function(e) {
-    saveState();
-  });
-
-  var replay = dom.createDom("a", {'href': 'javascript:void(null)'}, ["replay"]);
-  var clear = dom.createDom("a", {'href': 'javascript:void(null)'}, ["clear"]);
-  var controls = dom.createDom("div", null, [replay, " , ", clear]);
-  container.appendChild(controls);
-
-  goog.events.listen(
-    replay,
-    goog.events.EventType.CLICK,
-    function() {
+    var target = e.target;
+    if(target === makeNew) {
+      scribbles.makeNew();
+      drawCurrent();
+    } else if(target === replay) { 
       var replayLength = canvas.scene.complete.length * 500;
       canvas.replayAll(replayLength);
-    });
-  goog.events.listen(
-    clear,
-    goog.events.EventType.CLICK,
-    function() {
-      canvas.scene.complete = [];
-      saveState();
-      canvas.withContext(canvas.repaintComplete);
-    });
+    } else if(target === save) {
+      scribbles.save(canvas.scene.complete);         
+    } else if(goog.isDef(target._key_)) {
+      if(goog.isDef(scribbles.data[target._key_])) {
+        scribbles.currentKey = target._key_;
+        drawCurrent();
+      }
+    }
+  });
+
 
 };
 

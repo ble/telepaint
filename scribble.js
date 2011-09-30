@@ -6,8 +6,8 @@ goog.require('goog.events');
 goog.require('goog.events.EventType');
 
 
-var pathCoords = ble.gfx.pathCoords;
-var pathCoordsWithin = ble.gfx.pathCoordsWithin;
+var pathCoords = ble.gfx.pathPixCoords;
+var pathCoordsWithin = ble.gfx.pathPixCoordsWithin;
 /**
  * @constructor
  * @extends {ble.scratch.Canvas}

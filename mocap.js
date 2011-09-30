@@ -7,6 +7,7 @@ goog.provide('ble.mocap.Capture');
 goog.provide('ble.mocap.Stroke');
 goog.provide('ble.mocap.Polyline');
 
+goog.require('goog.userAgent');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.events.EventTarget');
@@ -153,6 +154,15 @@ goog.inherits(ble.mocap.Mocap, goog.events.EventTarget);
 
 ble.mocap.Mocap.prototype.handleEvent = goog.abstractMethod;
 
+ble.mocap.Mocap.prototype.fixEvent = function(event) {
+  if(goog.userAgent.GECKO) {
+    var offsetLeft = event.currentTarget.offsetLeft;
+    var offsetTop = event.currentTarget.offsetTop;
+    event.offsetX -= offsetLeft;
+    event.offsetY -= offsetTop;
+  }
+}
+
 ble.mocap.Mocap.prototype.dispatchMocap = function(type) {
   var event = new goog.events.Event(type);
   event.capture = this.capture;
@@ -198,6 +208,7 @@ ble.mocap.Stroke = function() {
 goog.inherits(ble.mocap.Stroke, ble.mocap.Mocap);
 
 ble.mocap.Stroke.prototype.handleEvent = function(event) { 
+  this.fixEvent(event);
   if(this.midStroke) {
     if(event.type === goog.events.EventType.MOUSEMOVE) {
       this.progressCapture(event);
@@ -240,7 +251,8 @@ ble.mocap.Polyline.prototype.eventTypesOfInterest0 = function() {
   return types;
 };
 
-ble.mocap.Polyline.prototype.handleEvent = function(event) {
+ble.mocap.Polyline.prototype.handleEvent = function(event) { 
+  this.fixEvent(event);
   if(this.drawing) {
     if(this.captureMove && event.type == goog.events.EventType.MOUSEMOVE) {
       this.progressCapture(event);

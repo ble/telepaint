@@ -12,6 +12,11 @@ goog.require('goog.ui.MenuItem');
 
 goog.require('goog.storage.mechanism.HTML5LocalStorage');
 
+goog.provide('ble.Scribbles');
+
+goog.require('goog.json.Serializer');
+goog.provide('ble.json.PrettyPrinter');
+
 var console = window.console;
 var JSON = window.JSON;
 
@@ -104,7 +109,49 @@ ble.Scribbles.prototype.makeNew = function() {
   this.write_(this.currentKey, this.data[this.currentKey]);
   this.write_(this.indexKey_, this.keys);
   this.update_();
-}
+};
+
+/**
+ * @constructor
+ * @extends {goog.json.Serializer}
+ */
+ble.json.PrettyPrinter = function(opt_tab) {
+  goog.json.Serializer.call(this);
+  this.tab = goog.isDef(opt_tab) ? opt_tab : "\t";
+  this.indentLevel = 0;
+};
+goog.inherits(ble.json.PrettyPrinter, goog.json.Serializer);
+
+ble.json.PrettyPrinter.prototype.currentIndent_ = function() {
+  return goog.string.repeat(this.tab, this.indentLevel);
+};
+
+ble.json.PrettyPrinter.prototype.serializeObject_ = function(obj, sb) {
+  this.indentLevel++;
+  sb.push('{');
+  var sep = "\n";
+  for(var key in obj) {
+    if(Object.prototype.hasOwnProperty.call(obj, key)) {
+      var value = obj[key];
+      if(typeof value == 'function')
+        continue;
+      sb.push(sep);
+      sb.push(this.currentIndent_());
+      this.serializeString_(key, sb);
+      sb.push(":");
+      this.serialize_(value, sb);
+      sep = ",\n";
+    }
+  }
+  this.indentLevel--;
+  sb.push('\n');
+  sb.push(this.currentIndent_());
+  sb.push('}');
+};
+
+ble.Scribbles.prototype.pickle = function() {
+  return (new ble.json.PrettyPrinter("  ")).serialize(this.data);
+};
 
 /**
  * @private
@@ -147,7 +194,6 @@ ble.use_canvas_3 = function() {
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
   var canvas = new ble.Scribble(pxWidth, pxHeight);
-  canvas.render(container);
 
   var scribbles = new ble.Scribbles();
 
@@ -158,18 +204,27 @@ ble.use_canvas_3 = function() {
     } 
   };
 
-  drawCurrent();
 
   var menu = new goog.ui.Menu();
   var makeNew = new goog.ui.MenuItem('New');
   var replay = new goog.ui.MenuItem('Replay');
   var save = new goog.ui.MenuItem('Save');
+  var json = new goog.ui.MenuItem('Display JSON');
   menu.addChild(save, true);
   menu.addChild(makeNew, true);
   menu.addChild(replay, true);
+  menu.addChild(json, true);
   menu.addChild(new goog.ui.MenuSeparator(), true);
 
   menu.render(container);
+  menu.getElement().style["position"] = "relative";
+  menu.getElement().style["display"] = "inline-block";
+
+  canvas.render(container);
+  canvas.getElement().style["border"] = "1px solid black";
+
+  drawCurrent();
+
   var scribbleMenuItems = [];
   var updateMenu = function() {
     for(var i = 0; i < scribbleMenuItems.length; i++) {
@@ -186,6 +241,14 @@ ble.use_canvas_3 = function() {
     }
   };
   updateMenu();
+
+  var pickle = dom.createDom("pre");
+  pickle.style["display"] = "none";
+  pickle.style["width"] = "400px";
+  pickle.style["height"] = "400px";
+  pickle.style["overflow"] = "scroll";
+  pickle.style["border"] = "1px solid black";
+  dom.appendChild(container, pickle);
   goog.events.listen(scribbles, ble.Scribbles.EventType.UPDATE, updateMenu);
   goog.events.listen(menu, goog.ui.Component.EventType.ACTION, function(e) {
 
@@ -198,6 +261,15 @@ ble.use_canvas_3 = function() {
       canvas.replayAll(replayLength);
     } else if(target === save) {
       scribbles.save(canvas.scene.complete);         
+    } else if(target == json) {
+      dom.removeChildren(pickle);
+      var link = dom.createElement("a");
+      var data = scribbles.pickle();
+      link.href="data:application/json;charset=utf-8," + data;
+      dom.appendChild(link, dom.createTextNode("JSON"));
+      dom.appendChild(pickle, link);
+      dom.appendChild(pickle, dom.createTextNode(scribbles.pickle()));
+      pickle.style["display"] = "block";
     } else if(goog.isDef(target._key_)) {
       if(goog.isDef(scribbles.data[target._key_])) {
         scribbles.currentKey = target._key_;

@@ -1,6 +1,6 @@
 goog.provide('ble.use_canvas_3');
 
-goog.require('ble.Scribble');
+goog.require('ble.Scribble2');
 goog.require('ble.mocap.EventType');
 goog.require('ble.mocap.Capture');
 goog.require('goog.events');
@@ -80,13 +80,11 @@ ble.Scribbles.prototype.blessScribble = function(s) {
     return null;
   var result = [];
   for(var i = 0; i < s.length; i++) {
-    try {
-      var toAdd = ble.mocap.Capture.blessJSONObject(s[i]);
-      result.push(toAdd);
-    } catch(error) {
+    var asReplay = ble.gfx.StrokeReplay.bless(s[i]);
+    if(goog.isNull(asReplay))
       console.log("bless error");
-      console.log(error);
-    }
+    else
+      result.push(asReplay);
   }
   return result;
 };
@@ -127,6 +125,8 @@ ble.json.PrettyPrinter.prototype.currentIndent_ = function() {
 };
 
 ble.json.PrettyPrinter.prototype.serializeObject_ = function(obj, sb) {
+  if(goog.isDef(obj.toJSON))
+    obj = obj.toJSON();
   this.indentLevel++;
   sb.push('{');
   var sep = "\n";
@@ -193,13 +193,12 @@ ble.use_canvas_3 = function() {
 
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
-  var canvas = new ble.Scribble(pxWidth, pxHeight);
+  var canvas = new ble.Scribble2(pxWidth, pxHeight);
 
   var scribbles = new ble.Scribbles();
-
   var drawCurrent = function() {
     if(scribbles.currentKey != null) {
-      canvas.scene.complete = scribbles.data[scribbles.currentKey];
+      canvas.painter = new ble.scribble.Painter(scribbles.data[scribbles.currentKey]);
       canvas.withContext(canvas.repaintComplete);
     } 
   };
@@ -222,6 +221,17 @@ ble.use_canvas_3 = function() {
 
   canvas.render(container);
   canvas.getElement().style["border"] = "1px solid black";
+
+
+/*
+  for(var i = 0; i < scribbles.keys.length; i++) {
+    var key = scribbles.keys[i];
+    scribbles.currentKey = key;
+    scribbles.save(scribbles.data[key]);
+  }*/
+
+  if(scribbles.keys.length > 0)
+    scribbles.currentKey = scribbles.keys[0];
 
   drawCurrent();
 
@@ -257,10 +267,10 @@ ble.use_canvas_3 = function() {
       scribbles.makeNew();
       drawCurrent();
     } else if(target === replay) { 
-      var replayLength = canvas.scene.complete.length * 500;
+      var replayLength = canvas.painter.data.length * 500;
       canvas.replayAll(replayLength);
     } else if(target === save) {
-      scribbles.save(canvas.scene.complete);         
+      scribbles.save(canvas.painter.data);         
     } else if(target == json) {
       dom.removeChildren(pickle);
       var link = dom.createElement("a");

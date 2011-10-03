@@ -7,8 +7,9 @@
 
 goog.provide('ble.scratch.Canvas');
 goog.provide('ble.scratch.Subcanvas');
-goog.provide('ble.scratch.DrawSurface');
-goog.provide('ble.scratch.Drawable');
+
+goog.require('ble.gfx.DrawSurface');
+goog.require('ble.gfx.Drawable');
 
 goog.require('goog.color');
 goog.require('goog.math.Box');
@@ -41,18 +42,6 @@ var sizeOfBox = function(box) {
 /**
  * @interface
  */
-ble.scratch.DrawSurface = function() {};
-ble.scratch.DrawSurface.prototype.withContext = function(action) {};
-
-/**
- * @interface
- */
-ble.scratch.Drawable = function() {};
-ble.scratch.Drawable.prototype.drawTo = function(context) {};
-
-/**
- * @interface
- */
 ble.scratch.EventRegion = function() {};
 
 /**
@@ -76,7 +65,7 @@ ble.scratch.EventRegion.prototype.getTarget = function() {};
  * @param {boolean=} virtualizeOffset
  * @constructor
  * @extends {goog.events.EventTarget}
- * @implements {ble.scratch.DrawSurface}
+ * @implements {ble.gfx.DrawSurface}
  * @implements {ble.scratch.EventRegion}
  */
 ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords, virtualizeOffset) {
@@ -201,7 +190,7 @@ ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
  * @param {number} height_px
  * @constructor
  * @extends {goog.ui.Component}
- * @implements {ble.scratch.DrawSurface}
+ * @implements {ble.gfx.DrawSurface}
  */
 ble.scratch.Canvas = function(width_px, height_px) {
   this.width_px = width_px;

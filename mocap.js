@@ -7,6 +7,7 @@ goog.provide('ble.mocap.Capture');
 goog.provide('ble.mocap.Stroke');
 goog.provide('ble.mocap.Polyline');
 
+goog.require('ble.util.binarySearch');
 goog.require('goog.userAgent');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
@@ -106,37 +107,11 @@ ble.mocap.Capture.prototype.addControl = function(time, x, y, controlValue) {
  * @return {Array.<number>}
  */
 ble.mocap.Capture.prototype.betweenTimes = function(time0, time1) {
-  var ix0 = Math.ceil(ble.mocap.binarySearch(this.times, time0));
-  var ix1 = Math.floor(ble.mocap.binarySearch(this.times, time1));
-  var cIx0 = Math.ceil(ble.mocap.binarySearch(this.controlTimeIndices, ix0));
-  var cIx1 = Math.floor(ble.mocap.binarySearch(this.controlTimeIndices, ix1));
+  var ix0 = Math.ceil(ble.util.binarySearch(this.times, time0));
+  var ix1 = Math.floor(ble.util.binarySearch(this.times, time1));
+  var cIx0 = Math.ceil(ble.util.binarySearch(this.controlTimeIndices, ix0));
+  var cIx1 = Math.floor(ble.util.binarySearch(this.controlTimeIndices, ix1));
   return [ix0, ix1, cIx0, cIx1];
-}
-
-ble.mocap.binarySearch = function(array, value) {
-  if(array.length == 0)
-    return -1;
-  return ble.mocap.binarySearch0(array, 0, array.length-1, Math.floor(array.length / 2), value);
-};
-
-ble.mocap.binarySearch0 = function(array, ix0, ixF, ix, value) {
-  var ixVal = array[ix];
-  if(ixVal == value) {
-    return ix;
-  }
-  
-  else if(ix0 == ix || ixF == ix) {
-    if(ixVal > value)
-      return ix - 0.5;
-    if(ixVal < value)
-      return ix + 0.5;
-  }
-
-  else if(ixVal > value) {
-    return ble.mocap.binarySearch0(array, ix0, ix, Math.floor((ix0 + ix) / 2), value);
-  }  else { 
-    return ble.mocap.binarySearch0(array, ix, ixF, Math.ceil((ix + ixF) / 2), value);
-  }
 }
 
 /**

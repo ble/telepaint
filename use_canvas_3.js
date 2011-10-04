@@ -8,12 +8,14 @@ goog.require('goog.ui.Component.EventType');
 goog.require('goog.ui.Menu');
 goog.require('goog.ui.MenuItem');
 
-goog.require('goog.storage.mechanism.HTML5LocalStorage');
+goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
+goog.require('goog.json.Serializer');
 
+goog.require('ble.json.TaggedDeserializer');
 goog.provide('ble.Scribbles');
 
-goog.require('goog.json.Serializer');
 goog.provide('ble.json.PrettyPrinter');
+
 
 var console = window.console;
 var JSON = window.JSON;
@@ -25,6 +27,9 @@ var JSON = window.JSON;
 ble.Scribbles = function() {
   goog.events.EventTarget.call(this);
   this.storage = new goog.storage.mechanism.HTML5LocalStorage();
+  this.deserializer = new ble.json.TaggedDeserializer();
+  this.deserializer.register(ble.gfx.StrokeReplay);
+  this.deserializer.register(ble.gfx.PolylineReplay); 
   this.initialize_();
 };
 goog.inherits(ble.Scribbles, goog.events.EventTarget);
@@ -78,7 +83,7 @@ ble.Scribbles.prototype.blessScribble = function(s) {
     return null;
   var result = [];
   for(var i = 0; i < s.length; i++) {
-    var asReplay = ble.gfx.StrokeReplay.bless(s[i]);
+    var asReplay = this.deserializer.deserialize(s[i]);
     if(goog.isNull(asReplay))
       console.log("bless error");
     else

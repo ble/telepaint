@@ -146,10 +146,14 @@ ble.gfx.PolylineReplay = function(coordinates, times, controls, opt_lineWidth, o
   this.coordinates = coordinates;
   this.times = times;
   this.controls = controls;
-  if(goog.isDef(opt_lineWidth))
+  if(goog.isDef(opt_lineWidth)) {
     this.lineWidth = opt_lineWidth;
-  if(goog.isDef(opt_strokeStyle))
+    this.definedWidth = true;
+  }
+  if(goog.isDef(opt_strokeStyle)) {
     this.strokeStyle = opt_strokeStyle;
+    this.definedStroke = true;
+  }
   if(goog.isDef(opt_fillStyle)) {
     this.fillStyle = opt_fillStyle;
     this.filled = true;
@@ -164,10 +168,10 @@ ble.gfx.PolylineReplay.prototype.toJSON = function() {
     'coordinates': this.coordinates,
     'times': this.times,
     'controls': this.controls});
-  if(this.lineWidth != ble.gfx.PolylineReplay.prototype.lineWidth) {
+  if(this.definedWidth) {
     obj['lineWidth'] = this.lineWidth;
   }
-  if(this.strokeStyle != ble.gfx.PolylineReplay.prototype.strokeStyle) {
+  if(this.definedStroke) {
     obj['strokeStyle'] = this.strokeStyle;
   }
   if(this.filled) {
@@ -216,14 +220,10 @@ ble.gfx.PolylineReplay.prototype.withStartTime = function(newStart) {
   for(var i = 0; i < newTimes.length; i++) {
     newTimes[i] += delta;
   }
-  if(goog.isDef(this.definedWidth)) {
-    if(goog.isDef(this.definedStyle))
-      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth, this.strokeStyle);
-    else
-      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth);
-  } else {
-    return new ble.gfx.StrokeReplay(this.coordinates, newTimes);
-  }
+  var fillStyle = this.filled ? this.fillStyle : undefined;
+  var strokeStyle = this.definedStroke ? this.strokeStyle : undefined;
+  var lineWidth = this.definedWidth ? this.lineWidth : undefined;
+  return new ble.gfx.PolylineReplay(this.coordinates, newTimes, this.controls, lineWidth, strokeStyle, fillStyle); 
 };
 
 
@@ -236,6 +236,7 @@ ble.gfx.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
     for(var ix = 0, control; (control = this.controls[ix]) <= indexEnd; ix++) {
       coords.push(this.coordinates[2*control], this.coordinates[2*control+1]);
     }
+    control = this.controls[ix-1];
     if(indexEnd > control) {
       coords.push(this.coordinates[2*indexEnd], this.coordinates[2*indexEnd+1]);
     }

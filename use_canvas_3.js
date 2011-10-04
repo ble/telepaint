@@ -1,8 +1,6 @@
 goog.provide('ble.use_canvas_3');
 
 goog.require('ble.Scribble');
-goog.require('ble.mocap.EventType');
-goog.require('ble.mocap.Capture');
 goog.require('goog.events');
 goog.require('goog.events.EventTarget');
 goog.require('goog.ui.Component.EventType');

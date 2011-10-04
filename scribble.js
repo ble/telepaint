@@ -3,7 +3,7 @@ goog.provide('ble.scribble.Painter');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
 goog.require('ble.gfx');
-goog.require('ble.gfx.StrokeReplay');
+goog.require('ble.gfx.PolylineReplay');
 goog.require('ble.gfx.TimeDrawable');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
@@ -178,14 +178,14 @@ ble.Scribble.prototype.handleEvent = function(event) {
     return;
   var painter = this.painter;
   if(event.type == ble.mocap.EventType.BEGIN) {
-    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
+    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
-    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
+    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.END) {
-    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
+    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
     painter.recordCurrent();
     this.dispatchEvent(event);
   }
@@ -193,7 +193,7 @@ ble.Scribble.prototype.handleEvent = function(event) {
 };
 
 ble.Scribble.prototype.enterDocument = function() {
-  var motionCapture = new ble.mocap.Stroke();
+  var motionCapture = new ble.mocap.Polyline();
   goog.events.listen(
       this.getElement(),
       motionCapture.eventTypesOfInterest,

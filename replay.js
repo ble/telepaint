@@ -47,6 +47,31 @@ ble.gfx.StrokeReplay = function(coordinates, times, opt_lineWidth, opt_strokeSty
   }
 };
 
+ble.gfx.StrokeReplay.prototype.toJSON = function() {
+  var obj = ({
+    '_tag': this._tag,
+    'coordinates': this.coordinates,
+    'times': this.times});
+  if(this.lineWidth != ble.gfx.StrokeReplay.prototype.lineWidth) {
+    obj['lineWidth'] = this.lineWidth;
+  }
+  if(this.strokeStyle != ble.gfx.StrokeReplay.prototype.strokeStyle) {
+    obj['strokeStyle'] = this.strokeStyle;
+  }
+  return obj;
+};
+
+ble.gfx.StrokeReplay.bless = function(obj) {
+  var tag = obj['_tag'];
+  if(tag != ble.gfx.StrokeReplay.prototype._tag) return null;
+  var c = obj['coordinates'];
+  var t = obj['times'];
+  var l = obj['lineWidth'];
+  var s = obj['strokeStyle'];
+  return new ble.gfx.StrokeReplay(c, t, l, s);
+};
+
+
 ble.gfx.StrokeReplay.prototype.startTime = function() {
   return this.times[0];
 };
@@ -66,14 +91,7 @@ ble.gfx.StrokeReplay.fromMocap = function(mocap, opt_lineWidth, opt_strokeStyle)
   var times = mocap.times.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  if(goog.isDef(opt_lineWidth)) {
-    if(goog.isDef(opt_strokeStyle)) 
-      return new ble.gfx.StrokeReplay(coords, times, opt_lineWidth, opt_strokeStyle);
-    else
-      return new ble.gfx.StrokeReplay(coords, times, opt_lineWidth);
-  } else {
-    return new ble.gfx.StrokeReplay(coords, times);
-  }
+  return new ble.gfx.StrokeReplay(coords, times, opt_lineWidth, opt_strokeStyle);
 };
 
 ble.gfx.StrokeReplay.prototype._tag = "ble.gfx.StrokeReplay";
@@ -115,31 +133,6 @@ ble.gfx.StrokeReplay.prototype.withStartTime = function(newStart) {
   }
 };
 
-
-ble.gfx.StrokeReplay.prototype.toJSON = function() {
-  var obj = ({
-    '_tag': this._tag,
-    'coordinates': this.coordinates,
-    'times': this.times});
-  if(this.lineWidth != ble.gfx.StrokeReplay.prototype.lineWidth) {
-    obj['lineWidth'] = this.lineWidth;
-  }
-  if(this.strokeStyle != ble.gfx.StrokeReplay.prototype.strokeStyle) {
-    obj['strokeStyle'] = this.strokeStyle;
-  }
-  return obj;
-};
-
-ble.gfx.StrokeReplay.bless = function(obj) {
-  var tag = obj['_tag'];
-  if(tag != ble.gfx.StrokeReplay.prototype._tag) return null;
-  var c = obj['coordinates'];
-  var t = obj['times'];
-  var l = obj['lineWidth'];
-  var s = obj['strokeStyle'];
-  return new ble.gfx.StrokeReplay(c, t, l, s);
-};
-
 /**
  * @constructor
  * @param {Array.<number>} coordinates
@@ -165,7 +158,51 @@ ble.gfx.PolylineReplay = function(coordinates, times, controls, opt_lineWidth, o
   }
 };
 
+ble.gfx.PolylineReplay.prototype.toJSON = function() {
+  var obj = ({
+    '_tag': this._tag,
+    'coordinates': this.coordinates,
+    'times': this.times,
+    'controls': this.controls});
+  if(this.lineWidth != ble.gfx.PolylineReplay.prototype.lineWidth) {
+    obj['lineWidth'] = this.lineWidth;
+  }
+  if(this.strokeStyle != ble.gfx.PolylineReplay.prototype.strokeStyle) {
+    obj['strokeStyle'] = this.strokeStyle;
+  }
+  if(this.filled) {
+    obj['fillStyle'] = this.fillStyle;
+  }
+  return obj;
+};
+
+ble.gfx.PolylineReplay.bless = function(obj) {
+  var tag = obj['_tag'];
+  if(tag != ble.gfx.PolylineReplay.prototype._tag) return null;
+  var c = obj['coordinates'];
+  var t = obj['times'];
+  var cs = obj['controls'];
+  var l = obj['lineWidth'];
+  var s = obj['strokeStyle'];
+  var f = obj['fillStyle'];
+  return new ble.gfx.PolylineReplay(c, t, cs, l, s, f);
+};
+
+ble.gfx.PolylineReplay.fromMocap = function(mocap, opt_lineWidth, opt_strokeStyle, opt_fillStyle) {
+  var coords = mocap.coordinates.slice();
+  var times = mocap.times.slice();
+  var controls = mocap.controlTimeIndices.slice();
+  for(var i = 0; i < times.length; i++)
+    times[i] += mocap.startTime;
+
+  return new ble.gfx.PolylineReplay(coords, times, controls, opt_lineWidth, opt_strokeStyle, opt_fillStyle);
+};
+
+ble.gfx.PolylineReplay.prototype._tag = "ble.gfx.PolylineReplay";
+ble.gfx.PolylineReplay.prototype.lineWidth = 1;
+ble.gfx.PolylineReplay.prototype.strokeStyle = "#000000";
 ble.gfx.PolylineReplay.prototype.startTime = function() {
+
   return this.times[0];
 };
 
@@ -173,8 +210,22 @@ ble.gfx.PolylineReplay.prototype.endTime = function() {
   return this.times[this.times.length - 1];
 };
 
-ble.gfx.PolylineReplay.prototype.lineWidth = 1;
-ble.gfx.PolylineReplay.prototype.strokeStyle = "#000000";
+ble.gfx.PolylineReplay.prototype.withStartTime = function(newStart) {
+  var delta = newStart - this.startTime();
+  var newTimes = this.times.slice();
+  for(var i = 0; i < newTimes.length; i++) {
+    newTimes[i] += delta;
+  }
+  if(goog.isDef(this.definedWidth)) {
+    if(goog.isDef(this.definedStyle))
+      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth, this.strokeStyle);
+    else
+      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth);
+  } else {
+    return new ble.gfx.StrokeReplay(this.coordinates, newTimes);
+  }
+};
+
 
 ble.gfx.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
   if(time >= this.endTime())

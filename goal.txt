@@ -1,0 +1,10 @@
+
+Next goals: 
+  Add more drawing methods (flesh out polyline, polyline fill, erase)
+  Add componentry for colors, linewidths, method selection
+    Use pixel coordinates for the icons
+  Wire all that shit up
+  Add undo and the requisite `visibleUntil` property needed to support it
+  (redo?) <-- no, no, thirteen times no.
+  Animate multiple drawings in sequence (events on end of animation)
+  Add drawing functionality for a "table view" or "race view" w/ panning, zooming

@@ -1,58 +1,124 @@
 goog.provide('ble.Scribble');
+goog.provide('ble.scribble.Painter');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
 goog.require('ble.gfx');
+goog.require('ble.gfx.StrokeReplay');
+goog.require('ble.gfx.TimeDrawable');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 
-
-var pathCoords = ble.gfx.pathPixCoords;
-var pathCoordsWithin = ble.gfx.pathPixCoordsWithin;
 /**
  * @constructor
+ * @param {Array.<ble.gfx.DrawPart>} items
+ * @implements {ble.gfx.DrawPart}
+ */
+ble.scribble.Painter = function(items) {
+  this.data = items.slice();
+  this.paintReady = this.zeroReference(this.data);
+  this.beingDrawn = null;
+};
+
+ble.scribble.Painter.prototype.startTime = function() {
+  return this.paintReady.length > 0 ? this.paintReady[0].startTime()
+                                    : 0;
+};
+
+ble.scribble.Painter.prototype.endTime = function() {
+  return this.paintReady.length > 0 ? this.paintReady[this.paintReady.length - 1].endTime()
+                                    : 0;
+};
+
+ble.scribble.Painter.prototype.withStartTime = function(newStart) {
+  var result = new ble.scribble.Painter(this.data);
+  var toAlter = result.paintReady;
+  var lastEnd = newStart;
+  for(var i = 0; i < toAlter.length; i++) {
+    toAlter[i] = toAlter[i].withStartTime(lastEnd);
+    lastEnd = toAlter[i].endTime();
+  }
+  return result;
+};
+
+ble.scribble.Painter.prototype.toJSON = function() {
+  return this.data;
+};
+
+/**
+ * @param {Array.<ble.gfx.DrawPart>} parts
+ */
+ble.scribble.Painter.prototype.zeroReference = function(parts) {
+  var result = [];
+  var lastEnd = 0;
+  for(var i = 0; i < parts.length; i++) {
+    result[i] = parts[i].withStartTime(lastEnd);
+    lastEnd = result[i].endTime();
+  };
+  return result;
+};
+
+/**
+ * @param {ble.gfx.DrawPart} current
+ */
+ble.scribble.Painter.prototype.setCurrent = function(current) {
+  this.beingDrawn = current;
+};
+
+ble.scribble.Painter.prototype.recordCurrent = function() {
+  var current = this.beingDrawn;
+  if(!goog.isNull(current)) {
+    this.data.push(current);
+    var adjusted = current.withStartTime(this.endTime());
+    this.paintReady.push(adjusted);
+    this.beingDrawn = null; 
+  }
+};
+
+ble.scribble.Painter.prototype.drawCompleteTo = function(ctx) {
+  if(!goog.isNull(this.beingDrawn)) {
+    this.beingDrawn.drawCompleteTo(ctx);
+  }
+  for(var i = 0; i < this.paintReady.length; i++)
+    this.paintReady[i].drawCompleteTo(ctx); 
+};
+
+ble.scribble.Painter.prototype.drawPartialTo = function(time, ctx) {
+  if(!goog.isNull(this.beingDrawn)) {
+    this.beingDrawn.drawCompleteTo(ctx);
+  }
+  for(var i = 0; i < this.paintReady.length; i++) {
+    var item = this.paintReady[i];
+    if(item.startTime() > time)
+      break;
+    item.drawPartialTo(time, ctx);
+  } 
+};
+
+/**
+ * @constructor
+ * @param {number} width
+ * @param {number} height
+ * @param {ble.scribble.Painter=} opt_painter
  * @extends {ble.scratch.Canvas}
  */
-ble.Scribble = function(width, height) {
+ble.Scribble = function(width, height, opt_painter) {
   ble.scratch.Canvas.call(this, width, height);
-  this.scene = {
-    beingDrawn: null,
-    complete: []
-  };
-  this.animating = false;
+  if(goog.isDef(opt_painter))
+    this.painter = opt_painter;
+  else
+    this.painter = new ble.scribble.Painter([]);
 };
 goog.inherits(ble.Scribble, ble.scratch.Canvas);
 
 ble.Scribble.prototype.repaintComplete = function(ctx) {
-  var scene = this.scene;
   ctx.clearRect(0, 0, this.width_px, this.height_px);
-  if(!goog.isNull(scene.beingDrawn)) {
-    pathCoords(ctx, scene.beingDrawn.coordinates);
-    ctx.stroke();
-  }
-  for(var i = 0; i < scene.complete.length; i++) {
-    pathCoords(ctx, scene.complete[i].coordinates);
-    ctx.stroke();
-  }
+  this.painter.drawCompleteTo(ctx);
 };
 
 ble.Scribble.prototype.repaintAt = function(time) {
-  return function(ctx) {
-    var scene = this.scene;
+  return function(ctx) { 
     ctx.clearRect(0, 0, this.width_px, this.height_px);
-    if(!goog.isNull(scene.beingDrawn)) { 
-      pathCoords(ctx, scene.beingDrawn.coordinates);
-      ctx.stroke();
-    }
-    for(var i = 0; i < scene.complete.length; i++) {
-      var replay = scene.complete[i];
-      if(time > replay.endTime()) {
-        pathCoords(ctx, replay.coordinates);
-      } else {
-        var indices = replay.betweenTimes(-replay.startTime, time-replay.startTime);
-        pathCoordsWithin(ctx, replay.coordinates, indices[0], indices[1]); 
-      }
-        ctx.stroke();
-    }
+    this.painter.drawPartialTo(time, ctx);
   };
 };
 
@@ -64,8 +130,7 @@ ble.Scribble.prototype.replayAll = function(duration_millis) {
   if(this.animating)
     return;
   this.animating = true;
-  var complete = this.scene.complete;
-  var real_duration = complete[complete.length - 1].endTime();
+  var real_duration = this.painter.endTime() - this.painter.startTime();
   if(window.webkitRequestAnimationFrame) {
     this.animateRAF(duration_millis, real_duration);
   } else {
@@ -111,21 +176,17 @@ ble.Scribble.prototype.handleEvent = function(event) {
   goog.base(this, "handleEvent", event);
   if(event.propagationStopped_)
     return;
-  var scene = this.scene;
+  var painter = this.painter;
   if(event.type == ble.mocap.EventType.BEGIN) {
-    scene.beingDrawn = event.capture;
+    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
+    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.END) {
-    scene.beingDrawn = null; 
-    if(scene.complete.length == 0) {
-      event.capture.startTime = 0;
-    } else {
-      event.capture.startTime = scene.complete[scene.complete.length - 1].endTime();
-    }
-    scene.complete.push(event.capture);
+    painter.setCurrent(ble.gfx.StrokeReplay.fromMocap(event.capture));
+    painter.recordCurrent();
     this.dispatchEvent(event);
   }
 

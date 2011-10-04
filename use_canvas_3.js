@@ -1,6 +1,6 @@
 goog.provide('ble.use_canvas_3');
 
-goog.require('ble.Scribble2');
+goog.require('ble.Scribble');
 goog.require('ble.mocap.EventType');
 goog.require('ble.mocap.Capture');
 goog.require('goog.events');
@@ -193,7 +193,7 @@ ble.use_canvas_3 = function() {
 
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
-  var canvas = new ble.Scribble2(pxWidth, pxHeight);
+  var canvas = new ble.Scribble(pxWidth, pxHeight);
 
   var scribbles = new ble.Scribbles();
   var drawCurrent = function() {

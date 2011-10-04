@@ -8,3 +8,11 @@ Next goals:
   (redo?) <-- no, no, thirteen times no.
   Animate multiple drawings in sequence (events on end of animation)
   Add drawing functionality for a "table view" or "race view" w/ panning, zooming
+
+
+Progress:
+  Added polyline serialization and deserialization
+  tested out polyline motion capture with componentry
+
+Next step:
+  change motion capture listeners in component

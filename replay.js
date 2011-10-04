@@ -252,6 +252,8 @@ ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
     var control = this.controls[ix];
     coords.push(this.coordinates[2*control], this.coordinates[2*control+1]);
   }
+  if(this.controls[this.controls.length - 1] < this.times.length-1)
+    coords.push(this.coordinates[this.coordinates.length - 2], this.coordinates[this.coordinates.length - 1]);
   ble.gfx.pathPixCoords(ctx, coords);
   ctx.lineWidth = this.lineWidth;
   ctx.strokeStyle = this.strokeStyle;

@@ -193,7 +193,7 @@ ble.Scribble.prototype.handleEvent = function(event) {
 };
 
 ble.Scribble.prototype.enterDocument = function() {
-  var motionCapture = new ble.mocap.Polyline();
+  var motionCapture = new ble.mocap.Polyline(true);
   goog.events.listen(
       this.getElement(),
       motionCapture.eventTypesOfInterest,

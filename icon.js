@@ -3,27 +3,70 @@ goog.require('goog.events.EventTarget');
 
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
+goog.require('ble.gfx.StrokeReplay');
 
-goog.provide('ble.icon');
+goog.provide('ble.scribble.icon');
 
 /**
  * @constructor
  * @extends {goog.events.EventTarget}
  */
-ble.icon.Style = function(color1, color2, strokeWidth) {
+ble.scribble.icon.Style = function(color1, color2, strokeWidth) {
   goog.events.EventTarget.call(this);
   this.color1 = color1;
   this.color2 = color2;
   this.strokeWidth = strokeWidth;
 };
-goog.inherits(ble.icon.Style, goog.events.EventTarget);
+goog.inherits(ble.scribble.icon.Style, goog.events.EventTarget);
 
-ble.icon.Icons = function(style) {
+ble.scribble.icon.fixer = function(coordinates) {
+  var result = coordinates.slice();
+  for(var i = 0; i < result.length; i++) 
+    result[i] = Math.round(result[i]);
+  return result; 
+};
+
+ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
+  var canvas = new ble.scratch.Canvas(size, size);
+  canvas.render(container);
+  var pxBox = new goog.math.Box(0, size, size, 0);
+  var vBox = new goog.math.Box(0, 1, 1, 0);
+  var mocap = new ble.mocap.Stroke();
+  canvas.getElement().style['border'] = "2px solid red";
+  canvas.getElement().style['display'] = "inline-block";
+  //Wire mouse events on canvas element to canvas controller...
+  goog.events.listen(
+      canvas.getElement(),
+      mocap.eventTypesOfInterest,
+      canvas);
+  //Wire canvas events to subcanvas...
+  var subcanvas = new ble.scratch.Subcanvas(canvas, pxBox, vBox, true);
+  canvas.forwardEvents(subcanvas, mocap.eventTypesOfInterest);
+  //Wire subcanvas events to motion capture...
+  goog.events.listen(
+      subcanvas,
+      mocap.eventTypesOfInterest,
+      mocap);
+  //Wire motion capture events to drawing on the subcanvas... 
+  goog.events.listen(
+      mocap,
+      ble.mocap.EventType.END,
+      function(event) {
+        
+        var stroke = ble.gfx.StrokeReplay.fromMocap(event.capture);
+        console.log(stroke);
+        subcanvas.withContext(function(context) {
+          stroke.drawCompleteTo(context);
+        });
+      });
+}
+/*
+ble.scribble.icon.Icons = function(style) {
   this.style = style;
   this.subcanvases = [];
 };
 
-ble.icon.Icons.prototype.addIcon = function(container, size, toDraw) {
+ble.scribble.icon.Icons.prototype.addIcon = function(container, size, toDraw) {
   var canvas = new ble.scratch.Canvas(size, size);
   canvas.render(container);
   var pxBox = new goog.math.Box(0, size, size, 0);
@@ -34,13 +77,13 @@ ble.icon.Icons.prototype.addIcon = function(container, size, toDraw) {
   return canvas;
 };
 
-ble.icon.Icons.prototype.setIcon = function(index, toDraw) {
+ble.scribble.icon.Icons.prototype.setIcon = function(index, toDraw) {
   if(index < this.subcanvases.length) {
     this.subcanvases[index][1] = toDraw;
   }
 }
 
-ble.icon.Icons.prototype.redraw = function() {
+ble.scribble.icon.Icons.prototype.redraw = function() {
   for(var i = 0; i < this.subcanvases.length; i++) {
     var subcanvas = this.subcanvases[i][0];
     var toDraw = this.subcanvases[i][1];
@@ -48,7 +91,7 @@ ble.icon.Icons.prototype.redraw = function() {
   }
 };
 
-ble.icon.Icons.prototype.stroke = function(ctx) {
+ble.scribble.icon.Icons.prototype.stroke = function(ctx) {
   clearBack(ctx);
   ctx.beginPath();
   ctx.strokeStyle = this.style.color1;
@@ -56,7 +99,7 @@ ble.icon.Icons.prototype.stroke = function(ctx) {
   doStroke(ctx);
 };
 
-ble.icon.Icons.prototype.polyline = function(ctx) {
+ble.scribble.icon.Icons.prototype.polyline = function(ctx) {
   clearBack(ctx);
   ctx.beginPath();
   ctx.strokeStyle = this.style.color1;
@@ -64,7 +107,7 @@ ble.icon.Icons.prototype.polyline = function(ctx) {
   doPolyline(ctx, false); 
 };
 
-ble.icon.Icons.prototype.polylineFill = function(ctx) {
+ble.scribble.icon.Icons.prototype.polylineFill = function(ctx) {
   clearBack(ctx);
   ctx.beginPath();
   ctx.strokeStyle = this.style.color1;
@@ -73,7 +116,7 @@ ble.icon.Icons.prototype.polylineFill = function(ctx) {
   doPolyline(ctx, true); 
 };
 
-ble.icon.Icons.prototype.erase = function(ctx) {
+ble.scribble.icon.Icons.prototype.erase = function(ctx) {
   ctx.beginPath();
   ctx.rect(-0.25, -0.25, 1.5, 15);
   ctx.fillStyle = "48f";
@@ -138,4 +181,4 @@ var doPolyline = function(ctx, fill, color) {
   ctx.stroke();
 };
 
-
+*/

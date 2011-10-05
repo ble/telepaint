@@ -13,6 +13,10 @@ Next goals:
 Progress:
   Added polyline serialization and deserialization
   tested out polyline motion capture with componentry
-
-Next step:
   change motion capture listeners in component
+
+Next steps?:
+  icons for method selection
+  serialize method for entire drawings
+  erase method
+  color / linewidth controls + polyline fill

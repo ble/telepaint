@@ -208,10 +208,16 @@ ble.use_canvas_3 = function() {
 
 
   var menu = new goog.ui.Menu();
+  var stroke = new goog.ui.MenuItem('Stroke');
+  var polyline = new goog.ui.MenuItem('Polyline');
   var makeNew = new goog.ui.MenuItem('New');
   var replay = new goog.ui.MenuItem('Replay');
   var save = new goog.ui.MenuItem('Save');
   var json = new goog.ui.MenuItem('Display JSON');
+
+  menu.addChild(stroke, true);
+  menu.addChild(polyline, true);
+  menu.addChild(new goog.ui.MenuSeparator(), true);
   menu.addChild(save, true);
   menu.addChild(makeNew, true);
   menu.addChild(replay, true);
@@ -266,7 +272,11 @@ ble.use_canvas_3 = function() {
   goog.events.listen(menu, goog.ui.Component.EventType.ACTION, function(e) {
 
     var target = e.target;
-    if(target === makeNew) {
+    if(target === stroke) {
+      canvas.setMode(0);
+    } else if(target === polyline) {
+      canvas.setMode(1);
+    } else if(target === makeNew) {
       scribbles.makeNew();
       drawCurrent();
     } else if(target === replay) { 

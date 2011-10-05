@@ -107,6 +107,7 @@ ble.Scribble = function(width, height, opt_painter) {
     this.painter = opt_painter;
   else
     this.painter = new ble.scribble.Painter([]);
+  this.mocap_ = null;
 };
 goog.inherits(ble.Scribble, ble.scratch.Canvas);
 
@@ -178,32 +179,60 @@ ble.Scribble.prototype.handleEvent = function(event) {
     return;
   var painter = this.painter;
   if(event.type == ble.mocap.EventType.BEGIN) {
-    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
+    painter.setCurrent(this.converter(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
-    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
+    painter.setCurrent(this.converter(event.capture));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.END) {
-    painter.setCurrent(ble.gfx.PolylineReplay.fromMocap(event.capture));
+    painter.setCurrent(this.converter(event.capture));
     painter.recordCurrent();
     this.dispatchEvent(event);
   }
 
 };
 
+ble.Scribble.prototype.modes = ([
+  {
+    constructor: function () { return new ble.mocap.Stroke(); },
+    converter: ble.gfx.StrokeReplay.fromMocap 
+  },
+  {
+    constructor: function () { return new ble.mocap.Polyline(true); },
+    converter: ble.gfx.PolylineReplay.fromMocap
+  }
+  ]);
+
 ble.Scribble.prototype.enterDocument = function() {
-  var motionCapture = new ble.mocap.Polyline(true);
+  this.setMode(0);
+};
+
+
+ble.Scribble.prototype.setMode = function(modeNum) {
+  if(!goog.isNull(this.mocap_)) {
+    goog.events.unlisten(
+        this.getElement(),
+        this.mocap_.eventTypesOfInterest,
+        this.mocap_);
+    goog.events.unlisten(
+        this.mocap_,
+        ble.mocap.EventType.ALL,
+        this);
+    this.mocap_ = null;
+  }
+  var mode = this.modes[modeNum];
+  this.mocap_ = mode.constructor();
+  this.converter = mode.converter;
   goog.events.listen(
       this.getElement(),
-      motionCapture.eventTypesOfInterest,
-      motionCapture);
-
+      this.mocap_.eventTypesOfInterest,
+      this.mocap_);
   goog.events.listen(
-      motionCapture,
+      this.mocap_,
       ble.mocap.EventType.ALL,
       this);
-  this.mocap_ = motionCapture;
+
 };
 
 ble.Scribble.prototype.exitDocument = function() {

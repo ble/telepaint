@@ -104,17 +104,13 @@ ble.gfx.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
   else {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
     ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
-    ctx.lineWidth = this.lineWidth;
-    ctx.strokeStyle = this.strokeStyle;
-    ctx.stroke();
+    this.painter.drawTo(ctx);
   }
 };
 
 ble.gfx.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
   ble.gfx.pathCoords(ctx, this.coordinates);
-  ctx.lineWidth = this.lineWidth;
-  ctx.strokeStyle = this.strokeStyle;
-  ctx.stroke();
+  this.painter.drawTo(ctx);
 };
 
 ble.gfx.StrokeReplay.prototype.withStartTime = function(newStart) {

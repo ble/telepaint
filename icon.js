@@ -50,11 +50,13 @@ ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
   //Wire motion capture events to drawing on the subcanvas... 
   goog.events.listen(
       mocap,
-      ble.mocap.EventType.END,
+      ble.mocap.EventType.ALL,
       function(event) {
         
         var stroke = ble.gfx.StrokeReplay.fromMocap(event.capture);
-        console.log(stroke);
+        canvas.withContext(function(context) {
+          context.clearRect(0, 0, size, size);
+        });
         subcanvas.withContext(function(context) {
           stroke.drawCompleteTo(context);
         });

@@ -16,13 +16,10 @@ Progress:
   change motion capture listeners in component
 
 Next steps?:
+  Extend new styling approach to polyline
+  Record representative paths for icon use
   icons for method selection
   serialize method for entire drawings
   erase method
   color / linewidth controls + polyline fill
 
-
-Running into trouble~
-  Attempting to use existing componentry (esp. subcanvas) reveals that there
-  are some incompatibilities, esp. as regards styling & pixel offset drawing.
-  Styling already an awkward part of replay; what to do?

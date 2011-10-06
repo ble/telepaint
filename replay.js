@@ -61,7 +61,7 @@ ble.gfx.StrokeReplay.prototype.toJSON = function() {
   return obj;
 };
 
-ble.gfx.StrokeReplay.bless = function(obj) {
+ble.gfx.StrokeReplay.prototype.bless = function(obj) {
   var tag = obj['_tag'];
   if(tag != ble.gfx.StrokeReplay.prototype._tag) return null;
   var c = obj['coordinates'];
@@ -172,7 +172,7 @@ ble.gfx.PolylineReplay.prototype.toJSON = function() {
   return obj;
 };
 
-ble.gfx.PolylineReplay.bless = function(obj) {
+ble.gfx.PolylineReplay.prototype.bless = function(obj) {
   var tag = obj['_tag'];
   if(tag != ble.gfx.PolylineReplay.prototype._tag) return null;
   var c = obj['coordinates'];

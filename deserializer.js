@@ -12,7 +12,7 @@ ble.json.TaggedDeserializer = function() {
 
 ble.json.TaggedDeserializer.prototype.register = function(constructor) {
   var tag = constructor.prototype._tag;
-  var bless = constructor.bless;
+  var bless = constructor.prototype.bless;
   this.tags[tag] = bless;
 };
 

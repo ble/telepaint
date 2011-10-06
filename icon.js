@@ -7,6 +7,7 @@ goog.require('ble.gfx.StrokeReplay');
 
 goog.provide('ble.scribble.icon');
 
+goog.provide('ble.scribble.icon.makeNormalizedStrokeRecorder');
 /**
  * @constructor
  * @extends {goog.events.EventTarget}
@@ -26,6 +27,10 @@ ble.scribble.icon.fixer = function(coordinates) {
   return result; 
 };
 
+/**
+ * @param{HTMLElement} container
+ * @param{number} size
+ */
 ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
   var canvas = new ble.scratch.Canvas(size, size);
   canvas.render(container);
@@ -62,6 +67,8 @@ ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
         });
       });
 }
+
+goog.exportSymbol('ble.scribble.icon.makeNormalizedStrokeRecorder', ble.scribble.icon.makeNormalizedStrokeRecorder);
 /*
 ble.scribble.icon.Icons = function(style) {
   this.style = style;

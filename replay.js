@@ -1,5 +1,7 @@
 goog.require('ble.gfx');
 goog.require('ble.gfx.TimeDrawable');
+goog.require('ble.gfx.path.PainterPixel');
+goog.require('ble.gfx.path.painterDefault');
 
 goog.provide('ble.gfx.DrawPart');
 goog.provide('ble.gfx.StrokeReplay'); 
@@ -30,33 +32,31 @@ ble.gfx.DrawPart.prototype.withStartTime = function(millis) {};
  * @constructor
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
- * @param {number=} opt_lineWidth
- * @param {string|CanvasGradient=} opt_strokeStyle
+ * @param {ble.gfx.path.PainterPixel=} opt_painter
  * @implements{ble.gfx.DrawPart}
  */
-ble.gfx.StrokeReplay = function(coordinates, times, opt_lineWidth, opt_strokeStyle) {
+ble.gfx.StrokeReplay = function(coordinates, times, opt_painter) {
   this.coordinates = coordinates;
   this.times = times;
-  if(goog.isDef(opt_lineWidth)) {
-    this.lineWidth = opt_lineWidth;
-    this.definedWidth = true;
-  }
-  if(goog.isDef(opt_strokeStyle)) {
-    this.strokeStyle = opt_strokeStyle;
-    this.definedStyle = true;
-  }
+  if(goog.isDef(opt_painter))
+    this.painter = opt_painter;
 };
+
+ble.gfx.StrokeReplay.defaultPainter = ble.gfx.path.painterDefault;
+ble.gfx.StrokeReplay.prototype.painter = ble.gfx.StrokeReplay.defaultPainter;
+ble.gfx.StrokeReplay.prototype._tag = "ble.gfx.StrokeReplay";
 
 ble.gfx.StrokeReplay.prototype.toJSON = function() {
   var obj = ({
     '_tag': this._tag,
     'coordinates': this.coordinates,
     'times': this.times});
-  if(this.lineWidth != ble.gfx.StrokeReplay.prototype.lineWidth) {
-    obj['lineWidth'] = this.lineWidth;
-  }
-  if(this.strokeStyle != ble.gfx.StrokeReplay.prototype.strokeStyle) {
-    obj['strokeStyle'] = this.strokeStyle;
+  var p = this.painter;
+  if(p !== ble.gfx.StrokeReplay.defaultPainter) {
+    obj['lineWidth'] = p.lineWidth;
+    obj['strokeStyle'] = p.strokeStyle;
+    if(p.filled)
+      obj['fillStyle'] = p.fillStyle;
   }
   return obj;
 };
@@ -66,9 +66,13 @@ ble.gfx.StrokeReplay.bless = function(obj) {
   if(tag != ble.gfx.StrokeReplay.prototype._tag) return null;
   var c = obj['coordinates'];
   var t = obj['times'];
-  var l = obj['lineWidth'];
-  var s = obj['strokeStyle'];
-  return new ble.gfx.StrokeReplay(c, t, l, s);
+  var L = obj['lineWidth'];
+  var S = obj['strokeStyle'];
+  var F = obj['fillStyle'];
+  var painter;
+  if(goog.isDef(L))
+    painter = ble.gfx.path.PainterPixel.get(L, S, F);
+  return new ble.gfx.StrokeReplay(c, t, painter);
 };
 
 
@@ -82,28 +86,24 @@ ble.gfx.StrokeReplay.prototype.endTime = function() {
 
 /**
  * @param {ble.mocap.Capture} mocap
- * @param {number=} opt_lineWidth
- * @param {string|CanvasGradient=} opt_strokeStyle
+ * @param {ble.gfx.path.PainterPixel=} opt_painter
  * @return {ble.gfx.StrokeReplay}
  */
-ble.gfx.StrokeReplay.fromMocap = function(mocap, opt_lineWidth, opt_strokeStyle) {
+ble.gfx.StrokeReplay.fromMocap = function(mocap, opt_painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.StrokeReplay(coords, times, opt_lineWidth, opt_strokeStyle);
+  return new ble.gfx.StrokeReplay(coords, times, opt_painter);
 };
 
-ble.gfx.StrokeReplay.prototype._tag = "ble.gfx.StrokeReplay";
-ble.gfx.StrokeReplay.prototype.lineWidth = 1;
-ble.gfx.StrokeReplay.prototype.strokeStyle = "#000000";
 
 ble.gfx.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
   if(time >= this.endTime())
     this.drawCompleteTo(ctx);
   else {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
-    ble.gfx.pathPixCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
+    ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
     ctx.lineWidth = this.lineWidth;
     ctx.strokeStyle = this.strokeStyle;
     ctx.stroke();
@@ -111,7 +111,7 @@ ble.gfx.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
 };
 
 ble.gfx.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
-  ble.gfx.pathPixCoords(ctx, this.coordinates);
+  ble.gfx.pathCoords(ctx, this.coordinates);
   ctx.lineWidth = this.lineWidth;
   ctx.strokeStyle = this.strokeStyle;
   ctx.stroke();
@@ -123,14 +123,10 @@ ble.gfx.StrokeReplay.prototype.withStartTime = function(newStart) {
   for(var i = 0; i < newTimes.length; i++) {
     newTimes[i] += delta;
   }
-  if(goog.isDef(this.definedWidth)) {
-    if(goog.isDef(this.definedStyle))
-      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth, this.strokeStyle);
-    else
-      return new ble.gfx.StrokeReplay(this.coordinates, newTimes, this.lineWidth);
-  } else {
-    return new ble.gfx.StrokeReplay(this.coordinates, newTimes);
-  }
+  var ownPainter;
+  if(ownPainter != ble.gfx.StrokeReplay.prototype.painter)
+    ownPainter = this.painter;
+  return new ble.gfx.StrokeReplay(this.coordinates, newTimes, ownPainter);
 };
 
 /**
@@ -240,7 +236,7 @@ ble.gfx.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
     if(indexEnd > control) {
       coords.push(this.coordinates[2*indexEnd], this.coordinates[2*indexEnd+1]);
     }
-    ble.gfx.pathPixCoords(ctx, coords);
+    ble.gfx.pathCoords(ctx, coords);
     ctx.lineWidth = this.lineWidth;
     ctx.strokeStyle = this.strokeStyle;
     ctx.stroke(); 
@@ -255,7 +251,7 @@ ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
   }
   if(this.controls[this.controls.length - 1] < this.times.length-1)
     coords.push(this.coordinates[this.coordinates.length - 2], this.coordinates[this.coordinates.length - 1]);
-  ble.gfx.pathPixCoords(ctx, coords);
+  ble.gfx.pathCoords(ctx, coords);
   ctx.lineWidth = this.lineWidth;
   ctx.strokeStyle = this.strokeStyle;
   ctx.stroke();

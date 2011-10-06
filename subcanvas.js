@@ -108,30 +108,38 @@ ble.scratch.Subcanvas.prototype.getTarget = function() {
 }
 
 ble.scratch.Subcanvas.prototype.withContext = function(action) {
-  var context = this.parentCanvas_.getRawContext();
-  context.save();
+  var doIt = function(context) {
+    //apply clip
+    
+    context.beginPath();
+    context.moveTo(this.pixelCoords_.left, this.pixelCoords_.top);
+    context.lineTo(this.pixelCoords_.right, this.pixelCoords_.top);
+    context.lineTo(this.pixelCoords_.right, this.pixelCoords_.bottom);
+    context.lineTo(this.pixelCoords_.left, this.pixelCoords_.bottom);
+    context.closePath();
+    context.clip();
+    context.translate(this.pixelCoords_.left, this.pixelCoords_.top); 
+    var ratio = this.pixelToVirtualRatio_();
+    context.scale( ratio.width,
+                   ratio.height );
+    context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
+    context.lineWidth /= hypot( ratio.width,
+                                ratio.height);
 
-  //apply clip
-  
-  context.beginPath();
-  context.moveTo(this.pixelCoords_.left, this.pixelCoords_.top);
-  context.lineTo(this.pixelCoords_.right, this.pixelCoords_.top);
-  context.lineTo(this.pixelCoords_.right, this.pixelCoords_.bottom);
-  context.lineTo(this.pixelCoords_.left, this.pixelCoords_.bottom);
-  context.closePath();
-  context.clip();
-  context.translate(this.pixelCoords_.left, this.pixelCoords_.top); 
-  var ratio = this.pixelToVirtualRatio_();
-  context.scale( ratio.width,
-                 ratio.height );
-  context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
-  context.lineWidth /= hypot( ratio.width,
-                              ratio.height);
-
-  action.call(this, context);
-
-  context.restore();
+    action.call(this, context);
+  };
+  this.parentCanvas_.withContext(goog.bind(doIt, this));
 }
+
+ble.scratch.Subcanvas.prototype.affineVirtualToPixel = function() {
+  var ratio = this.pixelToVirtualRatio_();
+  var transform = new goog.graphics.AffineTransform();
+  transform.translate(this.pixelCoords_.left, this.pixelCoords_.top);
+  transform.scale(ratio.width, ratio.height);
+  transform.translate(-this.virtualCoords_.left, this.virtualCoords_.top);
+  return transform;
+}
+
 
 ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
   var ratio = this.pixelToVirtualRatio_();
@@ -252,11 +260,14 @@ ble.scratch.Canvas.prototype.handleEvent = function(event) {
 ble.scratch.Canvas.prototype.withContext = function(action) {
   var context = this.getRawContext();
   context.save();
+  context.translate(0.5, 0.5);
   action.call(this, context);
   context.restore();
 };
 
-
+/**
+ * @private
+ */
 ble.scratch.Canvas.prototype.getRawContext = function() {
   return this.element_.getContext("2d");
 };

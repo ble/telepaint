@@ -1,9 +1,9 @@
 goog.require('ble.gfx.Drawable');
 
 goog.provide('ble.gfx.path.Painter');
-goog.provide('ble.gfx.path.painterDefault');
 goog.provide('ble.gfx.path.PainterPixel');
 goog.provide('ble.gfx.path.PainterVirtual');
+goog.provide('ble.gfx.path.painterDefault');
 
 /**
  * @constructor
@@ -56,10 +56,12 @@ ble.gfx.path.PainterPixel.get = function(lineWidth, strokeStyle, opt_fillStyle) 
   return pool[key];
 };
 
-ble.gfx.path.painterDefault = new ble.gfx.path.PainterPixel(1, "#000000");
 
 /**
  * @constructor
+ * @param {number} lineWidth
+ * @param {string|CanvasGradient} strokeStyle
+ * @param {string|CanvasGradient=} opt_fillStyle
  * @extends{ble.gfx.path.Painter}
  */
 ble.gfx.path.PainterVirtual = function(lineWidth, strokeStyle, opt_fillStyle) {
@@ -78,3 +80,14 @@ ble.gfx.path.PainterVirtual.prototype.drawTo = function(ctx) {
   ctx.restore(); 
 };
 
+ble.gfx.path.PainterVirtual.pool = {};
+ble.gfx.path.PainterVirtual.get = function(lineWidth, strokeStyle, opt_fillStyle) {
+  var key = [lineWidth, strokeStyle, opt_fillStyle];
+  var pool = ble.gfx.path.PainterPixel.pool;
+  if(!(key in pool)) {
+    pool[key] = new ble.gfx.path.PainterVirtual(lineWidth, strokeStyle, opt_fillStyle);
+  }
+  return pool[key];
+};
+
+ble.gfx.path.painterDefault = new ble.gfx.path.PainterVirtual(1, "#000000");

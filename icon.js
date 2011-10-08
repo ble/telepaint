@@ -1,9 +1,11 @@
+goog.require('goog.dom.DomHelper');
 goog.require('goog.math.Box');
 goog.require('goog.events.EventTarget');
 
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
 goog.require('ble.gfx.StrokeReplay');
+goog.require('ble.json.PrettyPrinter');
 
 goog.provide('ble.scribble.icon');
 
@@ -32,8 +34,12 @@ ble.scribble.icon.fixer = function(coordinates) {
  * @param{number} size
  */
 ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
+  var domHelper = new goog.dom.DomHelper();
   var canvas = new ble.scratch.Canvas(size, size);
   canvas.render(container);
+  var jsonContainer = domHelper.createDom("pre", null);
+  domHelper.appendChild(container, jsonContainer);
+
   var pxBox = new goog.math.Box(0, size, size, 0);
   var vBox = new goog.math.Box(0, 1, 1, 0);
   var mocap = new ble.mocap.Stroke();
@@ -52,20 +58,25 @@ ble.scribble.icon.makeNormalizedStrokeRecorder = function(container, size) {
       subcanvas,
       mocap.eventTypesOfInterest,
       mocap);
+  var pixelPainter = new ble.gfx.path.PainterPixel(1.5, "#000");
+  var prettyPrinter = new ble.json.PrettyPrinter();
   //Wire motion capture events to drawing on the subcanvas... 
   goog.events.listen(
       mocap,
       ble.mocap.EventType.ALL,
       function(event) {
         
-        var stroke = ble.gfx.StrokeReplay.fromMocap(event.capture);
+        var stroke = ble.gfx.StrokeReplay.fromMocap(event.capture, pixelPainter);
         canvas.withContext(function(context) {
           context.clearRect(0, 0, size, size);
         });
         subcanvas.withContext(function(context) {
           stroke.drawCompleteTo(context);
         });
+        if(event.type == ble.mocap.EventType.END) {
+          jsonContainer.innerHTML = prettyPrinter.serialize(stroke);
+        }
       });
-}
+};
 
 goog.exportSymbol('ble.scribble.icon.makeNormalizedStrokeRecorder', ble.scribble.icon.makeNormalizedStrokeRecorder); 

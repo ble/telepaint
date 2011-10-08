@@ -1,20 +1,18 @@
 goog.provide('ble.use_canvas_3');
-
-goog.require('ble.Scribble');
-goog.require('goog.events');
-goog.require('goog.events.EventTarget');
-goog.require('goog.ui.Component.EventType');
-
-goog.require('goog.ui.Menu');
-goog.require('goog.ui.MenuItem');
-
-goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
-goog.require('goog.json.Serializer');
-
-goog.require('ble.json.TaggedDeserializer');
 goog.provide('ble.Scribbles');
 
-goog.provide('ble.json.PrettyPrinter');
+goog.require('ble.Scribble');
+goog.require('ble.json.PrettyPrinter');
+goog.require('ble.json.TaggedDeserializer');
+
+goog.require('goog.events');
+goog.require('goog.events.EventTarget');
+goog.require('goog.ui.Component.EventType'); 
+goog.require('goog.ui.Menu');
+goog.require('goog.ui.MenuItem'); 
+goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
+
+
 
 
 var console = window.console;
@@ -110,46 +108,6 @@ ble.Scribbles.prototype.makeNew = function() {
   this.write_(this.currentKey, this.data[this.currentKey]);
   this.write_(this.indexKey_, this.keys);
   this.update_();
-};
-
-/**
- * @constructor
- * @extends {goog.json.Serializer}
- */
-ble.json.PrettyPrinter = function(opt_tab) {
-  goog.json.Serializer.call(this);
-  this.tab = goog.isDef(opt_tab) ? opt_tab : "\t";
-  this.indentLevel = 0;
-};
-goog.inherits(ble.json.PrettyPrinter, goog.json.Serializer);
-
-ble.json.PrettyPrinter.prototype.currentIndent_ = function() {
-  return goog.string.repeat(this.tab, this.indentLevel);
-};
-
-ble.json.PrettyPrinter.prototype.serializeObject_ = function(obj, sb) {
-  if(goog.isDef(obj.toJSON))
-    obj = obj.toJSON();
-  this.indentLevel++;
-  sb.push('{');
-  var sep = "\n";
-  for(var key in obj) {
-    if(Object.prototype.hasOwnProperty.call(obj, key)) {
-      var value = obj[key];
-      if(typeof value == 'function')
-        continue;
-      sb.push(sep);
-      sb.push(this.currentIndent_());
-      this.serializeString_(key, sb);
-      sb.push(":");
-      this.serialize_(value, sb);
-      sep = ",\n";
-    }
-  }
-  this.indentLevel--;
-  sb.push('\n');
-  sb.push(this.currentIndent_());
-  sb.push('}');
 };
 
 ble.Scribbles.prototype.pickle = function() {

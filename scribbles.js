@@ -1,4 +1,5 @@
 goog.provide('ble.Scribbles');
+goog.provide('ble.scribbleDeserializer');
 
 goog.require('ble.json.TaggedDeserializer');
 goog.require('ble.json.PrettyPrinter');
@@ -20,6 +21,10 @@ ble.Scribbles = function() {
   this.initialize_();
 };
 goog.inherits(ble.Scribbles, goog.events.EventTarget);
+
+ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
+ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
+ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
 
 /**
  * @enum{string}

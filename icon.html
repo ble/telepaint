@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>Subcanvas test</title>
-    <script src="http://127.0.0.1:9810/compile?id=subcanvas-3"></script>
+    <script src="http://127.0.0.1:9810/compile?id=subcanvas-3&mode=RAW"></script>
     <script src="curvy.json"></script>
     <script src="poky.json"></script>
   </head>
@@ -9,8 +9,22 @@
     <div id="icontest">
     </div>
     <script>
-      ble.scribble.icon.strokeRecorder(document.getElementById("icontest"), 75);
-      ble.scribble.icon.polylineRecorder(document.getElementById("icontest"), 75);
+      var size = 100;
+      c1 = ble.scribble.icon.strokeRecorder(document.getElementById("icontest"), size);
+      c2 = ble.scribble.icon.polylineRecorder(document.getElementById("icontest"), size);
+      var curvy2 = ble.scribbleDeserializer.deserialize(curvy);
+      curvy2.coordinates = ble.scribble.icon.scaleUp(size, curvy2.coordinates);
+      curvy2.painter.lineWidth = 1;
+      c1.withContext(function(context) {
+        curvy2.drawCompleteTo(context);
+      });
+
+      var poky2 = ble.scribbleDeserializer.deserialize(poky);
+      poky2.coordinates = ble.scribble.icon.scaleUp(size, poky2.coordinates);
+      poky2.painter.lineWidth = 1;
+      c2.withContext(function(context) {
+        poky2.drawCompleteTo(context);
+      });
     </script>
   </body>
 </html>

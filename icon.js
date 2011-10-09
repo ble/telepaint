@@ -31,11 +31,25 @@ ble.scribble.icon.fixer = function(coordinates) {
 };
 
 /**
+ * @param{number} scale
+ * @param{Array.<number>} coordinates
+ * @return{Array.<number>}
+ */
+ble.scribble.icon.scaleUp = function(scale, coordinates) {
+  var result = coordinates.slice();
+  for(var i = 0; i < result.length; i++) {
+    result[i] = Math.round(result[i] * scale);
+  }
+  return result;
+};
+
+/**
  * @param{HTMLElement} container
  * @param{number} size
  * @param{ble.mocap.Mocap} mocap
  * @param{function(ble.mocap.Capture, ble.gfx.path.Painter): ble.gfx.DrawPart} converter 
  * @param{ble.gfx.path.Painter} style
+ * @return{ble.scratch.Canvas}
  */ 
 ble.scribble.icon.makeRecorder = function(container, size, mocap, converter, style) {
   var domHelper = new goog.dom.DomHelper();
@@ -76,38 +90,42 @@ ble.scribble.icon.makeRecorder = function(container, size, mocap, converter, sty
       ble.mocap.EventType.ALL,
       function(event) {
         var toPaint = converter(event.capture, style);      
+        var end = (event.type == ble.mocap.EventType.END);
         canvas.withContext(function(context) {
-          context.clearRect(0, 0, size, size);
+          context.clearRect(0, 0, 1, 1);
         });
         subcanvas.withContext(function(context) {
           toPaint.drawCompleteTo(context);
         });
-        if(event.type == ble.mocap.EventType.END) {
+        if(end) {
           jsonContainer.innerHTML = prettyPrinter.serialize(toPaint);
         }
       });
+  return canvas;
 };
 
 /**
  * @param{HTMLElement} container
  * @param{number} size
+ * @return{ble.scratch.Canvas}
  */
 ble.scribble.icon.strokeRecorder = function(container, size) {
   var mocap = new ble.mocap.Stroke();
   var converter = ble.gfx.StrokeReplay.fromMocap;
   var style = new ble.gfx.path.PainterPixel(1.5, "#000");
-  ble.scribble.icon.makeRecorder(container, size, mocap, converter, style);
+  return ble.scribble.icon.makeRecorder(container, size, mocap, converter, style);
 };
 
 /**
  * @param{HTMLElement} container
  * @param{number} size
+ * @return{ble.scratch.Canvas}
  */ 
 ble.scribble.icon.polylineRecorder = function(container, size) {
   var mocap = new ble.mocap.Polyline(true);
   var converter = ble.gfx.PolylineReplay.fromMocap;
   var style = new ble.gfx.path.PainterPixel(1.5, "#000");
-  ble.scribble.icon.makeRecorder(container, size, mocap, converter, style); 
+  return ble.scribble.icon.makeRecorder(container, size, mocap, converter, style); 
 };
 
 goog.exportSymbol('ble.scribble.icon.strokeRecorder', ble.scribble.icon.strokeRecorder); 

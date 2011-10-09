@@ -32,7 +32,7 @@ ble.gfx.DrawPart.prototype.withStartTime = function(millis) {};
  * @constructor
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
- * @param {ble.gfx.path.Painter} opt_painter
+ * @param {ble.gfx.path.Painter=} opt_painter
  * @implements{ble.gfx.DrawPart}
  */
 ble.gfx.StrokeReplay = function(coordinates, times, opt_painter) {
@@ -77,7 +77,7 @@ ble.gfx.StrokeReplay.prototype.bless = function(obj) {
 
 /**
  * @param {ble.mocap.Capture} mocap
- * @param {ble.gfx.path.Painter} opt_painter
+ * @param {ble.gfx.path.Painter=} opt_painter
  * @return {ble.gfx.StrokeReplay}
  */
 ble.gfx.StrokeReplay.fromMocap = function(mocap, opt_painter) {
@@ -102,7 +102,7 @@ ble.gfx.StrokeReplay.prototype.withStartTime = function(newStart) {
   for(var i = 0; i < newTimes.length; i++) {
     newTimes[i] += delta;
   }
-  var ownPainter;
+  var ownPainter = this.painter;
   if(ownPainter === ble.gfx.StrokeReplay.prototype.painter)
     ownPainter = undefined;
   return new ble.gfx.StrokeReplay(this.coordinates, newTimes, ownPainter);
@@ -129,7 +129,7 @@ ble.gfx.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
  * @param {Array.<number>} controls
- * @param {ble.gfx.path.Painter} opt_painter
+ * @param {ble.gfx.path.Painter=} opt_painter
  */
 ble.gfx.PolylineReplay = function(coordinates, times, controls, opt_painter) {
   this.coordinates = coordinates;
@@ -139,8 +139,8 @@ ble.gfx.PolylineReplay = function(coordinates, times, controls, opt_painter) {
     this.painter = opt_painter;
 };
 
-ble.gfx.PolylineReplay.prototype.defaultPainter = ble.gfx.path.painterDefault;
-ble.gfx.PolylineReplay.prototype.painter = ble.gfx.PolylineReplay.prototype.defaultPainter;
+ble.gfx.PolylineReplay.defaultPainter = ble.gfx.path.painterDefault;
+ble.gfx.PolylineReplay.prototype.painter = ble.gfx.PolylineReplay.defaultPainter;
 ble.gfx.PolylineReplay.prototype._tag = "ble.gfx.PolylineReplay";
 
 ble.gfx.PolylineReplay.prototype.toJSON = function() {
@@ -173,14 +173,17 @@ ble.gfx.PolylineReplay.prototype.bless = function(obj) {
     painter = ble.gfx.path.PainterVirtual.get(L, S, F);
   return new ble.gfx.PolylineReplay(c, t, cs, painter);
 };
-
-ble.gfx.PolylineReplay.fromMocap = function(mocap, painter) {
+/**
+ * @param {ble.mocap.Capture} mocap
+ * @param {ble.gfx.path.Painter=} opt_painter
+ */
+ble.gfx.PolylineReplay.fromMocap = function(mocap, opt_painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   var controls = mocap.controlTimeIndices.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.PolylineReplay(coords, times, controls, painter);
+  return new ble.gfx.PolylineReplay(coords, times, controls, opt_painter);
 };
 
 ble.gfx.PolylineReplay.prototype.startTime = function() { 

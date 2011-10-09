@@ -207,7 +207,7 @@ ble.mocap.Stroke.prototype.eventTypesOfInterest =
 /**
  * Polyline motion capture: capture begins on click, optionally progresses
  * with mousemove, control points on subsequent clicks, ends on dblclick.
- * @param {boolean?} captureMove
+ * @param {boolean=} captureMove
  * @constructor
  * @extends {ble.mocap.Mocap}
  */

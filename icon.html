@@ -2,19 +2,18 @@
   <head>
     <title>Subcanvas test</title>
     <link rel="stylesheet" type="text/css" href="hsvapalette.css"/>
-    <script src="http://127.0.0.1:9810/compile?id=subcanvas-3&mode=RAW"></script>
+    <script src="http://127.0.0.1:9810/compile?id=icon&mode=SIMPLE"></script>
 
-<!--<script src="curvy.json"></script>
-    <script src="poky.json"></script> -->
+    <script src="curvy.json"></script>
+    <script src="poky.json"></script>
   </head>
   <body>
     <div id="icontest">
     </div>
     <script>
       var container = document.getElementById("icontest");
-      var thing = new ble.scribble.icon.StylePicker();
+      var thing = new ble.scribble.style.StylePicker();
       thing.render(container);
-      /*
       var size = 100;
       c1 = ble.scribble.icon.strokeRecorder(document.getElementById("icontest"), size);
       c2 = ble.scribble.icon.polylineRecorder(document.getElementById("icontest"), size);
@@ -31,7 +30,6 @@
       c2.withContext(function(context) {
         poky2.drawCompleteTo(context);
       });
-      */
     </script>
   </body>
 </html>

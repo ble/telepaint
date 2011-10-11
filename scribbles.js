@@ -3,11 +3,15 @@ goog.provide('ble.scribbleDeserializer');
 
 goog.require('ble.json.TaggedDeserializer');
 goog.require('ble.json.PrettyPrinter');
+goog.require('ble.gfx.StrokeReplay');
+goog.require('ble.gfx.PolylineReplay');
 
 goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
 
+var JSON = window.JSON;
+var console = window.console;
 /**
  * @constructor
  * @extends {goog.events.EventTarget}
@@ -25,6 +29,8 @@ goog.inherits(ble.Scribbles, goog.events.EventTarget);
 ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
 ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
 ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
+
+goog.exportSymbol('ble.scribbleDeserializer', ble.scribbleDeserializer);
 
 /**
  * @enum{string}

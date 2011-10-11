@@ -8,13 +8,13 @@ goog.require('ble.scratch.Subcanvas');
 goog.require('ble.gfx.StrokeReplay');
 goog.require('ble.json.PrettyPrinter');
 
-goog.provide('ble.scribble.icon');
+goog.provide('ble.scribble.backdropOn');
 
 goog.provide('ble.scribble.icon.makeNormalizedStrokeRecorder');
 goog.provide('ble.scribble.icon.makeNormalizedPolylineRecorder');
-goog.provide('ble.scribble.icon.StylePicker');
+goog.provide('ble.scribble.style.StylePicker');
 
-ble.scribble.icon.backdropOn = function(ctx, width, height, blockSize) {
+ble.scribble.backdropOn = function(ctx, width, height, blockSize) {
   ctx.save();
   var wCount = Math.ceil(width / blockSize);
   var hCount = Math.ceil(height / blockSize);
@@ -37,23 +37,23 @@ ble.scribble.icon.backdropOn = function(ctx, width, height, blockSize) {
  * @constructor
  * @extends {goog.ui.Component}
  */
-ble.scribble.icon.StylePicker = function() {
+ble.scribble.style.StylePicker = function() {
   goog.ui.Component.call(this);
 };
-goog.inherits(ble.scribble.icon.StylePicker, goog.ui.Component);
+goog.inherits(ble.scribble.style.StylePicker, goog.ui.Component);
 
 
-ble.scribble.icon.StylePicker.prototype.height = 187;
+ble.scribble.style.StylePicker.prototype.height = 187;
 
 /**
  * Disallow deocartion.
  * @override
  */
-ble.scribble.icon.StylePicker.prototype.canDecorate = function(element) {
+ble.scribble.style.StylePicker.prototype.canDecorate = function(element) {
   return false;
 };
 
-ble.scribble.icon.StylePicker.prototype.createDom = function() {
+ble.scribble.style.StylePicker.prototype.createDom = function() {
   var domHelper = this.getDomHelper();
   var container = domHelper.createDom('div', {'class': 'ble-scribble-stylepicker'});
   this.setElementInternal(container);
@@ -91,9 +91,9 @@ ble.scribble.icon.StylePicker.prototype.createDom = function() {
   this.addChild(this.hsva2, true);
 };
 
-ble.scribble.icon.StylePicker.prototype.enterDocument = function() {
+ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   this.bigIcon.withContext(function(ctx) {
-    ble.scribble.icon.backdropOn(ctx, 187, 187, 31);
+    ble.scribble.backdropOn(ctx, 187, 187, 31);
   });
 
   
@@ -101,27 +101,9 @@ ble.scribble.icon.StylePicker.prototype.enterDocument = function() {
   for(var i = 0; i < this.smallIcons.length; i++) {
     var smallIcon = this.smallIcons[i];
     smallIcon.withContext(function(ctx) {
-      ble.scribble.icon.backdropOn(ctx, 93, 93, 16);
+      ble.scribble.backdropOn(ctx, 93, 93, 16);
     });
   }
-};
-/**
- * @constructor
- * @extends {goog.events.EventTarget}
- */
-ble.scribble.icon.Style = function(color1, color2, strokeWidth) {
-  goog.events.EventTarget.call(this);
-  this.color1 = color1;
-  this.color2 = color2;
-  this.strokeWidth = strokeWidth;
-};
-goog.inherits(ble.scribble.icon.Style, goog.events.EventTarget);
-
-ble.scribble.icon.fixer = function(coordinates) {
-  var result = coordinates.slice();
-  for(var i = 0; i < result.length; i++) 
-    result[i] = Math.round(result[i]);
-  return result; 
 };
 
 /**
@@ -224,3 +206,6 @@ ble.scribble.icon.polylineRecorder = function(container, size) {
 
 goog.exportSymbol('ble.scribble.icon.strokeRecorder', ble.scribble.icon.strokeRecorder); 
 goog.exportSymbol('ble.scribble.icon.polylineRecorder', ble.scribble.icon.polylineRecorder); 
+goog.exportSymbol('ble.scribble.style.StylePicker', ble.scribble.style.StylePicker);
+goog.exportSymbol('ble.scribble.icon.scaleUp', ble.scribble.icon.scaleUp);
+goog.exportProperty(ble.scribble.style.StylePicker.prototype, 'render', ble.scribble.style.StylePicker.prototype.render);

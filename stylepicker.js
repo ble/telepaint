@@ -2,6 +2,7 @@ goog.require('goog.dom.DomHelper');
 goog.require('goog.math.Box');
 goog.require('goog.events.EventTarget');
 goog.require('goog.ui.HsvaPalette');
+goog.require('goog.ui.Slider');
 
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
@@ -84,6 +85,11 @@ ble.scribble.style.StylePicker.prototype.createDom = function() {
   this.smallIconContainer = smallIconContainer;
   this.addChild(smallIconContainer, true);
 
+  this.slider = new goog.ui.Slider();
+  this.slider.setOrientation(goog.ui.Slider.Orientation.VERTICAL);
+  this.addChild(this.slider, true);
+
+
   this.hsva1 = new goog.ui.HsvaPalette(domHelper, '#000', 1.0, 'goog-hsva-palette-sm');
   this.addChild(this.hsva1, true);
 
@@ -92,6 +98,13 @@ ble.scribble.style.StylePicker.prototype.createDom = function() {
 };
 
 ble.scribble.style.StylePicker.prototype.enterDocument = function() {
+  goog.base(this, "enterDocument");
+
+  var sEl = this.slider.getElement();
+  sEl.style['width'] = 20;
+  sEl.style['height']  = this.height;
+  sEl.style['display'] = "inline-block";
+
   this.bigIcon.withContext(function(ctx) {
     ble.scribble.backdropOn(ctx, 187, 187, 31);
   });

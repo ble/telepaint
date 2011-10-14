@@ -29,6 +29,7 @@ goog.inherits(ble.Scribbles, goog.events.EventTarget);
 ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
 ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
 ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
+ble.scribbleDeserializer.register(ble.gfx.EraseReplay); 
 
 goog.exportSymbol('ble.scribbleDeserializer', ble.scribbleDeserializer);
 

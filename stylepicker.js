@@ -104,6 +104,10 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   sEl.style['width'] = 20;
   sEl.style['height']  = this.height;
   sEl.style['display'] = "inline-block";
+  this.slider.setStep(1);
+  this.slider.setMinimum(1);
+  this.slider.setMaximum(75);
+  this.slider.setValue(1);
 
   this.bigIcon.withContext(function(ctx) {
     ble.scribble.backdropOn(ctx, 187, 187, 31);

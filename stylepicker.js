@@ -81,6 +81,9 @@ ble.scribble.style.StylePicker.prototype.initIconReplays = function() {
 ble.scribble.style.StylePicker.prototype.repaintAll = function() {
   if(!this.isInDocument())
     return;
+
+  if(this.animationHandle_ != null)
+    return;
   var self = this;
   for(var i = 0; i < this.smallIcons.length; i++) {
     this.smallIcons[i].withContext(function(ctx) {
@@ -112,8 +115,8 @@ ble.scribble.style.StylePicker.prototype.animateBig = function() {
     var now = Date.now();  
     var delta = (now - this.animationStart) / this.animationDuration;
     if(delta >= 1) {
-      this.repaintAll();
       this.cancelAnimation();
+      this.repaintAll();
     } else {
       var i = this.getSelectedMethod();
       if(this.bigCaps.length > 1) {
@@ -226,7 +229,7 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   this.bigIcon.getRawContext().lineJoin = "round";
   this.bigIcon.getRawContext().lineCap = "round";
 
-  goog.events.listen(this.slider.getElement(), goog.events.EventType.MOUSEUP, this.animateBig, false, this);
+  goog.events.listen(this.slider.getElement(), goog.events.EventType.CLICK, this.animateBig, false, this);
   goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.repaintAll, false, this);
   goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
   goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);

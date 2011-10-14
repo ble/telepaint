@@ -3,11 +3,13 @@ goog.require('goog.math.Box');
 goog.require('goog.events.EventTarget');
 goog.require('goog.ui.HsvaPalette');
 goog.require('goog.ui.Slider');
+goog.require('goog.color.alpha');
 
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
 goog.require('ble.gfx.StrokeReplay');
 goog.require('ble.json.PrettyPrinter');
+goog.require('ble.scribble.style.strokes');
 
 goog.provide('ble.scribble.backdropOn');
 
@@ -47,11 +49,32 @@ goog.inherits(ble.scribble.style.StylePicker, goog.ui.Component);
 ble.scribble.style.StylePicker.prototype.height = 187;
 
 /**
- * Disallow deocartion.
+ * Disallow decoration.
  * @override
  */
 ble.scribble.style.StylePicker.prototype.canDecorate = function(element) {
   return false;
+};
+
+ble.scribble.style.StylePicker.prototype.getFilled = function() {
+  return false;
+};
+
+ble.scribble.style.StylePicker.prototype.getStrokeColor = function() { 
+  return goog.color.alpha.hexToRgbaStyle(this.hsva1.getColorRgbaHex());
+};
+
+ble.scribble.style.StylePicker.prototype.getFillColor = function() { 
+  return goog.color.alpha.hexToRgbaStyle(this.hsva2.getColorRgbaHex());
+};
+
+ble.scribble.style.StylePicker.prototype.getStyle = function() {
+  var lineWidth = this.slider.getValue();
+  if(this.getFilled()) {
+    return new ble.gfx.path.PainterPixel(lineWidth, this.getStrokeColor(), this.getFillColor());
+  } else {
+    return new ble.gfx.path.PainterPixel(lineWidth, this.getStrokeColor()); 
+  }
 };
 
 ble.scribble.style.StylePicker.prototype.createDom = function() {
@@ -62,7 +85,7 @@ ble.scribble.style.StylePicker.prototype.createDom = function() {
   this.bigIcon = new ble.scratch.Canvas(this.height, this.height);
   this.addChild(this.bigIcon, true);
 
-  var smallSize = Math.floor(this.height / 2);
+  this.smallSize = Math.floor(this.height / 2);
   var smallIconContainer = new goog.ui.Component();
   var height = this.height;
   smallIconContainer.createDom = function() {
@@ -71,14 +94,12 @@ ble.scribble.style.StylePicker.prototype.createDom = function() {
     elt.style['width'] = height; 
     elt.style['height'] = height; 
     elt.style['display'] = "inline-block";
-//    elt.style['margin'] = 0;
-//    elt.style['padding'] = 0;
     this.setElementInternal(elt);
   };
   //replace manual styling with css class plz
   this.smallIcons = [];
   for(var i = 0; i < 4; i++) {
-    var smallIcon = new ble.scratch.Canvas(smallSize, smallSize);
+    var smallIcon = new ble.scratch.Canvas(this.smallSize, this.smallSize);
     smallIconContainer.addChild(smallIcon, true);
     this.smallIcons.push(smallIcon);
   };

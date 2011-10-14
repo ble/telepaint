@@ -42,6 +42,7 @@ ble.gfx.path.PainterPixel.prototype.drawTo = function(ctx) {
     ctx.fill();
   } 
   ctx.lineWidth *= this.lineWidth;
+  ctx.strokeStyle = this.strokeStyle;
   ctx.stroke();
   ctx.restore();
 };
@@ -76,6 +77,7 @@ ble.gfx.path.PainterVirtual.prototype.drawTo = function(ctx) {
     ctx.fill();
   } 
   ctx.lineWidth = this.lineWidth;
+  ctx.strokeStyle = this.strokeStyle;
   ctx.stroke();
   ctx.restore(); 
 };

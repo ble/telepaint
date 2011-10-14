@@ -5,6 +5,7 @@ goog.require('ble.json.TaggedDeserializer');
 goog.require('ble.json.PrettyPrinter');
 goog.require('ble.gfx.StrokeReplay');
 goog.require('ble.gfx.PolylineReplay');
+goog.require('ble.gfx.EraseReplay');
 
 goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
 goog.require('goog.events.EventTarget');

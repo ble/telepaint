@@ -1,6 +1,8 @@
 goog.require('goog.dom.DomHelper');
 goog.require('goog.math.Box');
+goog.require('goog.events');
 goog.require('goog.events.EventTarget');
+goog.require('goog.events.EventType');
 goog.require('goog.ui.HsvaPalette');
 goog.require('goog.ui.Slider');
 goog.require('goog.color.alpha');
@@ -57,12 +59,16 @@ ble.scribble.style.StylePicker.prototype.initIconReplays = function() {
   var smallStroke = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[0]);
   smallStroke.coordinates = ble.scribble.icon.scaleUp(this.smallSize, smallStroke.coordinates);
   var bigStroke = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[0]);
+  bigStroke = bigStroke.withStartTime(0);
   bigStroke.coordinates = ble.scribble.icon.scaleUp(this.height, bigStroke.coordinates);
+  bigStroke.times = ble.scribble.icon.flattenTime(bigStroke.times, 0.1);
 
   var smallPolyline = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[1]);
   smallPolyline.coordinates = ble.scribble.icon.scaleUp(this.smallSize, smallPolyline.coordinates);
   var bigPolyline = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[1]);
+  bigPolyline = bigPolyline.withStartTime(0);
   bigPolyline.coordinates = ble.scribble.icon.scaleUp(this.height, bigPolyline.coordinates);
+  bigPolyline.times = ble.scribble.icon.flattenTime(bigPolyline.times, 0.1);
 
   this.smallCaps.push(smallStroke);
   this.smallCaps.push(smallPolyline);
@@ -97,6 +103,41 @@ ble.scribble.style.StylePicker.prototype.repaintAll = function() {
   });
 };
 
+ble.scribble.style.StylePicker.prototype.animateBig = function() {
+  if(this.animationHandle_ != null)
+    this.cancelAnimation();
+  this.animationStart = Date.now();
+  this.animationDuration = 2500;
+  this.animationFn = goog.bind(function() {
+    var now = Date.now();  
+    var delta = (now - this.animationStart) / this.animationDuration;
+    if(delta >= 1) {
+      this.repaintAll();
+      this.cancelAnimation();
+    } else {
+      var i = this.getSelectedMethod();
+      if(this.bigCaps.length > 1) {
+        var bigCap = this.bigCaps[i];
+        bigCap.painter = this.getStyle();
+        var capTime = bigCap.startTime() + (bigCap.endTime() - bigCap.startTime()) * delta;
+        this.bigIcon.withContext(goog.bind(function(ctx) {
+          ctx.clearRect(0, 0, this.height, this.height);
+          ble.scribble.backdropOn(ctx, this.height, this.height, Math.round(this.height / 5));
+          bigCap.drawPartialTo(capTime, ctx); 
+        }, this));
+      }
+    }
+  }, this);
+  this.animationHandle_ = window.setInterval(this.animationFn, 16);
+}
+
+ble.scribble.style.StylePicker.prototype.cancelAnimation = function() {
+  if(this.animationHandle_ == null)
+    return;
+  window.clearInterval(this.animationHandle_);
+  this.animationHandle_ = null;
+   
+};
 /**
  * Disallow decoration.
  * @override
@@ -185,6 +226,7 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   this.bigIcon.getRawContext().lineJoin = "round";
   this.bigIcon.getRawContext().lineCap = "round";
 
+  goog.events.listen(this.slider.getElement(), goog.events.EventType.MOUSEUP, this.animateBig, false, this);
   goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.repaintAll, false, this);
   goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
   goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
@@ -202,6 +244,21 @@ ble.scribble.icon.scaleUp = function(scale, coordinates) {
     result[i] = Math.round(result[i] * scale);
   }
   return result;
+};
+
+ble.scribble.icon.flattenTime = function(time, factor) {
+  var L = time.length - 1;
+  var time0 = time[0];
+  var timeF = time[time.length - 1];
+  var interval = timeF - time0;
+
+  var delta = time.slice();
+  for(var i = 0; i <= L; i++) {
+    delta[i] = (delta[i] - time0) / interval;
+    delta[i] = factor * delta[i] + (1.0 - factor) * (i / L);
+    delta[i] = time0 + interval * delta[i];
+  }
+  return delta;
 };
 
 goog.exportSymbol('ble.scribble.style.StylePicker', ble.scribble.style.StylePicker);

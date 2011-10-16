@@ -254,22 +254,27 @@ ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
  * @constructor
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
+ * @param {number=} opt_lineWidth
  * @extends{ble.gfx.Replay}
  */
-ble.gfx.EraseReplay = function(coordinates, times) {
+ble.gfx.EraseReplay = function(coordinates, times, opt_lineWidth) {
   ble.gfx.Replay.call(this, coordinates, times);
+  if(goog.isDef(opt_lineWidth))
+    this.lineWidth = opt_lineWidth;
 };
 goog.inherits(ble.gfx.EraseReplay, ble.gfx.Replay);
 
-ble.gfx.EraseReplay.defaultPainter = ble.gfx.path.painterDefault;
-ble.gfx.EraseReplay.prototype.painter = ble.gfx.EraseReplay.defaultPainter;
 ble.gfx.EraseReplay.prototype._tag = "ble.gfx.EraseReplay";
+ble.gfx.EraseReplay.prototype.lineWidth = 15;
+goog.exportProperty(ble.gfx.EraseReplay.prototype, 'lineWidth', ble.gfx.EraseReplay.prototype.lineWidth);
 
 ble.gfx.EraseReplay.prototype.toJSON = function() {
   var obj = ({
     '_tag': this._tag,
     'coordinates': this.coordinates,
     'times': this.times});
+  if(this.hasOwnProperty('lineWidth'))
+    obj['lineWidth'] = this.lineWidth;
   return obj;
 };
 
@@ -278,7 +283,8 @@ ble.gfx.EraseReplay.prototype.bless = function(obj) {
   if(tag != ble.gfx.EraseReplay.prototype._tag) return null;
   var c = obj['coordinates'];
   var t = obj['times'];
-  return new ble.gfx.EraseReplay(c, t);
+  var l = obj['lineWidth'];
+  return new ble.gfx.EraseReplay(c, t, l);
 };
 
 /**
@@ -309,6 +315,7 @@ ble.gfx.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
     ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.0)';
     ctx.globalCompositeOperation = 'copy';
+    ctx.lineWidth = this.lineWidth;
     ctx.stroke(); 
     ctx.restore();
   }
@@ -319,6 +326,7 @@ ble.gfx.EraseReplay.prototype.drawCompleteTo = function(ctx) {
   ble.gfx.pathCoords(ctx, this.coordinates);
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.0)';
   ctx.globalCompositeOperation = 'copy';
+  ctx.lineWidth = this.lineWidth;
   ctx.stroke(); 
   ctx.restore();
 };

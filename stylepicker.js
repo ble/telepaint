@@ -11,32 +11,13 @@ goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
 goog.require('ble.gfx.StrokeReplay');
 goog.require('ble.json.PrettyPrinter');
-goog.require('ble.scribble.style.caps');
+goog.require('ble.scribble.style.IconPainter');
 
 goog.provide('ble.scribble.backdropOn');
 
 goog.provide('ble.scribble.icon.makeNormalizedStrokeRecorder');
 goog.provide('ble.scribble.icon.makeNormalizedPolylineRecorder');
 goog.provide('ble.scribble.style.StylePicker');
-
-ble.scribble.backdropOn = function(ctx, width, height, blockSize) {
-  ctx.save();
-  var wCount = Math.ceil(width / blockSize);
-  var hCount = Math.ceil(height / blockSize);
-  var color0 = "#ddd";
-  var color1 = "#eee";
-  for(var i = 0; i < wCount; i++) {
-    for(var j = 0; j < hCount; j++) {
-      var x = i * blockSize;
-      var y = j * blockSize;
-      ctx.beginPath();
-      ctx.rect(x, y, blockSize, blockSize);
-      ctx.fillStyle = ((i + j) % 2 == 0) ? color0 : color1;
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-};
 
 /**
  * @constructor
@@ -45,13 +26,14 @@ ble.scribble.backdropOn = function(ctx, width, height, blockSize) {
 ble.scribble.style.StylePicker = function() {
   goog.ui.Component.call(this);
   this.smallSize = Math.floor(this.height / 2);
-  this.initIconReplays();
+  this.painter = new ble.scribble.style.IconPainter(this);
+//  this.initIconReplays();
 };
 goog.inherits(ble.scribble.style.StylePicker, goog.ui.Component);
 
 
 ble.scribble.style.StylePicker.prototype.height = 187;
-
+/*
 ble.scribble.style.StylePicker.prototype.initIconReplays = function() {
   this.smallCaps = [];
   this.bigCaps = [];
@@ -141,6 +123,7 @@ ble.scribble.style.StylePicker.prototype.cancelAnimation = function() {
   this.animationHandle_ = null;
    
 };
+*/
 /**
  * Disallow decoration.
  * @override
@@ -150,7 +133,7 @@ ble.scribble.style.StylePicker.prototype.canDecorate = function(element) {
 };
 
 ble.scribble.style.StylePicker.prototype.getFilled = function() {
-  return false;
+  return (this.getSelectedMethod == 3);
 };
 
 ble.scribble.style.StylePicker.prototype.getSelectedMethod = function() {
@@ -229,39 +212,18 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   this.bigIcon.getRawContext().lineJoin = "round";
   this.bigIcon.getRawContext().lineCap = "round";
 
-  goog.events.listen(this.slider.getElement(), goog.events.EventType.CLICK, this.animateBig, false, this);
-  goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.repaintAll, false, this);
-  goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
-  goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
-  this.repaintAll();
-};
-
-/**
- * @param{number} scale
- * @param{Array.<number>} coordinates
- * @return{Array.<number>}
- */
-ble.scribble.icon.scaleUp = function(scale, coordinates) {
-  var result = coordinates.slice();
-  for(var i = 0; i < result.length; i++) {
-    result[i] = Math.round(result[i] * scale);
+  for(var i = 0; i < this.smallIcons.length; i++) {
+    var ctx = this.smallIcons[i].getRawContext();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round"; 
   }
-  return result;
-};
-
-ble.scribble.icon.flattenTime = function(time, factor) {
-  var L = time.length - 1;
-  var time0 = time[0];
-  var timeF = time[time.length - 1];
-  var interval = timeF - time0;
-
-  var delta = time.slice();
-  for(var i = 0; i <= L; i++) {
-    delta[i] = (delta[i] - time0) / interval;
-    delta[i] = factor * delta[i] + (1.0 - factor) * (i / L);
-    delta[i] = time0 + interval * delta[i];
-  }
-  return delta;
+//  goog.events.listen(this.slider.getElement(), goog.events.EventType.CLICK, this.animateBig, false, this);
+  goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.painter.paintPreview, false, this.painter);
+//  goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
+//  goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
+//  this.repaintAll();
+  this.painter.paintIcons();
+  this.painter.paintPreview();
 };
 
 goog.exportSymbol('ble.scribble.style.StylePicker', ble.scribble.style.StylePicker);

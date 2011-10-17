@@ -60,6 +60,11 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
   smallPolyline.painter = makeDefaultStyle();
   this.smallPolyline = smallPolyline;
 
+  var smallPolylineFill = this.deserialize(ble.scribble.style.caps[1]);
+  this.scaleUp(this.smallSize, smallPolylineFill.coordinates);
+  smallPolylineFill.painter = makeDefaultStyle();
+  this.smallPolylineFill = smallPolylineFill;
+
   var bigPolyline = this.deserialize(ble.scribble.style.caps[1]);
   bigPolyline = bigPolyline.withStartTime(0);
   this.scaleUp(this.bigSize, bigPolyline.coordinates);
@@ -68,11 +73,12 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
 
   var smallErase = new ble.gfx.EraseReplay(smallStroke.coordinates, smallStroke.times);
   this.smallErase = smallErase;
-  var bigErase = new ble.gfx.EraseReplay(bigStroke.coordinates, bigStroke.times, 6);
+  var bigErase = new ble.gfx.EraseReplay(bigStroke.coordinates, bigStroke.times);
   this.bigErase = bigErase;
 };
 
 ble.scribble.style.IconPainter.prototype.paintStrokeIcon = function(ctx, isBig) {
+  this.clear(ctx, isBig);
   this.backdrop(ctx, isBig);
   var stroke = isBig ? this.bigStroke : this.smallStroke;  
   if(isBig)
@@ -81,6 +87,7 @@ ble.scribble.style.IconPainter.prototype.paintStrokeIcon = function(ctx, isBig) 
 };
 
 ble.scribble.style.IconPainter.prototype.paintPolylineIcon = function(ctx, isBig) {
+  this.clear(ctx, isBig);
   this.backdrop(ctx, isBig);
   var polyline = isBig ? this.bigPolyline : this.smallPolyline;  
   if(isBig)
@@ -89,6 +96,7 @@ ble.scribble.style.IconPainter.prototype.paintPolylineIcon = function(ctx, isBig
 };
 
 ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
+  this.clear(ctx, isBig);
   ctx.save();
   ctx.fillStyle = "#dd0000";
   var size = isBig? this.bigSize : this.smallSize;
@@ -96,7 +104,7 @@ ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
   ctx.fillRect(delta, delta, size-2 * delta, size-2 * delta);
   var erase = isBig? this.bigErase: this.smallErase;
   if(isBig)
-    erase.lineWidth = this.picker.getStyle().lineWidth();
+    erase.lineWidth = this.picker.getStyle().lineWidth;
   erase.drawCompleteTo(ctx);
   ctx.globalCompositeOperation = "destination-over";
   this.backdrop(ctx, isBig);
@@ -104,8 +112,9 @@ ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
 };
 
 ble.scribble.style.IconPainter.prototype.paintPolylineFillIcon = function(ctx, isBig) { 
+  this.clear(ctx, isBig);
   this.backdrop(ctx, isBig);
-  var polyline = isBig ? this.bigPolyline : this.smallPolyline;  
+  var polyline = isBig ? this.bigPolyline : this.smallPolylineFill;  
   if(isBig)
     polyline.painter = this.picker.getStyle();
   polyline.painter.fillStyle = this.picker.getFillColor();
@@ -115,18 +124,30 @@ ble.scribble.style.IconPainter.prototype.paintPolylineFillIcon = function(ctx, i
 
 ble.scribble.style.IconPainter.prototype.paintIcons = function() {
   var self = this;
-  this.picker.smallIcons[0].withContext(function(ctx) {
+  this.picker.smallIcons[0].withClearContext(function(ctx) {
     self.paintStrokeIcon(ctx, false);
   });
-  this.picker.smallIcons[1].withContext(function(ctx) {
+  this.picker.smallIcons[1].withClearContext(function(ctx) {
     self.paintPolylineIcon(ctx, false);
   });
-  this.picker.smallIcons[2].withContext(function(ctx) {
+  this.picker.smallIcons[2].withClearContext(function(ctx) {
     self.paintEraseIcon(ctx, false);
   });
-  this.picker.smallIcons[3].withContext(function(ctx) {
+  this.picker.smallIcons[3].withClearContext(function(ctx) {
     self.paintPolylineFillIcon(ctx, false);
   });
+  var selection = this.picker.getSelectedMethod();
+  if(selection >= 0 && selection < 4) {
+    this.picker.smallIcons[selection].withContext(function(ctx) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0,0,self.smallSize,self.smallSize);
+      ctx.lineWidth=10;
+      ctx.strokeStyle="#48f";
+      ctx.stroke(); 
+      ctx.restore();
+    });
+  }
 };
 
 ble.scribble.style.IconPainter.prototype.paintPreview = function() {
@@ -143,9 +164,17 @@ ble.scribble.style.IconPainter.prototype.paintPreview = function() {
   else
     throw "bad method";
   var self = this;
-  this.picker.bigIcon.withContext(function(ctx) {
+  this.picker.bigIcon.withClearContext(function(ctx) {
     mFunc.call(self, ctx, true);
   });
+};
+
+ble.scribble.style.IconPainter.prototype.clear = function(ctx, isBig) {
+  if(isBig)
+    ctx.clearRect(ctx, -4, -4, this.bigSize+2, this.bigSize+2);
+  else
+    ctx.clearRect(ctx, -4, -4, this.smallSize+2, this.smallSize+2);
+
 };
 
 ble.scribble.style.IconPainter.prototype.backdrop = function(ctx, isBig) {

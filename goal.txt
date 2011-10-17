@@ -1,9 +1,6 @@
 
 Next goals: 
-in progress Add more drawing methods (flesh out polyline, polyline fill, erase)
-CHECK!  Add componentry for colors, linewidths, method selection
-CHECK!    Use pixel coordinates for the icons
-in progress  Wire all that shit up
+much further along  Wire all that shit up
   Add undo and the requisite `visibleUntil` property needed to support it
   (redo?) <-- no, no, thirteen times no.
   Animate multiple drawings in sequence (events on end of animation)
@@ -12,9 +9,10 @@ in progress  Wire all that shit up
 
 Next steps?:
   serialize method for entire drawings
-  color / linewidth controls
-  erase method
-  polyline fill
+CHECK!  color / linewidth controls
+CHECK!  erase method
+CHECK!  polyline fill
 
 
 Current way of painting shit onto stylepicker canvases is awkward.
+FIXED dat shit

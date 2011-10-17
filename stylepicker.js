@@ -26,68 +26,14 @@ goog.provide('ble.scribble.style.StylePicker');
 ble.scribble.style.StylePicker = function() {
   goog.ui.Component.call(this);
   this.smallSize = Math.floor(this.height / 2);
+  this.selectedMethod = 0;
   this.painter = new ble.scribble.style.IconPainter(this);
-//  this.initIconReplays();
 };
 goog.inherits(ble.scribble.style.StylePicker, goog.ui.Component);
 
 
 ble.scribble.style.StylePicker.prototype.height = 187;
 /*
-ble.scribble.style.StylePicker.prototype.initIconReplays = function() {
-  this.smallCaps = [];
-  this.bigCaps = [];
-
-  var smallStroke = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[0]);
-  smallStroke.coordinates = ble.scribble.icon.scaleUp(this.smallSize, smallStroke.coordinates);
-  var bigStroke = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[0]);
-  bigStroke = bigStroke.withStartTime(0);
-  bigStroke.coordinates = ble.scribble.icon.scaleUp(this.height, bigStroke.coordinates);
-  bigStroke.times = ble.scribble.icon.flattenTime(bigStroke.times, 0.1);
-
-  var smallPolyline = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[1]);
-  smallPolyline.coordinates = ble.scribble.icon.scaleUp(this.smallSize, smallPolyline.coordinates);
-  var bigPolyline = ble.scribbleDeserializer.deserialize(ble.scribble.style.caps[1]);
-  bigPolyline = bigPolyline.withStartTime(0);
-  bigPolyline.coordinates = ble.scribble.icon.scaleUp(this.height, bigPolyline.coordinates);
-  bigPolyline.times = ble.scribble.icon.flattenTime(bigPolyline.times, 0.1);
-
-  this.smallCaps.push(smallStroke);
-  this.smallCaps.push(smallPolyline);
-
-
-  this.bigCaps.push(bigStroke);
-  this.bigCaps.push(bigPolyline);
-};
-
-ble.scribble.style.StylePicker.prototype.repaintAll = function() {
-  if(!this.isInDocument())
-    return;
-
-  if(this.animationHandle_ != null)
-    return;
-  var self = this;
-  for(var i = 0; i < this.smallIcons.length; i++) {
-    this.smallIcons[i].withContext(function(ctx) {
-      ctx.clearRect(0, 0, self.smallSize, self.smallSize);
-      ble.scribble.backdropOn(ctx, self.smallSize, self.smallSize, Math.round(self.smallSize / 4));
-      if(self.smallCaps.length > i) {
-        self.smallCaps[i].drawCompleteTo(ctx);
-      }
-    });
-  }
-  this.bigIcon.withContext(function(ctx) {
-      ctx.clearRect(0, 0, self.height, self.height);
-      ble.scribble.backdropOn(ctx, self.height, self.height, Math.round(self.height / 5));
-      var i = self.getSelectedMethod();
-      if(self.bigCaps.length > i) {
-        self.bigCaps[i].painter = self.getStyle();
-        self.bigCaps[i].drawCompleteTo(ctx);
-      }
-
-  });
-};
-
 ble.scribble.style.StylePicker.prototype.animateBig = function() {
   if(this.animationHandle_ != null)
     this.cancelAnimation();
@@ -133,11 +79,11 @@ ble.scribble.style.StylePicker.prototype.canDecorate = function(element) {
 };
 
 ble.scribble.style.StylePicker.prototype.getFilled = function() {
-  return (this.getSelectedMethod == 3);
+  return (this.getSelectedMethod() == 3);
 };
 
 ble.scribble.style.StylePicker.prototype.getSelectedMethod = function() {
-  return 0;
+  return this.selectedMethod;
 };
 
 ble.scribble.style.StylePicker.prototype.getStrokeColor = function() { 
@@ -217,11 +163,28 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
     ctx.lineJoin = "round";
     ctx.lineCap = "round"; 
   }
+  goog.events.listen(
+    this.smallIconContainer.getElement(),
+    goog.events.EventType.CLICK,
+    goog.bind(
+      function(event){
+        var changed = false;
+        for(var i = 0; i < this.smallIcons.length; i++) {
+          if(event.target === this.smallIcons[i].getElement()) {
+            this.selectedMethod = i;
+            changed = true;
+            this.repaint();
+          }
+        }
+      },
+      this));
 //  goog.events.listen(this.slider.getElement(), goog.events.EventType.CLICK, this.animateBig, false, this);
   goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.painter.paintPreview, false, this.painter);
-//  goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
-//  goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaintAll, false, this);
-//  this.repaintAll();
+  goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaint, false, this);
+  goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaint, false, this);
+  this.repaint();
+};
+ble.scribble.style.StylePicker.prototype.repaint = function() {
   this.painter.paintIcons();
   this.painter.paintPreview();
 };

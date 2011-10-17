@@ -265,6 +265,15 @@ ble.scratch.Canvas.prototype.withContext = function(action) {
   context.restore();
 };
 
+ble.scratch.Canvas.prototype.withClearContext = function(action) {
+  var context = this.getRawContext();
+  context.clearRect(-1, -1, 2+this.width_px, 2+this.height_px);
+  context.save();
+  context.translate(0.5, 0.5);
+  action.call(this, context);
+  context.restore();
+};
+
 /**
  * @private
  */

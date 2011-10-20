@@ -1,6 +1,7 @@
 
 Next goals: 
-  Add style picker to control scribble input, make it work
+  Add STYLECHANGE, METHODCHANGE events dispatched @ the picker
+  Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
   serialize method for entire drawings
   Add undo and the requisite `visibleUntil` property needed to support it
   Animate multiple drawings in sequence (events on end of animation)

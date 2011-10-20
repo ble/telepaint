@@ -32,7 +32,7 @@ ble.scribble.style.StylePicker = function() {
 goog.inherits(ble.scribble.style.StylePicker, goog.ui.Component);
 
 
-ble.scribble.style.StylePicker.prototype.height = 187;
+ble.scribble.style.StylePicker.prototype.height = 152;
 /*
 ble.scribble.style.StylePicker.prototype.animateBig = function() {
   if(this.animationHandle_ != null)

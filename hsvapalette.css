@@ -27,7 +27,7 @@
 
 .goog-hsva-palette-sm {
   width: 205px;
-  height: 185px;
+  height: 150px;
 }
 
 .goog-hsva-palette label span,
@@ -49,7 +49,7 @@
 
 .goog-hsva-palette-sm-hs-backdrop,
 .goog-hsva-palette-sm-hs-image {
-  top: 45px;
+  top: 10px;
   width: 128px;
   height: 128px;
 }
@@ -141,7 +141,7 @@
 
 .goog-hsva-palette-sm-v-image,
 .goog-hsva-palette-sm-a-image {
-  top: 45px;
+  top: 10px;
   left: 155px;
   width: 9px;
   height: 128px;
@@ -186,6 +186,7 @@
 .goog-hsva-palette-swatch-backdrop,
 .goog-hsva-palette-sm-swatch,
 .goog-hsva-palette-sm-swatch-backdrop {
+  display: none; /** hack **/ 
   position: absolute;
   top: 10px;
   right: 10px;
@@ -198,6 +199,7 @@
 
 .goog-hsva-palette-sm-swatch,
 .goog-hsva-palette-sm-swatch-backdrop {
+  display: none; /** hack **/
   top: 10px;
   right: auto;
   left: 10px;
@@ -226,6 +228,7 @@
 }
 
 .goog-hsva-palette-sm-input {
+  display: none;
   top: 10px;
   right: auto;
   left: 50px;

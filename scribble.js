@@ -1,5 +1,6 @@
 goog.provide('ble.scribble.Canvas');
 goog.provide('ble.scribble.Painter');
+goog.provide('ble.scribble.Scribble');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
 goog.require('ble.gfx');
@@ -256,5 +257,63 @@ ble.scribble.Canvas.prototype.exitDocument = function() {
       this);
     this.mocap_ = undefined;
   }
+};
+
+/**
+ * @constructor
+ * @param{number} width
+ * @param{number} height
+ * @extends{goog.ui.Component}
+ */
+ble.scribble.Scribble = function(width, height) {
+  this.width = width;
+  this.height = height;
+  this.listenerKeys = [];
+  goog.ui.Component.call(this);
+};
+goog.inherits(ble.scribble.Scribble, goog.ui.Component);
+
+ble.scribble.Scribble.prototype.createDom = function() {
+  var domHelper = this.getDomHelper();
+  var container = domHelper.createDom('div', {'class': 'ble-scribble-stylepicker'});
+  this.setElementInternal(container);
+
+  this.canvas = new ble.scribble.Canvas(this.width, this.height);
+  this.picker = new ble.scribble.style.StylePicker();
+  this.addChild(this.canvas, true);
+  this.addChild(this.picker, true); 
+};
+
+ble.scribble.Scribble.prototype.enterDocument = function() {
+  goog.base(this, 'enterDocument');
+  this.canvas.getElement().style['border'] = '1px solid black';
+  var ctx = this.canvas.getRawContext();
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  this.listenerKeys.push(goog.events.listen(
+      this.picker,
+      ble.scribble.style.EventType.STYLECHANGED,
+      function(e) {
+        this.setStyle(e.style);
+      },
+      false,
+      this.canvas));
+  this.listenerKeys.push(goog.events.listen(
+      this.picker,
+      ble.scribble.style.EventType.METHODCHANGED,
+      function(e) {
+        this.setMode(e.method);
+        this.setStyle(e.style);
+      },
+      false,
+      this.canvas));
+};
+
+ble.scribble.Scribble.prototype.exitDocument = function() {
+  while(this.listenerKeys.length > 0) {
+    var key = this.listenerKeys.pop();
+    goog.events.unlistenByKey(key);
+  }
+  goog.base(this, 'exitDocument');
 };
 

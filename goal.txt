@@ -1,8 +1,33 @@
+Little fix:
+  round line cap, round line join for big canvas
 
 Next goals: 
-  Take a pass for now --> Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
-  --> actually unnecessary. serialize method for entire drawings
+  DONE Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
+  entire drawings serialize themselves as long as each part has an appropriate entry in the tagged deserializer and an appropriate toJSON method
+
   Add undo and the requisite `visibleUntil` property needed to support it
+  ^-- not actually the approach worth taking.
+  Painter has
+    canonical representation of drawing; how drawing will be saved and transmitted
+    playback representation of drawing; all strokes and undos, times scaled for playback
+    intermediate representation of drawing:
+      call method to indicate that you are starting animation of the drawing
+       ---> side effects creating new empty intermediate representation
+      call method indicating the time at which the drawing will next be painted
+      ---> walk playback representation: 
+        process every item that starts between the last update time and the new one:
+          replays are added as "pushes".
+          undos are executed as "pops".  
+
+  In creating a drawing, undos push an undo onto the canonical representation and thus pop a replay off
+  the actual painting; redos pop an undo off the canonical representation IFF the last item in the
+  canonical representation is an undo.  Because redos remove the original undo from the canonical
+  representation, undoing and redoing one or more times WILL NOT APPEAR IN THE PLAYBACK.
+
+  Alternative: can we allow people to be really annoying and undo/redo things multiple times?  well, if
+  we're taking the time to make undos behave nicely with this whole canonical/playback/intermediate
+  representation, it may be worth doing as it won't make things that much MORE complicated...
+
   Animate multiple drawings in sequence (events on end of animation)
   Add drawing functionality for a "table view" or "race view" w/ panning, zooming
 

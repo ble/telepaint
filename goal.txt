@@ -1,8 +1,7 @@
 
 Next goals: 
-  Add STYLECHANGE, METHODCHANGE events dispatched @ the picker
-  Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
-  serialize method for entire drawings
+  Take a pass for now --> Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
+  --> actually unnecessary. serialize method for entire drawings
   Add undo and the requisite `visibleUntil` property needed to support it
   Animate multiple drawings in sequence (events on end of animation)
   Add drawing functionality for a "table view" or "race view" w/ panning, zooming

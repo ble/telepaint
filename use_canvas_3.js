@@ -1,19 +1,10 @@
 goog.provide('ble.use_canvas_3');
 
 goog.require('ble.Scribble');
-goog.require('ble.Scribbles');
+goog.require('ble.scribble.style.StylePicker');
+goog.require('ble.scribble.style.EventType');
 
 goog.require('goog.events');
-goog.require('goog.ui.Component.EventType'); 
-goog.require('goog.ui.Menu');
-goog.require('goog.ui.MenuItem'); 
-
-
-
-
-//var console = window.console;
-//var JSON = window.JSON;
-
 
 ble.use_canvas_3 = function() {
   var pxWidth = 640;
@@ -29,6 +20,23 @@ ble.use_canvas_3 = function() {
   var picker = new ble.scribble.style.StylePicker();
   picker.render(container);
 
+  goog.events.listen(
+      picker,
+      ble.scribble.style.EventType.STYLECHANGED,
+      function(e) {
+        this.setStyle(e.style);
+      },
+      false,
+      canvas);
+  goog.events.listen(
+      picker,
+      ble.scribble.style.EventType.METHODCHANGED,
+      function(e) {
+        this.setMode(e.method);
+        this.setStyle(e.style);
+      },
+      false,
+      canvas);
 };
 
 goog.exportSymbol('ble.use_canvas_3', ble.use_canvas_3);

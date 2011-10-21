@@ -3,6 +3,7 @@ goog.provide('ble.scribble.Painter');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
 goog.require('ble.gfx');
+goog.require('ble.gfx.path.painterDefault');
 goog.require('ble.gfx.PolylineReplay');
 goog.require('ble.gfx.TimeDrawable');
 goog.require('goog.events');
@@ -75,11 +76,11 @@ ble.scribble.Painter.prototype.recordCurrent = function() {
 };
 
 ble.scribble.Painter.prototype.drawCompleteTo = function(ctx) {
+  for(var i = 0; i < this.paintReady.length; i++)
+    this.paintReady[i].drawCompleteTo(ctx); 
   if(!goog.isNull(this.beingDrawn)) {
     this.beingDrawn.drawCompleteTo(ctx);
   }
-  for(var i = 0; i < this.paintReady.length; i++)
-    this.paintReady[i].drawCompleteTo(ctx); 
 };
 
 ble.scribble.Painter.prototype.drawPartialTo = function(time, ctx) {
@@ -108,6 +109,8 @@ ble.Scribble = function(width, height, opt_painter) {
   else
     this.painter = new ble.scribble.Painter([]);
   this.mocap_ = null;
+  this.modes = this.makeModes();
+  this.style = ble.gfx.path.painterDefault;
 };
 goog.inherits(ble.Scribble, ble.scratch.Canvas);
 
@@ -179,35 +182,39 @@ ble.Scribble.prototype.handleEvent = function(event) {
     return;
   var painter = this.painter;
   if(event.type == ble.mocap.EventType.BEGIN) {
-    painter.setCurrent(this.converter(event.capture));
+    painter.setCurrent(this.converter(event.capture, this.style));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.PROGRESS ||
             event.type == ble.mocap.EventType.CONTROLPOINT) {
-    painter.setCurrent(this.converter(event.capture));
+    painter.setCurrent(this.converter(event.capture, this.style));
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.END) {
-    painter.setCurrent(this.converter(event.capture));
+    painter.setCurrent(this.converter(event.capture, this.style));
     painter.recordCurrent();
     this.dispatchEvent(event);
   }
 
 };
 
-ble.Scribble.prototype.modes = ([
-  {
-    constructor: function () { return new ble.mocap.Stroke(); },
-    converter: ble.gfx.StrokeReplay.fromMocap 
-  },
-  {
-    constructor: function () { return new ble.mocap.Polyline(true); },
-    converter: ble.gfx.PolylineReplay.fromMocap
-  }
-  ]);
+
+ble.Scribble.prototype.makeModes = function() {
+  var stroke = new ble.mocap.Stroke();
+  var polyline = new ble.mocap.Polyline(true);
+  return [
+    [stroke, ble.gfx.StrokeReplay.fromMocap],
+    [polyline, ble.gfx.PolylineReplay.fromMocap],
+    [stroke, ble.gfx.EraseReplay.fromMocap],
+    [polyline, ble.gfx.PolylineReplay.fromMocap]
+  ]; 
+};
 
 ble.Scribble.prototype.enterDocument = function() {
   this.setMode(0);
 };
 
+ble.Scribble.prototype.setStyle = function(style) {
+  this.style = style;
+};
 
 ble.Scribble.prototype.setMode = function(modeNum) {
   if(!goog.isNull(this.mocap_)) {
@@ -222,8 +229,8 @@ ble.Scribble.prototype.setMode = function(modeNum) {
     this.mocap_ = null;
   }
   var mode = this.modes[modeNum];
-  this.mocap_ = mode.constructor();
-  this.converter = mode.converter;
+  this.mocap_ = mode[0];
+  this.converter = mode[1];
   goog.events.listen(
       this.getElement(),
       this.mocap_.eventTypesOfInterest,

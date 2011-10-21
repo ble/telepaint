@@ -289,20 +289,20 @@ ble.gfx.EraseReplay.prototype.bless = function(obj) {
 
 /**
  * @param {ble.mocap.Capture} mocap
- * @param {*} ignored
+ * @param {*} painter
  * @return {ble.gfx.EraseReplay}
  */
-ble.gfx.EraseReplay.fromMocap = function(mocap, ignored) {
+ble.gfx.EraseReplay.fromMocap = function(mocap, painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.EraseReplay(coords, times);
+  return new ble.gfx.EraseReplay(coords, times, painter.lineWidth);
 };
 
 ble.gfx.EraseReplay.prototype.withStartTime = function(newStart) {
   var newTimes = this.shiftedStartTimes(newStart);
-  return new ble.gfx.EraseReplay(this.coordinates, newTimes);
+  return new ble.gfx.EraseReplay(this.coordinates, newTimes, this.lineWidth);
 }; 
 
 

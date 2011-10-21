@@ -15,9 +15,16 @@ goog.require('ble.scribble.style.IconPainter');
 
 goog.provide('ble.scribble.backdropOn');
 
-goog.provide('ble.scribble.icon.makeNormalizedStrokeRecorder');
-goog.provide('ble.scribble.icon.makeNormalizedPolylineRecorder');
 goog.provide('ble.scribble.style.StylePicker');
+goog.provide('ble.scribble.style.EventType');
+
+/**
+ * @enum{string}
+ */
+ble.scribble.style.EventType = {
+  METHODCHANGED: 'methodchange',
+  STYLECHANGED: 'stylechange'
+};
 
 /**
  * @constructor
@@ -166,27 +173,67 @@ ble.scribble.style.StylePicker.prototype.enterDocument = function() {
   goog.events.listen(
     this.smallIconContainer.getElement(),
     goog.events.EventType.CLICK,
-    goog.bind(
-      function(event){
-        var changed = false;
-        for(var i = 0; i < this.smallIcons.length; i++) {
-          if(event.target === this.smallIcons[i].getElement()) {
-            this.selectedMethod = i;
-            changed = true;
-            this.repaint();
-          }
+    function(event){
+      var changed = false;
+      for(var i = 0; i < this.smallIcons.length; i++) {
+        if(event.target === this.smallIcons[i].getElement()) {
+          this.selectedMethod = i;
+          changed = true;
         }
-      },
-      this));
-//  goog.events.listen(this.slider.getElement(), goog.events.EventType.CLICK, this.animateBig, false, this);
-  goog.events.listen(this.slider, goog.ui.Component.EventType.CHANGE, this.painter.paintPreview, false, this.painter);
-  goog.events.listen(this.hsva1, goog.ui.Component.EventType.ACTION, this.repaint, false, this);
-  goog.events.listen(this.hsva2, goog.ui.Component.EventType.ACTION, this.repaint, false, this);
+      }
+      if(changed) {
+        this.repaint();
+        this.methodChanged();
+      };
+    },
+    false,
+    this);
+
+  var styleChanged = function(event) {
+    this.repaint();
+    this.styleChanged();
+  };
+
+  goog.events.listen(
+    this.slider,
+    goog.ui.Component.EventType.CHANGE,
+    styleChanged,
+    false,
+    this);
+  goog.events.listen(
+    this.hsva1,
+    goog.ui.Component.EventType.ACTION,
+    styleChanged,
+    false,
+    this);
+  goog.events.listen(
+    this.hsva2,
+    goog.ui.Component.EventType.ACTION,
+    styleChanged,
+    false,
+    this);
   this.repaint();
+  this.styleChanged();
+  this.methodChanged();
 };
+
 ble.scribble.style.StylePicker.prototype.repaint = function() {
   this.painter.paintIcons();
   this.painter.paintPreview();
+};
+
+ble.scribble.style.StylePicker.prototype.styleChanged = function() {
+  var e = new goog.events.Event(ble.scribble.style.EventType.STYLECHANGED);
+  e.method = this.getSelectedMethod();
+  e.style = this.getStyle();
+  this.dispatchEvent(e);
+};
+
+ble.scribble.style.StylePicker.prototype.methodChanged = function() {
+  var e = new goog.events.Event(ble.scribble.style.EventType.METHODCHANGED);
+  e.method = this.getSelectedMethod();
+  e.style = this.getStyle();
+  this.dispatchEvent(e);
 };
 
 goog.exportSymbol('ble.scribble.style.StylePicker', ble.scribble.style.StylePicker);

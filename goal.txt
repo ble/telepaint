@@ -2,9 +2,7 @@ Little fix:
   round line cap, round line join for big canvas
 
 Next goals: 
-  DONE Create a Component that owns a Scribble and a StylePicker and wires StylePicker events into the Scribble
-  entire drawings serialize themselves as long as each part has an appropriate entry in the tagged deserializer and an appropriate toJSON method
-
+  Add back in the local storage save capability to test serialization
   Add undo and the requisite `visibleUntil` property needed to support it
   ^-- not actually the approach worth taking.
   Painter has

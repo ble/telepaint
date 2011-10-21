@@ -1,4 +1,4 @@
-goog.provide('ble.Scribble');
+goog.provide('ble.scribble.Canvas');
 goog.provide('ble.scribble.Painter');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
@@ -102,7 +102,7 @@ ble.scribble.Painter.prototype.drawPartialTo = function(time, ctx) {
  * @param {ble.scribble.Painter=} opt_painter
  * @extends {ble.scratch.Canvas}
  */
-ble.Scribble = function(width, height, opt_painter) {
+ble.scribble.Canvas = function(width, height, opt_painter) {
   ble.scratch.Canvas.call(this, width, height);
   if(goog.isDef(opt_painter))
     this.painter = opt_painter;
@@ -112,25 +112,25 @@ ble.Scribble = function(width, height, opt_painter) {
   this.modes = this.makeModes();
   this.style = ble.gfx.path.painterDefault;
 };
-goog.inherits(ble.Scribble, ble.scratch.Canvas);
+goog.inherits(ble.scribble.Canvas, ble.scratch.Canvas);
 
-ble.Scribble.prototype.repaintComplete = function(ctx) {
+ble.scribble.Canvas.prototype.repaintComplete = function(ctx) {
   ctx.clearRect(0, 0, this.width_px, this.height_px);
   this.painter.drawCompleteTo(ctx);
 };
 
-ble.Scribble.prototype.repaintAt = function(time) {
+ble.scribble.Canvas.prototype.repaintAt = function(time) {
   return function(ctx) { 
     ctx.clearRect(0, 0, this.width_px, this.height_px);
     this.painter.drawPartialTo(time, ctx);
   };
 };
 
-ble.Scribble.prototype.finishAnimation = function() {
+ble.scribble.Canvas.prototype.finishAnimation = function() {
   this.animating = false;
 };
 
-ble.Scribble.prototype.replayAll = function(duration_millis) {
+ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
   if(this.animating)
     return;
   this.animating = true;
@@ -142,7 +142,7 @@ ble.Scribble.prototype.replayAll = function(duration_millis) {
   }
 };
 
-ble.Scribble.prototype.animateRAF = function(replay_dur, capture_dur) {
+ble.scribble.Canvas.prototype.animateRAF = function(replay_dur, capture_dur) {
   var start = Date.now();
   var redraw = goog.bind(function(now) {
     var delta = now - start;
@@ -158,7 +158,7 @@ ble.Scribble.prototype.animateRAF = function(replay_dur, capture_dur) {
   redraw(Date.now());
 };
 
-ble.Scribble.prototype.animateInterval = function(replay_dur, capture_dur, interval) {
+ble.scribble.Canvas.prototype.animateInterval = function(replay_dur, capture_dur, interval) {
   var start = Date.now();
   var handle;
   var redraw = goog.bind(function() {
@@ -176,7 +176,7 @@ ble.Scribble.prototype.animateInterval = function(replay_dur, capture_dur, inter
   handle = window.setInterval(redraw, interval); 
 };
 
-ble.Scribble.prototype.handleEvent = function(event) {
+ble.scribble.Canvas.prototype.handleEvent = function(event) {
   goog.base(this, "handleEvent", event);
   if(event.propagationStopped_)
     return;
@@ -197,7 +197,7 @@ ble.Scribble.prototype.handleEvent = function(event) {
 };
 
 
-ble.Scribble.prototype.makeModes = function() {
+ble.scribble.Canvas.prototype.makeModes = function() {
   var stroke = new ble.mocap.Stroke();
   var polyline = new ble.mocap.Polyline(true);
   return [
@@ -208,15 +208,15 @@ ble.Scribble.prototype.makeModes = function() {
   ]; 
 };
 
-ble.Scribble.prototype.enterDocument = function() {
+ble.scribble.Canvas.prototype.enterDocument = function() {
   this.setMode(0);
 };
 
-ble.Scribble.prototype.setStyle = function(style) {
+ble.scribble.Canvas.prototype.setStyle = function(style) {
   this.style = style;
 };
 
-ble.Scribble.prototype.setMode = function(modeNum) {
+ble.scribble.Canvas.prototype.setMode = function(modeNum) {
   if(!goog.isNull(this.mocap_)) {
     goog.events.unlisten(
         this.getElement(),
@@ -242,7 +242,7 @@ ble.Scribble.prototype.setMode = function(modeNum) {
 
 };
 
-ble.Scribble.prototype.exitDocument = function() {
+ble.scribble.Canvas.prototype.exitDocument = function() {
   if(goog.isDef(this.mocap_)) {
     var motionCapture = this.mocap_;
     goog.events.unlisten(

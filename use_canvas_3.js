@@ -1,6 +1,6 @@
 goog.provide('ble.use_canvas_3');
 
-goog.require('ble.Scribble');
+goog.require('ble.scribble.Canvas');
 goog.require('ble.scribble.style.StylePicker');
 goog.require('ble.scribble.style.EventType');
 
@@ -12,7 +12,7 @@ ble.use_canvas_3 = function() {
 
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
-  var canvas = new ble.Scribble(pxWidth, pxHeight);
+  var canvas = new ble.scribble.Canvas(pxWidth, pxHeight);
 
   canvas.render(container);
   canvas.getElement().style["border"] = "1px solid black";

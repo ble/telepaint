@@ -317,3 +317,11 @@ ble.scribble.Scribble.prototype.exitDocument = function() {
   goog.base(this, 'exitDocument');
 };
 
+ble.scribble.Scribble.prototype.setPicture = function(data) {
+  this.canvas.painter = new ble.scribble.Painter(data);
+  this.canvas.withContext(goog.bind(this.canvas.repaintComplete, this.canvas));
+};
+
+ble.scribble.Scribble.prototype.getPicture = function() {
+  return this.canvas.painter.data;
+};

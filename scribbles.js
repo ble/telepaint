@@ -11,6 +11,14 @@ goog.require('goog.storage.mechanism.HTML5LocalStorage');
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
 
+ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
+ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
+ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
+ble.scribbleDeserializer.register(ble.gfx.EraseReplay); 
+
+goog.exportSymbol('ble.scribbleDeserializer', ble.scribbleDeserializer);
+
+
 var JSON = window.JSON;
 var console = window.console;
 /**
@@ -20,19 +28,10 @@ var console = window.console;
 ble.Scribbles = function() {
   goog.events.EventTarget.call(this);
   this.storage = new goog.storage.mechanism.HTML5LocalStorage();
-  this.deserializer = new ble.json.TaggedDeserializer();
-  this.deserializer.register(ble.gfx.StrokeReplay);
-  this.deserializer.register(ble.gfx.PolylineReplay); 
+  this.deserializer = ble.scribbleDeserializer;
   this.initialize_();
 };
 goog.inherits(ble.Scribbles, goog.events.EventTarget);
-
-ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
-ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
-ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
-ble.scribbleDeserializer.register(ble.gfx.EraseReplay); 
-
-goog.exportSymbol('ble.scribbleDeserializer', ble.scribbleDeserializer);
 
 /**
  * @enum{string}

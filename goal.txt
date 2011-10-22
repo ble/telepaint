@@ -1,10 +1,9 @@
 Little fix:
-  round line cap, round line join for big canvas
+DONE  round line cap, round line join for big canvas
 
 Next goals: 
-  Add back in the local storage save capability to test serialization
-  Add undo and the requisite `visibleUntil` property needed to support it
-  ^-- not actually the approach worth taking.
+DONE  Add back in the local storage save capability to test serialization
+ Undo plan:
   Painter has
     canonical representation of drawing; how drawing will be saved and transmitted
     playback representation of drawing; all strokes and undos, times scaled for playback

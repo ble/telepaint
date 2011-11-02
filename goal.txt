@@ -1,8 +1,7 @@
-Little fix:
-DONE  round line cap, round line join for big canvas
+WHY ARE THESE PREVIOUS GOALS SO TL;DR?
+\/  \/   \/   \/   \/   \/   \/   \/   \/   \/   \/  \/ 
 
 Next goals: 
-DONE  Add back in the local storage save capability to test serialization
  Undo plan:
   Painter has
     canonical representation of drawing; how drawing will be saved and transmitted
@@ -25,6 +24,16 @@ DONE  Add back in the local storage save capability to test serialization
   we're taking the time to make undos behave nicely with this whole canonical/playback/intermediate
   representation, it may be worth doing as it won't make things that much MORE complicated...
 
+/\  /\   /\   /\   /\   /\   /\   /\   /\   /\   /\  /\ 
+
+Not sure I like the way it's going; too many responsibilities in one place.
+Seems like if I just started by adding an undo button and wiring things up,
+I might well come up with a simpler solution.
+
+
+Still valid goals:
   Animate multiple drawings in sequence (events on end of animation)
   Add drawing functionality for a "table view" or "race view" w/ panning, zooming
 
+New goal:
+  Play, pause, ffw, rewind animation of drawings / stacks / games

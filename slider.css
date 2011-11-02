@@ -1,13 +1,13 @@
     .goog-slider-vertical,
     .goog-slider-horizontal {
-      background-color: ThreeDFace;
+      background-color: #eeeeee;
       position: relative;
       overflow: hidden;
     }
 
     .goog-slider-thumb {
       position: absolute;
-      background-color: ThreeDShadow;
+      background-color: #444444;
       overflow: hidden;
     }
 

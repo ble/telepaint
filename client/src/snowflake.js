@@ -23,34 +23,42 @@ ble.snowflake.Painter.prototype.drawTo = function(state, ctx) {
   ctx.beginPath();
   //Firefox treats the optional "anticlockwise" argument as mandatory! argh!
   ctx.arc(0, 0, 1, 0, 2 * Math.PI, true);
+  ctx.save();
+  ctx.clip();
   ctx.fill();
   for(var i = 0; i < state.cuts.length; i++) {
     this.drawFragment(ctx, state.cuts[i]);
   }
   if(state.currentInteraction != null) 
     this.drawFragment(ctx, state.currentInteraction, true); 
+  ctx.restore();
 };
 
 ble.snowflake.Painter.prototype.drawFragment = function(ctx, fragment, stroked) {
   if(fragment.method == "erase-polyline") {
+    ctx.save();
     var coordinates = fragment.data.getControlCoordinatesAndHead();
     if(!goog.isDef(coordinates))
       return; 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.0)";
-    ctx.globalCompositeOperation = "copy";
+    ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
     if(coordinates.length == 0)
       return;
+    ctx.beginPath();
     for(var flip = 0; flip < 2; flip++) {
       for(var rot = 0; rot < 6; rot++) {
         ble.gfx.pathCoords(ctx, coordinates);
         ctx.closePath();
-        ctx.fill();
-        if(stroked)
-          ctx.stroke();
         ctx.rotate(Math.PI / 3.0);
       }
       ctx.scale(-1, 1);
     }
+    ctx.globalCompositeOperation = "destination-out";
+        ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+        ctx.stroke();
+
+
+    ctx.restore();
   }
 };
 

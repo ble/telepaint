@@ -3,7 +3,6 @@ goog.provide('ble.gfx');
 ble.gfx.pathCoords = function(ctx, coords) {
   if(coords.length == 0)
     return;
-  ctx.beginPath();
   ctx.moveTo(coords[0], coords[1]);
   for(var i = 1; i < coords.length / 2; i++)
     ctx.lineTo(coords[2*i], coords[2*i+1]);

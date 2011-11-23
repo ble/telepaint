@@ -313,8 +313,8 @@ ble.gfx.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
     ctx.save();
     ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.0)';
-    ctx.globalCompositeOperation = 'copy';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
+    ctx.globalCompositeOperation = 'destination-out';
     ctx.lineWidth = this.lineWidth;
     ctx.stroke(); 
     ctx.restore();
@@ -324,8 +324,8 @@ ble.gfx.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
 ble.gfx.EraseReplay.prototype.drawCompleteTo = function(ctx) {
   ctx.save();
   ble.gfx.pathCoords(ctx, this.coordinates);
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.0)';
-  ctx.globalCompositeOperation = 'copy';
+  ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
+  ctx.globalCompositeOperation = 'destination-out';
   ctx.lineWidth = this.lineWidth;
   ctx.stroke(); 
   ctx.restore();

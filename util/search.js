@@ -52,16 +52,16 @@ ble.util.binarySearchIn = function(data, key, startIx, endIx) {
   if(middleVal == key)
     return middleIx;
   else if(middleVal < key)
-    return ble.util.binarySearchIn(data, key, middleIx, endIx);
+    return ble.util.binarySearchIn(data, key, middleIx + 1, endIx);
   else if(middleVal > key)
-    return ble.util.binarySearchIn(data, key, startIx, endIx);
+    return ble.util.binarySearchIn(data, key, startIx, middleIx);
   else 
     throw "NaN found during ble.binarySearchIn";
 };
 
 ble.util.comparatorFromRank = function(rankFn) {
   return function(a, b) {
-    return rankFn(b) - rankFn(a);
+    return rankFn(a) - rankFn(b);
   };
 }
 
@@ -109,9 +109,9 @@ ble.util.rankBinarySearchIn = function(rankFn, data, key, startIx, endIx) {
   if(middleRank == key)
     return middleIx;
   else if(middleRank < key)
-    return ble.util.rankBinarySearchIn(rankFn, data, key, middleIx, endIx);
+    return ble.util.rankBinarySearchIn(rankFn, data, key, middleIx + 1, endIx);
   else if(middleRank > key)
-    return ble.util.rankBinarySearchIn(rankFn, data, key, startIx, endIx);
+    return ble.util.rankBinarySearchIn(rankFn, data, key, startIx, middleIx);
   else 
     throw "NaN found during ble.binarySearchIn";
 };

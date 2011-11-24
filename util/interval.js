@@ -3,10 +3,11 @@ goog.require('ble.util.comparatorFromRank');
 
 goog.provide('ble.interval.Interval');
 goog.provide('ble.interval.AdjustableInterval');
-goog.provide('ble.interval.interval.Impl');
+goog.provide('ble.interval.Impl');
 
-goog.provide('ble.interval.interval.Tweaker');
-goog.provide('ble.interval.interval.NoOverlapTweaker');
+goog.provide('ble.interval.Tweaker');
+goog.provide('ble.interval.NoOverlapTweaker');
+goog.provide('ble.interval.Fetcher');
 
 /**
  * @interface
@@ -168,4 +169,44 @@ ble.interval.Gapless.prototype.altered_ = function(plan, index) {
   }
 };
 
+/**
+ * @constructor
+ * @param {Array.<ble.interval.Interval>} data
+ */
+ble.interval.Fetcher = function(data) {
+  this.byEnd = data.slice();
+  this.byEnd.sort(ble.util.comparatorFromRank(ble.interval.endRank));
+};
+
+ble.interval.Fetcher.prototype.beforeAndDuring = function(point) {
+  var n = this.byEnd.length;
+  var lastBefore =
+    Math.ceil(ble.util.rankBinarySearch(ble.interval.endRank, this.byEnd, point));
+  while(lastBefore < n && this.byEnd[lastBefore].end() <= point)
+    lastBefore++;
+  var before = this.byEnd.slice(0, lastBefore);
+  var after = this.byEnd.slice(lastBefore);
+  var during = after.filter(function(interval) { return interval.start() < point; });
+  /*
+  after.sort(ble.util.comparatorFromRank(ble.interval.startRank));
+  lastBefore =
+    Math.ceil(ble.util.rankBinarySearch(ble.interval.startRank, after, point));
+  while(lastBefore < after.length && after[lastBefore].start() <= point)
+    lastBefore++;
+  var during = after.slice(0, lastBefore);
+  */
+  return [before, during]; 
+};
+
+ble.interval.makeRandom = function(samples, size) {
+  var result = [];
+  for(var i = 0; i < samples; i++) {
+    var a = Math.round(Math.random() * size),
+        b = Math.round(Math.random() * size),
+        start = Math.min(a, b),
+        end = Math.max(Math.max(a, b), start + 1);
+    result.push(new ble.interval.Impl(start, end)); 
+  }
+  return result;
+};
 

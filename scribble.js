@@ -3,17 +3,17 @@ goog.provide('ble.scribble.Painter');
 goog.provide('ble.scribble.Scribble');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
-goog.require('ble.gfx');
-goog.require('ble.gfx.path.painterDefault');
-goog.require('ble.gfx.PolylineReplay');
-goog.require('ble.gfx.TimeDrawable');
+goog.require('ble._2d');
+goog.require('ble._2d.path.painterDefault');
+goog.require('ble._2d.PolylineReplay');
+goog.require('ble._2d.TimeDrawable');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 
 /**
  * @constructor
- * @param {Array.<ble.gfx.DrawPart>} items
- * @implements {ble.gfx.DrawPart}
+ * @param {Array.<ble._2d.DrawPart>} items
+ * @implements {ble._2d.DrawPart}
  */
 ble.scribble.Painter = function(items) {
   this.data = items.slice();
@@ -47,7 +47,7 @@ ble.scribble.Painter.prototype.toJSON = function() {
 };
 
 /**
- * @param {Array.<ble.gfx.DrawPart>} parts
+ * @param {Array.<ble._2d.DrawPart>} parts
  */
 ble.scribble.Painter.prototype.zeroReference = function(parts) {
   var result = [];
@@ -60,7 +60,7 @@ ble.scribble.Painter.prototype.zeroReference = function(parts) {
 };
 
 /**
- * @param {ble.gfx.DrawPart} current
+ * @param {ble._2d.DrawPart} current
  */
 ble.scribble.Painter.prototype.setCurrent = function(current) {
   this.beingDrawn = current;
@@ -111,7 +111,7 @@ ble.scribble.Canvas = function(width, height, opt_painter) {
     this.painter = new ble.scribble.Painter([]);
   this.mocap_ = null;
   this.modes = this.makeModes();
-  this.style = ble.gfx.path.painterDefault;
+  this.style = ble._2d.path.painterDefault;
 };
 goog.inherits(ble.scribble.Canvas, ble.scratch.Canvas);
 
@@ -202,10 +202,10 @@ ble.scribble.Canvas.prototype.makeModes = function() {
   var stroke = new ble.mocap.Stroke();
   var polyline = new ble.mocap.Polyline(true);
   return [
-    [stroke, ble.gfx.StrokeReplay.fromMocap],
-    [polyline, ble.gfx.PolylineReplay.fromMocap],
-    [stroke, ble.gfx.EraseReplay.fromMocap],
-    [polyline, ble.gfx.PolylineReplay.fromMocap]
+    [stroke, ble._2d.StrokeReplay.fromMocap],
+    [polyline, ble._2d.PolylineReplay.fromMocap],
+    [stroke, ble._2d.EraseReplay.fromMocap],
+    [polyline, ble._2d.PolylineReplay.fromMocap]
   ]; 
 };
 

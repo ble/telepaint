@@ -9,7 +9,6 @@ goog.require('goog.color.alpha');
 
 goog.require('ble.scratch.Canvas');
 goog.require('ble.scratch.Subcanvas');
-goog.require('ble.gfx.StrokeReplay');
 goog.require('ble.json.PrettyPrinter');
 goog.require('ble.scribble.style.IconPainter');
 
@@ -104,9 +103,9 @@ ble.scribble.style.StylePicker.prototype.getFillColor = function() {
 ble.scribble.style.StylePicker.prototype.getStyle = function() {
   var lineWidth = this.slider.getValue();
   if(this.getFilled()) {
-    return new ble.gfx.path.PainterPixel(lineWidth, this.getStrokeColor(), this.getFillColor());
+    return new ble._2d.path.PainterPixel(lineWidth, this.getStrokeColor(), this.getFillColor());
   } else {
-    return new ble.gfx.path.PainterPixel(lineWidth, this.getStrokeColor()); 
+    return new ble._2d.path.PainterPixel(lineWidth, this.getStrokeColor()); 
   }
 };
 

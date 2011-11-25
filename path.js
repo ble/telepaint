@@ -1,15 +1,15 @@
-goog.require('ble.gfx.Drawable');
+goog.require('ble._2d.Drawable');
 
-goog.provide('ble.gfx.path.Painter');
-goog.provide('ble.gfx.path.PainterPixel');
-goog.provide('ble.gfx.path.PainterVirtual');
-goog.provide('ble.gfx.path.painterDefault');
+goog.provide('ble._2d.path.Painter');
+goog.provide('ble._2d.path.PainterPixel');
+goog.provide('ble._2d.path.PainterVirtual');
+goog.provide('ble._2d.path.painterDefault');
 
 /**
  * @constructor
- * @implements{ble.gfx.Drawable}
+ * @implements{ble._2d.Drawable}
  */
-ble.gfx.path.Painter = function(lineWidth, strokeStyle, opt_fillStyle) {
+ble._2d.path.Painter = function(lineWidth, strokeStyle, opt_fillStyle) {
   this.lineWidth = lineWidth;
   this.strokeStyle = strokeStyle;
   if(goog.isDef(opt_fillStyle)) {
@@ -20,7 +20,7 @@ ble.gfx.path.Painter = function(lineWidth, strokeStyle, opt_fillStyle) {
   }
 };
 
-ble.gfx.path.Painter.prototype.drawTo = goog.abstractMethod;
+ble._2d.path.Painter.prototype.drawTo = goog.abstractMethod;
 
 /**
  * @constructor
@@ -28,14 +28,14 @@ ble.gfx.path.Painter.prototype.drawTo = goog.abstractMethod;
  * @param {number} lineWidth
  * @param {string|CanvasGradient} strokeStyle
  * @param {string|CanvasGradient=} opt_fillStyle
- * @extends{ble.gfx.path.Painter}
+ * @extends{ble._2d.path.Painter}
  */
-ble.gfx.path.PainterPixel = function(lineWidth, strokeStyle, opt_fillStyle) {
-  ble.gfx.path.Painter.call(this, lineWidth, strokeStyle, opt_fillStyle);
+ble._2d.path.PainterPixel = function(lineWidth, strokeStyle, opt_fillStyle) {
+  ble._2d.path.Painter.call(this, lineWidth, strokeStyle, opt_fillStyle);
 };
-goog.inherits(ble.gfx.path.PainterPixel, ble.gfx.path.Painter);
+goog.inherits(ble._2d.path.PainterPixel, ble._2d.path.Painter);
 
-ble.gfx.path.PainterPixel.prototype.drawTo = function(ctx) {
+ble._2d.path.PainterPixel.prototype.drawTo = function(ctx) {
   ctx.save();
   if(this.filled) {
     ctx.fillStyle = this.fillStyle;
@@ -47,12 +47,12 @@ ble.gfx.path.PainterPixel.prototype.drawTo = function(ctx) {
   ctx.restore();
 };
 
-ble.gfx.path.PainterPixel.pool = {};
-ble.gfx.path.PainterPixel.get = function(lineWidth, strokeStyle, opt_fillStyle) {
+ble._2d.path.PainterPixel.pool = {};
+ble._2d.path.PainterPixel.get = function(lineWidth, strokeStyle, opt_fillStyle) {
   var key = [lineWidth, strokeStyle, opt_fillStyle];
-  var pool = ble.gfx.path.PainterPixel.pool;
+  var pool = ble._2d.path.PainterPixel.pool;
   if(!(key in pool)) {
-    pool[key] = new ble.gfx.path.PainterPixel(lineWidth, strokeStyle, opt_fillStyle);
+    pool[key] = new ble._2d.path.PainterPixel(lineWidth, strokeStyle, opt_fillStyle);
   }
   return pool[key];
 };
@@ -63,14 +63,14 @@ ble.gfx.path.PainterPixel.get = function(lineWidth, strokeStyle, opt_fillStyle) 
  * @param {number} lineWidth
  * @param {string|CanvasGradient} strokeStyle
  * @param {string|CanvasGradient=} opt_fillStyle
- * @extends{ble.gfx.path.Painter}
+ * @extends{ble._2d.path.Painter}
  */
-ble.gfx.path.PainterVirtual = function(lineWidth, strokeStyle, opt_fillStyle) {
-  ble.gfx.path.Painter.call(this, lineWidth, strokeStyle, opt_fillStyle);
+ble._2d.path.PainterVirtual = function(lineWidth, strokeStyle, opt_fillStyle) {
+  ble._2d.path.Painter.call(this, lineWidth, strokeStyle, opt_fillStyle);
 };
-goog.inherits(ble.gfx.path.PainterVirtual, ble.gfx.path.Painter);
+goog.inherits(ble._2d.path.PainterVirtual, ble._2d.path.Painter);
 
-ble.gfx.path.PainterVirtual.prototype.drawTo = function(ctx) {
+ble._2d.path.PainterVirtual.prototype.drawTo = function(ctx) {
   ctx.save();
   if(this.filled) {
     ctx.fillStyle = this.fillStyle;
@@ -82,14 +82,14 @@ ble.gfx.path.PainterVirtual.prototype.drawTo = function(ctx) {
   ctx.restore(); 
 };
 
-ble.gfx.path.PainterVirtual.pool = {};
-ble.gfx.path.PainterVirtual.get = function(lineWidth, strokeStyle, opt_fillStyle) {
+ble._2d.path.PainterVirtual.pool = {};
+ble._2d.path.PainterVirtual.get = function(lineWidth, strokeStyle, opt_fillStyle) {
   var key = [lineWidth, strokeStyle, opt_fillStyle];
-  var pool = ble.gfx.path.PainterPixel.pool;
+  var pool = ble._2d.path.PainterPixel.pool;
   if(!(key in pool)) {
-    pool[key] = new ble.gfx.path.PainterVirtual(lineWidth, strokeStyle, opt_fillStyle);
+    pool[key] = new ble._2d.path.PainterVirtual(lineWidth, strokeStyle, opt_fillStyle);
   }
   return pool[key];
 };
 
-ble.gfx.path.painterDefault = new ble.gfx.path.PainterVirtual(1, "#000000");
+ble._2d.path.painterDefault = new ble._2d.path.PainterVirtual(1, "#000000");

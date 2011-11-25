@@ -3,18 +3,18 @@ goog.provide('ble.scribbleDeserializer');
 
 goog.require('ble.json.TaggedDeserializer');
 goog.require('ble.json.PrettyPrinter');
-goog.require('ble.gfx.StrokeReplay');
-goog.require('ble.gfx.PolylineReplay');
-goog.require('ble.gfx.EraseReplay');
+goog.require('ble._2d.StrokeReplay');
+goog.require('ble._2d.PolylineReplay');
+goog.require('ble._2d.EraseReplay');
 
 goog.require('goog.storage.mechanism.HTML5LocalStorage'); 
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
 
 ble.scribbleDeserializer = new ble.json.TaggedDeserializer();
-ble.scribbleDeserializer.register(ble.gfx.StrokeReplay);
-ble.scribbleDeserializer.register(ble.gfx.PolylineReplay); 
-ble.scribbleDeserializer.register(ble.gfx.EraseReplay); 
+ble.scribbleDeserializer.register(ble._2d.StrokeReplay);
+ble.scribbleDeserializer.register(ble._2d.PolylineReplay); 
+ble.scribbleDeserializer.register(ble._2d.EraseReplay); 
 
 goog.exportSymbol('ble.scribbleDeserializer', ble.scribbleDeserializer);
 

@@ -1,61 +1,61 @@
-goog.require('ble.gfx');
-goog.require('ble.gfx.TimeDrawable');
-goog.require('ble.gfx.path.PainterPixel');
-goog.require('ble.gfx.path.painterDefault');
+goog.require('ble._2d');
+goog.require('ble._2d.TimeDrawable');
+goog.require('ble._2d.path.PainterPixel');
+goog.require('ble._2d.path.painterDefault');
 
-goog.provide('ble.gfx.DrawPart');
-goog.provide('ble.gfx.Replay');
-goog.provide('ble.gfx.StrokeReplay'); 
-goog.provide('ble.gfx.PolylineReplay');
-goog.provide('ble.gfx.EraseReplay');
+goog.provide('ble._2d.DrawPart');
+goog.provide('ble._2d.Replay');
+goog.provide('ble._2d.StrokeReplay'); 
+goog.provide('ble._2d.PolylineReplay');
+goog.provide('ble._2d.EraseReplay');
 
 
 /**
  * @interface
- * @extends {ble.gfx.TimeDrawable}
+ * @extends {ble._2d.TimeDrawable}
  */
-ble.gfx.DrawPart = function() {};
+ble._2d.DrawPart = function() {};
 
 /**
  * @return {number}
  */
-ble.gfx.DrawPart.prototype.startTime = function() {};
+ble._2d.DrawPart.prototype.startTime = function() {};
 /**
  * @return {number}
  */
-ble.gfx.DrawPart.prototype.endTime = function() {};
+ble._2d.DrawPart.prototype.endTime = function() {};
 /**
  * @param {number} millis
- * @return {ble.gfx.DrawPart}
+ * @return {ble._2d.DrawPart}
  */
-ble.gfx.DrawPart.prototype.withStartTime = function(millis) {}; 
+ble._2d.DrawPart.prototype.withStartTime = function(millis) {}; 
 
 
 /**
  * @constructor
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
- * @implements {ble.gfx.DrawPart}
+ * @implements {ble._2d.DrawPart}
  */
-ble.gfx.Replay = function(coordinates, times) {
+ble._2d.Replay = function(coordinates, times) {
   this.coordinates = coordinates.slice();
   this.times = times.slice();
 };
 
-ble.gfx.Replay.prototype.toJSON = goog.abstractMethod;
-ble.gfx.Replay.prototype.drawCompleteTo = goog.abstractMethod;
-ble.gfx.Replay.prototype.drawPartialTo = goog.abstractMethod;
-ble.gfx.Replay.prototype.withStartTime = goog.abstractMethod;
+ble._2d.Replay.prototype.toJSON = goog.abstractMethod;
+ble._2d.Replay.prototype.drawCompleteTo = goog.abstractMethod;
+ble._2d.Replay.prototype.drawPartialTo = goog.abstractMethod;
+ble._2d.Replay.prototype.withStartTime = goog.abstractMethod;
 
-ble.gfx.Replay.prototype.startTime = function() {
+ble._2d.Replay.prototype.startTime = function() {
   return this.times[0];
 };
 
-ble.gfx.Replay.prototype.endTime = function() {
+ble._2d.Replay.prototype.endTime = function() {
   return this.times[this.times.length - 1];
 };
 
-ble.gfx.Replay.prototype.shiftedStartTimes = function(newStart) {
+ble._2d.Replay.prototype.shiftedStartTimes = function(newStart) {
   var delta = newStart - this.startTime();
   var newTimes = this.times.slice();
   for(var i = 0; i < newTimes.length; i++) {
@@ -68,27 +68,27 @@ ble.gfx.Replay.prototype.shiftedStartTimes = function(newStart) {
  * @constructor
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
- * @param {ble.gfx.path.Painter=} opt_painter
- * @extends{ble.gfx.Replay}
+ * @param {ble._2d.path.Painter=} opt_painter
+ * @extends{ble._2d.Replay}
  */
-ble.gfx.StrokeReplay = function(coordinates, times, opt_painter) {
-  ble.gfx.Replay.call(this, coordinates, times);
+ble._2d.StrokeReplay = function(coordinates, times, opt_painter) {
+  ble._2d.Replay.call(this, coordinates, times);
   if(goog.isDef(opt_painter))
     this.painter = opt_painter;
 };
-goog.inherits(ble.gfx.StrokeReplay, ble.gfx.Replay);
+goog.inherits(ble._2d.StrokeReplay, ble._2d.Replay);
 
-ble.gfx.StrokeReplay.defaultPainter = ble.gfx.path.painterDefault;
-ble.gfx.StrokeReplay.prototype.painter = ble.gfx.StrokeReplay.defaultPainter;
-ble.gfx.StrokeReplay.prototype._tag = "ble.gfx.StrokeReplay";
+ble._2d.StrokeReplay.defaultPainter = ble._2d.path.painterDefault;
+ble._2d.StrokeReplay.prototype.painter = ble._2d.StrokeReplay.defaultPainter;
+ble._2d.StrokeReplay.prototype._tag = "ble._2d.StrokeReplay";
 
-ble.gfx.StrokeReplay.prototype.toJSON = function() {
+ble._2d.StrokeReplay.prototype.toJSON = function() {
   var obj = ({
     '_tag': this._tag,
     'coordinates': this.coordinates,
     'times': this.times});
   var p = this.painter;
-  if(p !== ble.gfx.StrokeReplay.defaultPainter) {
+  if(p !== ble._2d.StrokeReplay.defaultPainter) {
     obj['lineWidth'] = p.lineWidth;
     obj['strokeStyle'] = p.strokeStyle;
     if(p.filled)
@@ -97,9 +97,9 @@ ble.gfx.StrokeReplay.prototype.toJSON = function() {
   return obj;
 };
 
-ble.gfx.StrokeReplay.prototype.bless = function(obj) {
+ble._2d.StrokeReplay.prototype.bless = function(obj) {
   var tag = obj['_tag'];
-  if(tag != ble.gfx.StrokeReplay.prototype._tag) return null;
+  if(tag != ble._2d.StrokeReplay.prototype._tag) return null;
   var c = obj['coordinates'];
   var t = obj['times'];
   var L = obj['lineWidth'];
@@ -107,44 +107,44 @@ ble.gfx.StrokeReplay.prototype.bless = function(obj) {
   var F = obj['fillStyle'];
   var painter;
   if(goog.isDef(L))
-    painter = ble.gfx.path.PainterVirtual.get(L, S, F);
-  return new ble.gfx.StrokeReplay(c, t, painter);
+    painter = ble._2d.path.PainterVirtual.get(L, S, F);
+  return new ble._2d.StrokeReplay(c, t, painter);
 };
 
 /**
  * @param {ble.mocap.Capture} mocap
- * @param {ble.gfx.path.Painter=} opt_painter
- * @return {ble.gfx.StrokeReplay}
+ * @param {ble._2d.path.Painter=} opt_painter
+ * @return {ble._2d.StrokeReplay}
  */
-ble.gfx.StrokeReplay.fromMocap = function(mocap, opt_painter) {
+ble._2d.StrokeReplay.fromMocap = function(mocap, opt_painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.StrokeReplay(coords, times, opt_painter);
+  return new ble._2d.StrokeReplay(coords, times, opt_painter);
 };
 
-ble.gfx.StrokeReplay.prototype.withStartTime = function(newStart) {
+ble._2d.StrokeReplay.prototype.withStartTime = function(newStart) {
   var newTimes = this.shiftedStartTimes(newStart);
   var ownPainter = this.painter;
-  if(ownPainter === ble.gfx.StrokeReplay.prototype.painter)
+  if(ownPainter === ble._2d.StrokeReplay.prototype.painter)
     ownPainter = undefined;
-  return new ble.gfx.StrokeReplay(this.coordinates, newTimes, ownPainter);
+  return new ble._2d.StrokeReplay(this.coordinates, newTimes, ownPainter);
 }; 
 
 
-ble.gfx.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
+ble._2d.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
   if(time >= this.endTime())
     this.drawCompleteTo(ctx);
   else {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
-    ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
+    ble._2d.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
     this.painter.drawTo(ctx);
   }
 };
 
-ble.gfx.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
-  ble.gfx.pathCoords(ctx, this.coordinates);
+ble._2d.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
+  ble._2d.pathCoords(ctx, this.coordinates);
   this.painter.drawTo(ctx);
 };
 
@@ -153,29 +153,29 @@ ble.gfx.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
  * @param {Array.<number>} controls
- * @param {ble.gfx.path.Painter=} opt_painter
- * @extends {ble.gfx.Replay}
+ * @param {ble._2d.path.Painter=} opt_painter
+ * @extends {ble._2d.Replay}
  */
-ble.gfx.PolylineReplay = function(coordinates, times, controls, opt_painter) {
-  ble.gfx.Replay.call(this, coordinates, times);
+ble._2d.PolylineReplay = function(coordinates, times, controls, opt_painter) {
+  ble._2d.Replay.call(this, coordinates, times);
   this.controls = controls;
   if(goog.isDef(opt_painter))
     this.painter = opt_painter;
 };
-goog.inherits(ble.gfx.PolylineReplay, ble.gfx.Replay);
+goog.inherits(ble._2d.PolylineReplay, ble._2d.Replay);
 
-ble.gfx.PolylineReplay.defaultPainter = ble.gfx.path.painterDefault;
-ble.gfx.PolylineReplay.prototype.painter = ble.gfx.PolylineReplay.defaultPainter;
-ble.gfx.PolylineReplay.prototype._tag = "ble.gfx.PolylineReplay";
+ble._2d.PolylineReplay.defaultPainter = ble._2d.path.painterDefault;
+ble._2d.PolylineReplay.prototype.painter = ble._2d.PolylineReplay.defaultPainter;
+ble._2d.PolylineReplay.prototype._tag = "ble._2d.PolylineReplay";
 
-ble.gfx.PolylineReplay.prototype.toJSON = function() {
+ble._2d.PolylineReplay.prototype.toJSON = function() {
   var obj = ({
     '_tag': this._tag,
     'coordinates': this.coordinates,
     'times': this.times,
     'controls': this.controls});
   var p = this.painter;
-  if(p !== ble.gfx.PolylineReplay.defaultPainter) {
+  if(p !== ble._2d.PolylineReplay.defaultPainter) {
     obj['lineWidth'] = p.lineWidth;
     obj['strokeStyle'] = p.strokeStyle;
     if(p.filled)
@@ -184,9 +184,9 @@ ble.gfx.PolylineReplay.prototype.toJSON = function() {
   return obj;
 };
 
-ble.gfx.PolylineReplay.prototype.bless = function(obj) {
+ble._2d.PolylineReplay.prototype.bless = function(obj) {
   var tag = obj['_tag'];
-  if(tag != ble.gfx.PolylineReplay.prototype._tag) return null;
+  if(tag != ble._2d.PolylineReplay.prototype._tag) return null;
   var c = obj['coordinates'];
   var t = obj['times'];
   var cs = obj['controls'];
@@ -195,32 +195,32 @@ ble.gfx.PolylineReplay.prototype.bless = function(obj) {
   var F = obj['fillStyle'];
   var painter;
   if(goog.isDef(L))
-    painter = ble.gfx.path.PainterVirtual.get(L, S, F);
-  return new ble.gfx.PolylineReplay(c, t, cs, painter);
+    painter = ble._2d.path.PainterVirtual.get(L, S, F);
+  return new ble._2d.PolylineReplay(c, t, cs, painter);
 };
 /**
  * @param {ble.mocap.Capture} mocap
- * @param {ble.gfx.path.Painter=} opt_painter
+ * @param {ble._2d.path.Painter=} opt_painter
  */
-ble.gfx.PolylineReplay.fromMocap = function(mocap, opt_painter) {
+ble._2d.PolylineReplay.fromMocap = function(mocap, opt_painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   var controls = mocap.controlTimeIndices.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.PolylineReplay(coords, times, controls, opt_painter);
+  return new ble._2d.PolylineReplay(coords, times, controls, opt_painter);
 };
 
-ble.gfx.PolylineReplay.prototype.withStartTime = function(newStart) {
+ble._2d.PolylineReplay.prototype.withStartTime = function(newStart) {
   var newTimes = this.shiftedStartTimes(newStart);
   var ownPainter = this.painter;
-  if(ownPainter === ble.gfx.PolylineReplay.prototype.painter)
+  if(ownPainter === ble._2d.PolylineReplay.prototype.painter)
     ownPainter = undefined; 
-  return new ble.gfx.PolylineReplay(this.coordinates, newTimes, this.controls, ownPainter);
+  return new ble._2d.PolylineReplay(this.coordinates, newTimes, this.controls, ownPainter);
 };
 
 
-ble.gfx.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
+ble._2d.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
   if(time >= this.endTime())
     this.drawCompleteTo(ctx);
   else {
@@ -233,12 +233,12 @@ ble.gfx.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
     if(indexEnd > control) {
       coords.push(this.coordinates[2*indexEnd], this.coordinates[2*indexEnd+1]);
     }
-    ble.gfx.pathCoords(ctx, coords);
+    ble._2d.pathCoords(ctx, coords);
     this.painter.drawTo(ctx);
   }
 };
 
-ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
+ble._2d.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
   var coords = [];
   for(var ix = 0; ix < this.controls.length; ix++) {
     var control = this.controls[ix];
@@ -246,7 +246,7 @@ ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
   }
   if(this.controls[this.controls.length - 1] < this.times.length-1)
     coords.push(this.coordinates[this.coordinates.length - 2], this.coordinates[this.coordinates.length - 1]);
-  ble.gfx.pathCoords(ctx, coords);
+  ble._2d.pathCoords(ctx, coords);
   this.painter.drawTo(ctx);
 };
 
@@ -255,20 +255,20 @@ ble.gfx.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
  * @param {number=} opt_lineWidth
- * @extends{ble.gfx.Replay}
+ * @extends{ble._2d.Replay}
  */
-ble.gfx.EraseReplay = function(coordinates, times, opt_lineWidth) {
-  ble.gfx.Replay.call(this, coordinates, times);
+ble._2d.EraseReplay = function(coordinates, times, opt_lineWidth) {
+  ble._2d.Replay.call(this, coordinates, times);
   if(goog.isDef(opt_lineWidth))
     this.lineWidth = opt_lineWidth;
 };
-goog.inherits(ble.gfx.EraseReplay, ble.gfx.Replay);
+goog.inherits(ble._2d.EraseReplay, ble._2d.Replay);
 
-ble.gfx.EraseReplay.prototype._tag = "ble.gfx.EraseReplay";
-ble.gfx.EraseReplay.prototype.lineWidth = 15;
-goog.exportProperty(ble.gfx.EraseReplay.prototype, 'lineWidth', ble.gfx.EraseReplay.prototype.lineWidth);
+ble._2d.EraseReplay.prototype._tag = "ble._2d.EraseReplay";
+ble._2d.EraseReplay.prototype.lineWidth = 15;
+goog.exportProperty(ble._2d.EraseReplay.prototype, 'lineWidth', ble._2d.EraseReplay.prototype.lineWidth);
 
-ble.gfx.EraseReplay.prototype.toJSON = function() {
+ble._2d.EraseReplay.prototype.toJSON = function() {
   var obj = ({
     '_tag': this._tag,
     'coordinates': this.coordinates,
@@ -278,41 +278,41 @@ ble.gfx.EraseReplay.prototype.toJSON = function() {
   return obj;
 };
 
-ble.gfx.EraseReplay.prototype.bless = function(obj) {
+ble._2d.EraseReplay.prototype.bless = function(obj) {
   var tag = obj['_tag'];
-  if(tag != ble.gfx.EraseReplay.prototype._tag) return null;
+  if(tag != ble._2d.EraseReplay.prototype._tag) return null;
   var c = obj['coordinates'];
   var t = obj['times'];
   var l = obj['lineWidth'];
-  return new ble.gfx.EraseReplay(c, t, l);
+  return new ble._2d.EraseReplay(c, t, l);
 };
 
 /**
  * @param {ble.mocap.Capture} mocap
  * @param {*} painter
- * @return {ble.gfx.EraseReplay}
+ * @return {ble._2d.EraseReplay}
  */
-ble.gfx.EraseReplay.fromMocap = function(mocap, painter) {
+ble._2d.EraseReplay.fromMocap = function(mocap, painter) {
   var coords = mocap.coordinates.slice();
   var times = mocap.times.slice();
   for(var i = 0; i < times.length; i++)
     times[i] += mocap.startTime;
-  return new ble.gfx.EraseReplay(coords, times, painter.lineWidth);
+  return new ble._2d.EraseReplay(coords, times, painter.lineWidth);
 };
 
-ble.gfx.EraseReplay.prototype.withStartTime = function(newStart) {
+ble._2d.EraseReplay.prototype.withStartTime = function(newStart) {
   var newTimes = this.shiftedStartTimes(newStart);
-  return new ble.gfx.EraseReplay(this.coordinates, newTimes, this.lineWidth);
+  return new ble._2d.EraseReplay(this.coordinates, newTimes, this.lineWidth);
 }; 
 
 
-ble.gfx.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
+ble._2d.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
   if(time >= this.endTime())
     this.drawCompleteTo(ctx);
   else {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
     ctx.save();
-    ble.gfx.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
+    ble._2d.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
     ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
     ctx.globalCompositeOperation = 'destination-out';
     ctx.lineWidth = this.lineWidth;
@@ -321,9 +321,9 @@ ble.gfx.EraseReplay.prototype.drawPartialTo = function(time, ctx) {
   }
 };
 
-ble.gfx.EraseReplay.prototype.drawCompleteTo = function(ctx) {
+ble._2d.EraseReplay.prototype.drawCompleteTo = function(ctx) {
   ctx.save();
-  ble.gfx.pathCoords(ctx, this.coordinates);
+  ble._2d.pathCoords(ctx, this.coordinates);
   ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
   ctx.globalCompositeOperation = 'destination-out';
   ctx.lineWidth = this.lineWidth;

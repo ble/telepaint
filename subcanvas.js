@@ -1,15 +1,15 @@
 
 /**
- * @fileoverview Simple framework for breaking one canvas element into
- * multiple, logical subcanvases which are separately drawable.
+ * @fileoverview Break one canvas element into multiple logical subcanvases
+ * which are separately drawable.
  * @author benjaminster@gmail.com (Ben Ellis)
  */
 
 goog.provide('ble.scratch.Canvas');
 goog.provide('ble.scratch.Subcanvas');
 
-goog.require('ble.gfx.DrawSurface');
-goog.require('ble.gfx.Drawable');
+goog.require('ble._2d.DrawSurface');
+goog.require('ble._2d.Drawable');
 
 goog.require('goog.color');
 goog.require('goog.math.Box');
@@ -65,7 +65,7 @@ ble.scratch.EventRegion.prototype.getTarget = function() {};
  * @param {boolean=} virtualizeOffset
  * @constructor
  * @extends {goog.events.EventTarget}
- * @implements {ble.gfx.DrawSurface}
+ * @implements {ble._2d.DrawSurface}
  * @implements {ble.scratch.EventRegion}
  */
 ble.scratch.Subcanvas = function(parentCanvas, pixelCoords, virtualCoords, virtualizeOffset) {
@@ -198,7 +198,7 @@ ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
  * @param {number} height_px
  * @constructor
  * @extends {goog.ui.Component}
- * @implements {ble.gfx.DrawSurface}
+ * @implements {ble._2d.DrawSurface}
  */
 ble.scratch.Canvas = function(width_px, height_px) {
   this.width_px = width_px;

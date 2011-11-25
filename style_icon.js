@@ -42,7 +42,7 @@ ble.scribble.style.IconPainter.prototype.flattenTime = function(time, factor) {
 };
 
 ble.scribble.style.IconPainter.prototype.initIcons = function() {
-  var makeDefaultStyle = function() { return new ble.gfx.path.PainterVirtual(1, "#000"); };
+  var makeDefaultStyle = function() { return new ble._2d.path.PainterVirtual(1, "#000"); };
   var smallStroke = this.deserialize(ble.scribble.style.caps[0]);
   this.scaleUp(this.smallSize, smallStroke.coordinates);
   smallStroke.painter = makeDefaultStyle();
@@ -71,9 +71,9 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
   bigPolyline.painter = makeDefaultStyle();
   this.bigPolyline = bigPolyline;
 
-  var smallErase = new ble.gfx.EraseReplay(smallStroke.coordinates, smallStroke.times);
+  var smallErase = new ble._2d.EraseReplay(smallStroke.coordinates, smallStroke.times);
   this.smallErase = smallErase;
-  var bigErase = new ble.gfx.EraseReplay(bigStroke.coordinates, bigStroke.times);
+  var bigErase = new ble._2d.EraseReplay(bigStroke.coordinates, bigStroke.times);
   this.bigErase = bigErase;
 };
 

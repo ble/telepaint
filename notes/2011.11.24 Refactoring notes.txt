@@ -1,0 +1,51 @@
+What are we doing here?
+
+changing the time interval implementation underneath replays...
+
+What's involved here?
+
+Motion capture, replays, partialdrawable or timedrawable or whatever...
+
+
+Let's review these things.
+
+Motion capture stores times as a start time and time offsets; that's nice and
+should be used throughout.
+
+
+Okay, here's some stuff that needs refactoring--
+
+ble.gfx.DrawPart combines several things... interval (start, end) and
+sliceability for lack of a better word (withStartTime).
+
+What I really want is to have sliceable drawable time intervals like deeeis: 
+  -whole drawing is an interval, a drawable, and a sliceable
+  -individual strokes are intervals, drawables, and sliceables
+  -interval-drawable-sliceables that are within a containing i-d-s have interval
+   start and end values that are relative to the start and end time of the
+   container.
+What's a draft of this look like?
+
+ble.interval.Interval = function() {}; 
+//all return numbers
+ble.interval.Interval.prototype.start = function() {};
+ble.interval.Interval.prototype.end = function() {};
+ble.interval.Interval.prototype.length = function() {};
+
+ble.2d.Drawable = function() {};
+//calls methods on ctx
+ble.2d.Drawable.prototype.draw = function(ctx) {];
+
+ble.2d.replay.Sliceable = function() {};
+//return a Drawable which will draw this object as it existed at time.
+ble.2d.replay.Sliceable.prototype.atTime = function(time) {};
+
+Step the first: ditch DrawPart.
+
+Okay, now DrawPart has been rewritten--
+extends AdjustableInterval
+extends Drawable
+ble._2d.DrawPart.prototype.at = function(time) //returns Drawable
+
+So I've got all the replays rewritten to use the new interface...
+Gotta change the whole-drawing object over to using the new interface.

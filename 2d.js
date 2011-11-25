@@ -23,22 +23,17 @@ ble._2d.Drawable = function() {};
  */
 ble._2d.Drawable.prototype.draw = function(context) {};
 
+/**
+ * @constructor
+ * @implements {ble._2d.Drawable}
+ */
+ble._2d.Nothing = function() {}; 
+ble._2d.Nothing.prototype.draw = function(context) {};
 
 /**
- * @interface
+ * @type {ble._2d.Drawable}
  */
-ble._2d.TimeDrawable = function() {};
-
-/**
- * @param {number} time
- * @param {CanvasRenderingContext2D} context
- */
-ble._2d.TimeDrawable.prototype.drawPartialTo = function(time, context) {};
-
-/**
- * @param {CanvasRenderingContext2D} context
- */
-ble._2d.TimeDrawable.prototype.drawCompleteTo = function(context) {};
+ble._2d.nothing = new ble._2d.Nothing();
 
 ble._2d.pathCoords = function(ctx, coords) {
   ctx.beginPath();
@@ -47,7 +42,7 @@ ble._2d.pathCoords = function(ctx, coords) {
   ctx.moveTo(coords[0], coords[1]);
   for(var i = 1; i < coords.length / 2; i++)
     ctx.lineTo(coords[2*i], coords[2*i+1]);
-}
+};
 
 ble._2d.pathCoordsWithin = function(ctx, coords, start, last) {
   ctx.beginPath();
@@ -57,4 +52,4 @@ ble._2d.pathCoordsWithin = function(ctx, coords, start, last) {
   for(var i = start+1; i <= last; i++) {
     ctx.lineTo(coords[2*i], coords[2*i+1]);
   }
-}
+};

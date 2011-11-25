@@ -30,7 +30,7 @@ var defaultTo = function(default_value, received) {
 
 var hypot = function(x, y) {
   return Math.sqrt(x * x + y * y);
-}
+};
 
 /**
  *  @type {function(goog.math.Box): goog.math.Size} 
@@ -101,11 +101,11 @@ ble.scratch.Subcanvas.prototype.pixelToVirtualRatio_ = function() {
 ble.scratch.Subcanvas.prototype.inRegion = function(event) {
   var coord = new goog.math.Coordinate(event.offsetX, event.offsetY);
   return this.pixelCoords_.contains(coord);
-}
+};
 
 ble.scratch.Subcanvas.prototype.getTarget = function() {
   return this;
-}
+};
 
 ble.scratch.Subcanvas.prototype.withContext = function(action) {
   var doIt = function(context) {
@@ -129,7 +129,7 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
     action.call(this, context);
   };
   this.parentCanvas_.withContext(goog.bind(doIt, this));
-}
+};
 
 ble.scratch.Subcanvas.prototype.affineVirtualToPixel = function() {
   var ratio = this.pixelToVirtualRatio_();
@@ -138,7 +138,7 @@ ble.scratch.Subcanvas.prototype.affineVirtualToPixel = function() {
   transform.scale(ratio.width, ratio.height);
   transform.translate(-this.virtualCoords_.left, this.virtualCoords_.top);
   return transform;
-}
+};
 
 
 ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
@@ -148,7 +148,7 @@ ble.scratch.Subcanvas.prototype.affinePixelToVirtual = function() {
   transform.scale(1.0 / ratio.width, 1.0 / ratio.height);
   transform.translate(-this.pixelCoords_.left, -this.pixelCoords_.top);
   return transform;
-}
+};
 
 /**
  * @override
@@ -171,7 +171,7 @@ ble.scratch.Subcanvas.prototype.virtualizeEvent = function(event) {
   affine.transform(pixelCoords, 0, virtualCoords, 0, 1);
   event.virtualX = virtualCoords[0];
   event.virtualY = virtualCoords[1];
-}
+};
 
 ble.scratch.Subcanvas.prototype.virtualizeListener_replaceOffset = function(listener) {
   var subcanvas = this;
@@ -181,7 +181,7 @@ ble.scratch.Subcanvas.prototype.virtualizeListener_replaceOffset = function(list
     event.offsetY = event.virtualY;
     return listener.call(this, event);
   };
-}
+};
 
 ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
   var subcanvas = this;
@@ -189,7 +189,7 @@ ble.scratch.Subcanvas.prototype.virtualizeListener = function(listener) {
     subcanvas.virtualizeEvent(event);
     return listener.call(this, event);
   };
-}
+};
 
 
 /**
@@ -241,7 +241,7 @@ ble.scratch.Canvas.prototype.forwardEvents = function(region, eventType) {
   } else {
     throw new TypeError();
   }
-}
+};
 
 ble.scratch.Canvas.prototype.handleEvent = function(event) {
   var regions = this.regions_[event.type];
@@ -292,14 +292,14 @@ ble.scratch.Canvas.prototype.createDom = function() {
     var attrib = {"width": this.width_px, "height": this.height_px};
     this.element_ = domHelper.createDom("canvas", attrib);
   }
-}
+};
 
 /**
  * stub
  * @override
  */
 ble.scratch.Canvas.prototype.enterDocument = function() {
-}
+};
 
 /**
  * Disallow decoration.
@@ -307,7 +307,7 @@ ble.scratch.Canvas.prototype.enterDocument = function() {
  */
 ble.scratch.Canvas.prototype.canDecorate = function(element) {
   return false;
-}
+};
 
 /**
  * override

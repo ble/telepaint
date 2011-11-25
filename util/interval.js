@@ -9,6 +9,9 @@ goog.provide('ble.interval.Tweaker');
 goog.provide('ble.interval.NoOverlapTweaker');
 goog.provide('ble.interval.Fetcher');
 
+goog.provide('ble.interval.startRank');
+goog.provide('ble.interval.endRank');
+
 /**
  * @interface
  */
@@ -175,27 +178,41 @@ ble.interval.Gapless.prototype.altered_ = function(plan, index) {
  */
 ble.interval.Fetcher = function(data) {
   this.byEnd = data.slice();
-  this.byEnd.sort(ble.util.comparatorFromRank(ble.interval.endRank));
+  this.byEnd.sort(this.comparator_);
 };
 
+/**
+ * @const
+ */
+ble.interval.Fetcher.prototype.comparator_ =
+  ble.util.comparatorFromRank(ble.interval.endRank);
+/**
+ * @const
+ */
+ble.interval.Fetcher.prototype.rank_ = ble.interval.endRank;
+
+
+/**
+ * @param {number} point
+ * @return {Array.<Array.<ble.interval.Interval>>}
+ */
 ble.interval.Fetcher.prototype.beforeAndDuring = function(point) {
   var n = this.byEnd.length;
   var lastBefore =
-    Math.ceil(ble.util.rankBinarySearch(ble.interval.endRank, this.byEnd, point));
+    Math.ceil(ble.util.rankBinarySearch(this.rank_, this.byEnd, point));
   while(lastBefore < n && this.byEnd[lastBefore].end() <= point)
     lastBefore++;
   var before = this.byEnd.slice(0, lastBefore);
   var after = this.byEnd.slice(lastBefore);
   var during = after.filter(function(interval) { return interval.start() < point; });
-  /*
-  after.sort(ble.util.comparatorFromRank(ble.interval.startRank));
-  lastBefore =
-    Math.ceil(ble.util.rankBinarySearch(ble.interval.startRank, after, point));
-  while(lastBefore < after.length && after[lastBefore].start() <= point)
-    lastBefore++;
-  var during = after.slice(0, lastBefore);
-  */
   return [before, during]; 
+};
+
+/**
+ * @param {ble.interval.Interval} interval
+ */
+ble.interval.Fetcher.prototype.add = function(interval) {
+  ble.util.rankBinaryInsert(this.rank_, this.byEnd, interval);
 };
 
 ble.interval.makeRandom = function(samples, size) {

@@ -1,5 +1,7 @@
 goog.provide('ble.util.binarySearch');
 goog.provide('ble.util.binarySearchIn');
+goog.provide('ble.util.binaryInsert');
+goog.provide('ble.util.binaryInsertBy');
 goog.provide('ble.util.comparatorFromRank');
 goog.provide('ble.util.rankBinarySearch');
 goog.provide('ble.util.rankBinarySearchIn');
@@ -66,6 +68,15 @@ ble.util.comparatorFromRank = function(rankFn) {
 }
 
 /**
+ * @param {Array.<number>} data
+ * @param {number} key
+ */
+ble.util.binaryInsert = function(data, key) {
+  var insertionPoint = Math.ceil(ble.util.binarySearch(data, key));
+  data.splice(insertionPoint, 0, key);
+};
+
+/**
  * Like ble.util.binarySearch, only it takes an array of arbitrary objects 
  * and a ranking function and searches for an element of the array with rank
  * equal to key.  The array of objects must already be sorted according to
@@ -114,6 +125,13 @@ ble.util.rankBinarySearchIn = function(rankFn, data, key, startIx, endIx) {
     return ble.util.rankBinarySearchIn(rankFn, data, key, startIx, middleIx);
   else 
     throw "NaN found during ble.binarySearchIn";
+};
+
+
+ble.util.rankBinaryInsert = function(rankFn, data, obj) {
+  var insertRank = rankFn(obj);
+  var insertionPoint = Math.ceil(ble.util.rankBinarySearch(rankFn, data, insertRank));
+  data.splice(insertionPoint, 0, obj);
 };
 
 ble.util.maxBy = function(rankFn, data) {

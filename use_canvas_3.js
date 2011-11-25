@@ -11,7 +11,7 @@ ble.use_canvas_3 = function() {
 
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
-  var scribble = new ble.scribble.Scribble(640, 480);
+  var scribble = new ble.scribble.UI(640, 480);
   scribble.render(container);
 
   var scribbles = new ble.Scribbles();

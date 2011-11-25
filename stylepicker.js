@@ -66,7 +66,7 @@ ble.scribble.style.StylePicker.prototype.animateBig = function() {
     }
   }, this);
   this.animationHandle_ = window.setInterval(this.animationFn, 16);
-}
+};
 
 ble.scribble.style.StylePicker.prototype.cancelAnimation = function() {
   if(this.animationHandle_ == null)

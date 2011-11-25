@@ -71,9 +71,15 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
   bigPolyline.painter = makeDefaultStyle();
   this.bigPolyline = bigPolyline;
 
-  var smallErase = new ble._2d.EraseReplay(smallStroke.coordinates, smallStroke.times);
+  var smallErase = new ble._2d.EraseReplay(
+    smallStroke.coordinates,
+    smallStroke.startTime,
+    smallStroke.times);
   this.smallErase = smallErase;
-  var bigErase = new ble._2d.EraseReplay(bigStroke.coordinates, bigStroke.times);
+  var bigErase = new ble._2d.EraseReplay(
+      bigStroke.coordinates,
+      smallStroke.startTime,
+      bigStroke.times);
   this.bigErase = bigErase;
 };
 

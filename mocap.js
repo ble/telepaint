@@ -43,7 +43,7 @@ ble.mocap.Capture = function(startTime) {
   this.times = [];
   this.controlTimeIndices = [];
   this.controlPoints = [];
-}
+};
 
 ble.mocap.Capture.prototype.endTime = function() {
   return this.startTime + this.times[this.times.length - 1];
@@ -73,7 +73,7 @@ ble.mocap.Capture.blessJSONObject = function(obj) {
   result.controlTimeIndices = obj.controlTimeIndices.slice();
   result.controlPoints = obj.controlPoints.slice();
   return result;
-}
+};
 
 /**
  * Concatenate a regular point to the capture.
@@ -84,7 +84,7 @@ ble.mocap.Capture.blessJSONObject = function(obj) {
 ble.mocap.Capture.prototype.addCoordinates = function(time, x, y) {
   this.times.push(time - this.startTime);
   this.coordinates.push(x, y);
-}
+};
 
 /**
  * Concatenate a control point to the capture.
@@ -98,7 +98,7 @@ ble.mocap.Capture.prototype.addControl = function(time, x, y, controlValue) {
   this.coordinates.push(x, y);
   this.controlTimeIndices.push(this.times.length - 1);
   this.controlPoints.push(controlValue);
-}
+};
 
 /**
  * Time-slice the capture.
@@ -112,7 +112,7 @@ ble.mocap.Capture.prototype.betweenTimes = function(time0, time1) {
   var cIx0 = Math.ceil(ble.util.binarySearch(this.controlTimeIndices, ix0));
   var cIx1 = Math.floor(ble.util.binarySearch(this.controlTimeIndices, ix1));
   return [ix0, ix1, cIx0, cIx1];
-}
+};
 
 /**
  * Abstract class providing motion-capture functionality for mouse events.
@@ -124,7 +124,7 @@ ble.mocap.Mocap = function() {
   this.startTime = null;
   this.capture = null;
   goog.events.EventTarget.call(this);
-}
+};
 goog.inherits(ble.mocap.Mocap, goog.events.EventTarget);
 
 ble.mocap.Mocap.prototype.handleEvent = goog.abstractMethod;
@@ -136,39 +136,39 @@ ble.mocap.Mocap.prototype.fixEvent = function(event) {
     event.offsetX -= offsetLeft;
     event.offsetY -= offsetTop;
   }
-}
+};
 
 ble.mocap.Mocap.prototype.dispatchMocap = function(type) {
   var event = new goog.events.Event(type);
   event.capture = this.capture;
   this.dispatchEvent(event);
-}
+};
 
 ble.mocap.Mocap.prototype.beginCapture = function(event) {
   var time = event.getBrowserEvent().timeStamp;
   this.capture = new ble.mocap.Capture(time);
   this.capture.addCoordinates(time, event.offsetX, event.offsetY);
   this.dispatchMocap(ble.mocap.EventType.BEGIN);
-}
+};
 
 ble.mocap.Mocap.prototype.progressCapture = function(event) {
   var time = event.getBrowserEvent().timeStamp;
   this.capture.addCoordinates(time, event.offsetX, event.offsetY);
   this.dispatchMocap(ble.mocap.EventType.PROGRESS);
-}
+};
 
 ble.mocap.Mocap.prototype.controlCapture = function(event, controlValue) {
   var time = event.getBrowserEvent().timeStamp;
   this.capture.addControl(time, event.offsetX, event.offsetY, controlValue);
   this.dispatchMocap(ble.mocap.EventType.CONTROLPOINT);
-}
+};
 
 ble.mocap.Mocap.prototype.endCapture = function(event) {
   var time = event.getBrowserEvent().timeStamp;
   this.capture.addCoordinates(time, event.offsetX, event.offsetY);
   this.dispatchMocap(ble.mocap.EventType.END);
   this.capture = null;
-}
+};
 
 /**
  * Stroke-based motion capture: capture begins on mousedown, progresses with
@@ -243,4 +243,4 @@ ble.mocap.Polyline.prototype.handleEvent = function(event) {
     this.beginCapture(event);
     this.controlCapture(event, null);
   }
-}
+};

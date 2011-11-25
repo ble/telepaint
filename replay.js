@@ -139,13 +139,13 @@ ble._2d.StrokeReplay.prototype.drawPartialTo = function(time, ctx) {
   else {
     var indexEnd = Math.floor(ble.util.binarySearch(this.times, time));
     ble._2d.pathCoordsWithin(ctx, this.coordinates, 0, indexEnd); 
-    this.painter.drawTo(ctx);
+    this.painter.draw(ctx);
   }
 };
 
 ble._2d.StrokeReplay.prototype.drawCompleteTo = function(ctx) {
   ble._2d.pathCoords(ctx, this.coordinates);
-  this.painter.drawTo(ctx);
+  this.painter.draw(ctx);
 };
 
 /**
@@ -234,7 +234,7 @@ ble._2d.PolylineReplay.prototype.drawPartialTo = function(time, ctx) {
       coords.push(this.coordinates[2*indexEnd], this.coordinates[2*indexEnd+1]);
     }
     ble._2d.pathCoords(ctx, coords);
-    this.painter.drawTo(ctx);
+    this.painter.draw(ctx);
   }
 };
 
@@ -247,7 +247,7 @@ ble._2d.PolylineReplay.prototype.drawCompleteTo = function(ctx) {
   if(this.controls[this.controls.length - 1] < this.times.length-1)
     coords.push(this.coordinates[this.coordinates.length - 2], this.coordinates[this.coordinates.length - 1]);
   ble._2d.pathCoords(ctx, coords);
-  this.painter.drawTo(ctx);
+  this.painter.draw(ctx);
 };
 
 /**

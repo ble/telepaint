@@ -7,13 +7,21 @@ goog.provide('ble._2d.TimeDrawable');
  * @interface
  */
 ble._2d.DrawSurface = function() {};
+
+/**
+ * @param {function(CanvasRenderingContext2D)} action
+ */
 ble._2d.DrawSurface.prototype.withContext = function(action) {};
 
 /**
  * @interface
  */
 ble._2d.Drawable = function() {};
-ble._2d.Drawable.prototype.drawTo = function(context) {};
+
+/**
+ * @param {CanvasRenderingContext2D} context
+ */
+ble._2d.Drawable.prototype.draw = function(context) {};
 
 
 /**

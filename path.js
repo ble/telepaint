@@ -20,7 +20,7 @@ ble._2d.path.Painter = function(lineWidth, strokeStyle, opt_fillStyle) {
   }
 };
 
-ble._2d.path.Painter.prototype.drawTo = goog.abstractMethod;
+ble._2d.path.Painter.prototype.draw = goog.abstractMethod;
 
 /**
  * @constructor
@@ -35,7 +35,7 @@ ble._2d.path.PainterPixel = function(lineWidth, strokeStyle, opt_fillStyle) {
 };
 goog.inherits(ble._2d.path.PainterPixel, ble._2d.path.Painter);
 
-ble._2d.path.PainterPixel.prototype.drawTo = function(ctx) {
+ble._2d.path.PainterPixel.prototype.draw = function(ctx) {
   ctx.save();
   if(this.filled) {
     ctx.fillStyle = this.fillStyle;
@@ -70,7 +70,7 @@ ble._2d.path.PainterVirtual = function(lineWidth, strokeStyle, opt_fillStyle) {
 };
 goog.inherits(ble._2d.path.PainterVirtual, ble._2d.path.Painter);
 
-ble._2d.path.PainterVirtual.prototype.drawTo = function(ctx) {
+ble._2d.path.PainterVirtual.prototype.draw = function(ctx) {
   ctx.save();
   if(this.filled) {
     ctx.fillStyle = this.fillStyle;

@@ -227,3 +227,16 @@ ble.interval.makeRandom = function(samples, size) {
   return result;
 };
 
+ble.interval.crappyTest = function(samples, size) {
+  var zz = ble.interval.makeRandom(samples, size);
+  var qq = new ble.interval.Fetcher(zz);
+  var t0 = Date.now();
+  for(var i = 0; i < size+2; i++) {
+    var zed = qq.beforeAndDuring(i);
+    window.console.log(i + ": " + zed[0].length + ", " + zed[1].length);
+  }
+  var t1 = Date.now();
+  window.console.log(1e-3*(t1-t0) + " seconds.");
+}
+
+goog.exportSymbol('ble.interval.crappyTest', ble.interval.crappyTest);

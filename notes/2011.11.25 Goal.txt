@@ -16,3 +16,9 @@ It would be nice if I could have multiple items currently being drawn, but that'
 actually kinda tricky.
 
 REVISIT: multiple 'currently being drawn items' for multi-person drawing.
+
+
+
+Time alignment of shit is not right. Durn.
+
+OKAY, turns out I was just getting too tired to program. Loool.

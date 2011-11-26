@@ -29,7 +29,7 @@ ble.scribble.Drawing.prototype.end = function() {
 ble.scribble.Drawing.prototype.length = function() {
   var byEnd = this.fetcher.byEnd;
   if(byEnd.length == 0)
-    return this.startTime;
+    return 0;
   
   return byEnd[byEnd.length - 1].end();
 };
@@ -146,6 +146,7 @@ ble.scribble.MutableDrawing.prototype.draw = function(ctx) {
  */
 ble.scribble.MutableDrawing.prototype.add = function(item) {
   console.log(item.start());
+  console.log(this.length());
   this.fetcher.add(item);
   ble.util.rankBinaryInsert(ble.interval.startRank, this.byStart, item);
 };

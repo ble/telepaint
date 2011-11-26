@@ -145,8 +145,6 @@ ble.scribble.MutableDrawing.prototype.draw = function(ctx) {
  * @param {ble._2d.DrawPart} item
  */
 ble.scribble.MutableDrawing.prototype.add = function(item) {
-  console.log(item.start());
-  console.log(this.length());
   this.fetcher.add(item);
   ble.util.rankBinaryInsert(ble.interval.startRank, this.byStart, item);
 };

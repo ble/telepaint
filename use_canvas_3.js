@@ -61,8 +61,13 @@ ble.use_canvas_3 = function() {
     goog.events.listen(scribbles, ble.Scribbles.EventType.UPDATE, updateMenu);
 
     var drawCurrent = function() {
-      if(scribbles.currentKey != null)
-        scribble.setPicture(scribbles.data[scribbles.currentKey]);
+      if(scribbles.currentKey != null) {
+        var items = scribbles.data[scribbles.currentKey];
+        var start = 0;
+        if(items.length > 0)
+          start = items[0].start();
+        scribble.setPicture(start, items);
+      }
     };
     goog.events.listen(menu, goog.ui.Component.EventType.ACTION, function(e) {
 

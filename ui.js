@@ -63,7 +63,6 @@ ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
 
 ble.scribble.Canvas.prototype.animateRAF = function(replay_dur, capture_dur) {
   var start = Date.now();
-  console.log(this.drawing.byStart.map(function(x) { return [x.start(), x.end()]; }));
   var redraw = goog.bind(function(now) {
     var delta = now - start;
     if(delta > replay_dur) {
@@ -237,7 +236,7 @@ ble.scribble.UI.prototype.exitDocument = function() {
 };
 
 ble.scribble.UI.prototype.setPicture = function(startTime, data) {
-  this.canvas.painter = new ble.scribble.MutableDrawing(startTime, data);
+  this.canvas.drawing = new ble.scribble.MutableDrawing(startTime, data);
   this.canvas.withContext(goog.bind(this.canvas.repaintComplete, this.canvas));
 };
 

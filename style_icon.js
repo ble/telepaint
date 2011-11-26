@@ -112,6 +112,7 @@ ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
   if(isBig)
     erase.lineWidth = this.picker.getStyle().lineWidth;
   erase.draw(ctx);
+  ctx.globalCompositeOperation = "destination-over"
   this.backdrop(ctx, isBig);
   ctx.restore();
 };

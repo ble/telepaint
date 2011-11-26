@@ -22,3 +22,6 @@ REVISIT: multiple 'currently being drawn items' for multi-person drawing.
 Time alignment of shit is not right. Durn.
 
 OKAY, turns out I was just getting too tired to program. Loool.
+
+
+Okay, next step: multi-drawing replay.

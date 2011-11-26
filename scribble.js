@@ -27,7 +27,11 @@ ble.scribble.Drawing.prototype.end = function() {
 };
 
 ble.scribble.Drawing.prototype.length = function() {
-  return this.fetcher.byEnd[this.fetcher.byEnd.length - 1].end();
+  var byEnd = this.fetcher.byEnd;
+  if(byEnd.length == 0)
+    return this.startTime;
+  
+  return byEnd[byEnd.length - 1].end();
 };
 
 ble.scribble.Drawing.prototype.withStartAt = function(newTime) {
@@ -133,16 +137,17 @@ goog.inherits(ble.scribble.MutableDrawing, ble.scribble.Drawing);
  */
 ble.scribble.MutableDrawing.prototype.draw = function(ctx) {
   ble.scribble.Drawing.prototype.draw.call(this, ctx);
-  this.current.draw(ctx);
+  if(!goog.isNull(this.current))
+    this.current.draw(ctx);
 };
 
 /**
  * @param {ble._2d.DrawPart} item
  */
 ble.scribble.MutableDrawing.prototype.add = function(item) {
-  var item1 = item.withStartAt(item.start() - this.start());
-  this.fetcher.add(item1);
-  ble.util.rankBinaryInsert(ble.interval.startRank, this.byStart, item1);
+  console.log(item.start());
+  this.fetcher.add(item);
+  ble.util.rankBinaryInsert(ble.interval.startRank, this.byStart, item);
 };
 
 /**
@@ -153,7 +158,7 @@ ble.scribble.MutableDrawing.prototype.setCurrent = function(item) {
 };
 
 ble.scribble.MutableDrawing.prototype.recordCurrent = function() {
-  this.add(this.current);
+  this.add(this.current.withStartAt(this.length()));
   this.current = null;
 };
 

@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar plovr.jar serve config-icon.js config-3.js
+java -jar plovr.jar serve config-icon.json config-3.json

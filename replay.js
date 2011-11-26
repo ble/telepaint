@@ -24,12 +24,13 @@ ble._2d.DrawPart.prototype.at = function(time) {};
 
 /**
  * @constructor
+ * @param {number} startTime
  * @param {Array.<number>} coordinates
  * @param {Array.<number>} times
  */
-ble._2d.Replay = function(coordinates, startTime, times) {
-  this.coordinates = coordinates.slice();
+ble._2d.Replay = function(startTime, coordinates, times) {
   this.startTime = startTime;
+  this.coordinates = coordinates.slice();
   this.times = times.slice();
 };
 
@@ -46,13 +47,13 @@ ble._2d.Replay.prototype.length = function() {
 };
 
 ble._2d.Replay.prototype.withStartAt = function(newStart) {
-  return new ble._2d.Replay(this.coordinates, newStart, this.times);
+  return new ble._2d.Replay(newStart, this.coordinates, this.times);
 };
 
 ble._2d.Replay.prototype.withLength = function(newLength) {
   var scaleFactor = newLength / this.length();
   var newTimes = this.times.map(function(t) { return scaleFactor * t; });
-  return new ble._2d.Replay(this.coordinates, this.startTime, newTimes);
+  return new ble._2d.Replay(this.startTime, this.coordinates, newTimes);
 };
 
 ble._2d.Replay.prototype.draw = goog.abstractMethod;
@@ -339,7 +340,7 @@ ble._2d.PolylineReplay.fromMocap = function(mocap, opt_painter) {
  * @extends{ble._2d.Replay}
  */
 ble._2d.EraseReplay = function(coordinates, startTime, times, opt_lineWidth) {
-  ble._2d.Replay.call(this, coordinates, startTime, times);
+  ble._2d.Replay.call(this, startTime, coordinates, times);
   if(goog.isDef(opt_lineWidth))
     this.lineWidth = opt_lineWidth;
 };

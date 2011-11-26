@@ -63,13 +63,14 @@ ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
 
 ble.scribble.Canvas.prototype.animateRAF = function(replay_dur, capture_dur) {
   var start = Date.now();
+  console.log(this.drawing.byStart.map(function(x) { return [x.start(), x.end()]; }));
   var redraw = goog.bind(function(now) {
     var delta = now - start;
     if(delta > replay_dur) {
       this.withContext(this.repaintComplete);
       this.finishAnimation();
     } else {
-      var effective_time = capture_dur * (delta / replay_dur);
+      var effective_time = capture_dur * (delta / replay_dur) + this.drawing.start();
       this.withContext(this.repaintAt(effective_time));
       window.webkitRequestAnimationFrame(redraw);
     }
@@ -88,7 +89,7 @@ ble.scribble.Canvas.prototype.animateInterval = function(replay_dur, capture_dur
       this.finishAnimation();
       window.clearInterval(handle);
     } else {
-      var effective_time = capture_dur * (delta / replay_dur);
+      var effective_time = capture_dur * (delta / replay_dur) + this.drawing.start();
       this.withContext(this.repaintAt(effective_time));
     }
   }, this);
@@ -241,5 +242,5 @@ ble.scribble.UI.prototype.setPicture = function(startTime, data) {
 };
 
 ble.scribble.UI.prototype.getPicture = function() {
-  return this.canvas.painter.data;
+  return this.canvas.drawing.byStart;
 };

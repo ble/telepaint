@@ -49,7 +49,7 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
   this.smallStroke = smallStroke;
 
   var bigStroke = this.deserialize(ble.scribble.style.caps[0]);
-  bigStroke = bigStroke.withStartTime(0);
+  bigStroke = bigStroke.withStartAt(0);
   this.scaleUp(this.bigSize, bigStroke.coordinates);
   this.flattenTime(bigStroke.times, 0.25);
   bigStroke.painter = makeDefaultStyle();
@@ -66,7 +66,7 @@ ble.scribble.style.IconPainter.prototype.initIcons = function() {
   this.smallPolylineFill = smallPolylineFill;
 
   var bigPolyline = this.deserialize(ble.scribble.style.caps[1]);
-  bigPolyline = bigPolyline.withStartTime(0);
+  bigPolyline = bigPolyline.withStartAt(0);
   this.scaleUp(this.bigSize, bigPolyline.coordinates);
   bigPolyline.painter = makeDefaultStyle();
   this.bigPolyline = bigPolyline;
@@ -89,7 +89,7 @@ ble.scribble.style.IconPainter.prototype.paintStrokeIcon = function(ctx, isBig) 
   var stroke = isBig ? this.bigStroke : this.smallStroke;  
   if(isBig)
     stroke.painter = this.picker.getStyle(); 
-  stroke.drawCompleteTo(ctx);
+  stroke.draw(ctx);
 };
 
 ble.scribble.style.IconPainter.prototype.paintPolylineIcon = function(ctx, isBig) {
@@ -98,7 +98,7 @@ ble.scribble.style.IconPainter.prototype.paintPolylineIcon = function(ctx, isBig
   var polyline = isBig ? this.bigPolyline : this.smallPolyline;  
   if(isBig)
     polyline.painter = this.picker.getStyle();
-  polyline.drawCompleteTo(ctx);
+  polyline.draw(ctx);
 };
 
 ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
@@ -111,8 +111,7 @@ ble.scribble.style.IconPainter.prototype.paintEraseIcon = function(ctx, isBig) {
   var erase = isBig? this.bigErase: this.smallErase;
   if(isBig)
     erase.lineWidth = this.picker.getStyle().lineWidth;
-  erase.drawCompleteTo(ctx);
-  ctx.globalCompositeOperation = "destination-over";
+  erase.draw(ctx);
   this.backdrop(ctx, isBig);
   ctx.restore();
 };
@@ -125,7 +124,7 @@ ble.scribble.style.IconPainter.prototype.paintPolylineFillIcon = function(ctx, i
     polyline.painter = this.picker.getStyle();
   polyline.painter.fillStyle = this.picker.getFillColor();
   polyline.painter.filled = true;
-  polyline.drawCompleteTo(ctx); 
+  polyline.draw(ctx); 
 };
 
 ble.scribble.style.IconPainter.prototype.paintIcons = function() {

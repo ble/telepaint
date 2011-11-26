@@ -18,29 +18,43 @@ ble.json.PrettyPrinter.prototype.currentIndent_ = function() {
   return goog.string.repeat(this.tab, this.indentLevel);
 };
 
-ble.json.PrettyPrinter.prototype.serializeObject_ = function(obj, sb) {
-  if(goog.isDef(obj.toJSON))
-    obj = obj.toJSON();
-  this.indentLevel++;
-  sb.push('{');
-  var sep = "\n";
-  for(var key in obj) {
-    if(Object.prototype.hasOwnProperty.call(obj, key)) {
-      var value = obj[key];
-      if(typeof value == 'function')
-        continue;
-      sb.push(sep);
-      sb.push(this.currentIndent_());
-      this.serializeString_(key, sb);
-      sb.push(":");
-      this.serialize_(value, sb);
-      sep = ",\n";
+/**
+ * param {*} obj
+ * param {Array} sb
+ */
+ble.json.PrettyPrinter.prototype.serializeObject_ = function(_obj, sb) {
+  if(typeof _obj == 'object') {
+    var obj;
+    if(goog.isDef(_obj.toJSON)) {
+      obj = _obj.toJSON();
     }
+    if(!obj) {
+      obj = _obj;
+    }
+    this.indentLevel++;
+    sb.push('{');
+    var sep = "\n";
+    for(var key in obj) {
+      if(Object.prototype.hasOwnProperty.call(obj, key)) {
+        var value = obj[key];
+        if(typeof value == 'function')
+          continue;
+        sb.push(sep);
+        sb.push(this.currentIndent_());
+        this.serializeString_(key, sb);
+        sb.push(":");
+        this.serialize_(value, sb);
+        sep = ",\n";
+      }
+    }
+    this.indentLevel--;
+    sb.push('\n');
+    sb.push(this.currentIndent_());
+    sb.push('}'); 
+  } else {
+    goog.json.Serializer.prototype.serializeObject_.call(this, _obj, sb);
   }
-  this.indentLevel--;
-  sb.push('\n');
-  sb.push(this.currentIndent_());
-  sb.push('}');
+
 };
 
 

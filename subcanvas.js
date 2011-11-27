@@ -8,6 +8,7 @@
 goog.provide('ble.scratch.Canvas');
 goog.provide('ble.scratch.Subcanvas');
 
+goog.require('ble.util.hypot');
 goog.require('ble._2d.DrawSurface');
 goog.require('ble._2d.Drawable');
 
@@ -28,9 +29,6 @@ var defaultTo = function(default_value, received) {
   return (received !== undefined) ? received : default_value;
 };
 
-var hypot = function(x, y) {
-  return Math.sqrt(x * x + y * y);
-};
 
 /**
  *  @type {function(goog.math.Box): goog.math.Size} 
@@ -123,8 +121,9 @@ ble.scratch.Subcanvas.prototype.withContext = function(action) {
     context.scale( ratio.width,
                    ratio.height );
     context.translate(-this.virtualCoords_.left, -this.virtualCoords_.top);
-    context.lineWidth /= hypot( ratio.width,
-                                ratio.height);
+    //just making shit up with this factor here...
+    context.lineWidth /= ble.util.hypot( ratio.width / 2,
+                                         ratio.height / 2) / Math.sqrt(2);
 
     action.call(this, context);
   };

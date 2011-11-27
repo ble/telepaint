@@ -1,5 +1,6 @@
 goog.provide('ble.use_canvas_3');
 
+goog.require('ble.scribble.Simultaneous');
 goog.require('ble.scribble.Canvas');
 goog.require('ble.scribble.style.StylePicker');
 goog.require('ble.scribble.style.EventType');
@@ -8,24 +9,58 @@ goog.require('goog.events');
 goog.require('goog.ui.Menu');
 
 ble.use_canvas_3 = function() {
-
+  var drawingSize = new goog.math.Size(640, 480);
+  var smallDrawingSize = new goog.math.Size(213, 160);
   var dom = new goog.dom.DomHelper();
   var container = dom.getElement("outermost");
-  var scribble = new ble.scribble.UI(640, 480);
+  var scribble = new ble.scribble.UI(drawingSize.width, drawingSize.height);
   scribble.render(container);
+  var withContext_reacharound = function(action) {
+    scribble.canvas.withContext(action);
+  };
+
 
   var scribbles = new ble.Scribbles();
+
+  var get9Drawings = function() {
+    var drawings = [];
+    var data = scribbles.data;
+    for(var key in data) {
+      if(data.hasOwnProperty(key))
+        drawings.push(data[key]);
+      if(drawings.length == 9)
+        break;
+    }
+    if(drawings.length == 0)
+      return drawings;
+
+    for(var i = 0; drawings.length < 9; i++)
+      drawings.push(drawings[i]);
+    return drawings;
+  };
+
+  var makeMulti = function() {
+    return new ble.scribble.Simultaneous(
+        0,
+        get9Drawings(),
+        3,
+        drawingSize,
+        smallDrawingSize); 
+  };
+
   var createMenu = function() {
     var menu = new goog.ui.Menu();
     var makeNew = new goog.ui.MenuItem('New');
     var replay = new goog.ui.MenuItem('Replay');
     var save = new goog.ui.MenuItem('Save');
+    var nineUp = new goog.ui.MenuItem('9 up');
     var json = new goog.ui.MenuItem('Display JSON');
     
     menu.addChild(save, true);
     menu.addChild(makeNew, true);
     menu.addChild(replay, true);
     menu.addChild(json, true);
+    menu.addChild(nineUp, true);
     menu.addChild(new goog.ui.MenuSeparator(), true);
     menu.render(container);
     menu.getElement().style["position"] = "relative";
@@ -89,6 +124,11 @@ ble.use_canvas_3 = function() {
         dom.appendChild(pickle, link);
         dom.appendChild(pickle, dom.createTextNode(scribbles.pickle()));
         pickle.style["display"] = "block";
+      } else if(target === nineUp) {
+        withContext_reacharound(function(ctx) {
+          ctx.clearRect(0, 0, drawingSize.width, drawingSize.height);
+          makeMulti().draw(ctx);
+        });
       } else if(goog.isDef(target._key_)) {
         if(goog.isDef(scribbles.data[target._key_])) {
           scribbles.currentKey = target._key_;

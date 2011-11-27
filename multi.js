@@ -1,8 +1,10 @@
 goog.require('goog.math.Size');
-goog.require('goog.functions.identity');
+goog.require('goog.functions');
 
 goog.require('ble._2d.DrawPart');
 goog.require('ble.scribble.Drawing');
+
+goog.provide('ble.scribble.Simultaneous');
 
 /**
  * @constructor
@@ -11,7 +13,7 @@ goog.require('ble.scribble.Drawing');
  * @param {number} columns
  * @param {goog.math.Size} drawingSize
  * @param {goog.math.Size} drawnSize
- * @extends {ble._2d.DrawPart}
+ * @implements {ble._2d.DrawPart}
  */
 ble.scribble.Simultaneous = function(
     start,
@@ -38,7 +40,7 @@ ble.scribble.Simultaneous.prototype.start = function() {
  */
 ble.scribble.Simultaneous.prototype.length = function() {
   var maxLength = 0;
-  goog.array.forEach(function(drawing) {
+  goog.array.forEach(this.drawings, function(drawing) {
     maxLength = Math.max(drawing.length, maxLength);
   });
   return maxLength;
@@ -59,27 +61,27 @@ ble.scribble.Simultaneous.prototype.withStartAt = function(newStart) {
       newStart,
       this.drawings,
       this.columns,
-      this.drawingSize
+      this.drawingSize,
       this.drawnSize);
 };
 
 ble.scribble.Simultaneous.prototype.withLength = function(newLength) {
   var scale = newLength / this.length();
-  var newDrawings = drawings.map(function(drawing) {
+  var newDrawings = this.drawings.map(function(drawing) {
     return drawing.withLength(drawing.length() * scale);
   });
   return new ble.scribble.Simultaneous(
-      this.start,
+      this.start(),
       newDrawings,
       this.columns,
-      this.drawingSize
+      this.drawingSize,
       this.drawnSize); 
 };
 
 ble.scribble.Simultaneous.prototype.ratio_ = function() {
   var d0 = this.drawingSize;
   var d1 = this.drawnSize;
-  return new goog.math.Size(d1.width / d0.width, d1.height / d1.height); 
+  return new goog.math.Size(d1.width / d0.width, d1.height / d0.height); 
 };
 
 ble.scribble.Simultaneous.prototype.prepAndDraw_ = function(f, ctx) {
@@ -87,6 +89,7 @@ ble.scribble.Simultaneous.prototype.prepAndDraw_ = function(f, ctx) {
   var vSize = this.drawingSize;
   for(var i = 0; i < this.drawings.length; i++) {
     var drawing = f(this.drawings[i]);
+    drawing = new ble.scribble.Drawing(0, drawing); 
     var row = Math.floor(i / this.columns);
     var col = i % this.columns;
     var top = row * this.drawnSize.height;
@@ -113,7 +116,7 @@ ble.scribble.Simultaneous.prototype.prepAndDraw_ = function(f, ctx) {
  * @override
  */
 ble.scribble.Simultaneous.prototype.draw = function(ctx) {
-  this.prepAndDraw_(goog.functions.identity);
+  this.prepAndDraw_(goog.functions.identity, ctx);
 };
 
 /**

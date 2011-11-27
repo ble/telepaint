@@ -55,3 +55,5 @@ lot of clock time.
 What's the example that will let me see this shit working?  Throw another 
 canvas onto the same example page, have it steal scribbles?  Nah, this should 
 be totally doable with just the current canvas and another menu entry.
+
+Now the "draw 9 at a time" thing works.  Animation next, mofos!

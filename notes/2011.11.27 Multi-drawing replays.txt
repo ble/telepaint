@@ -47,3 +47,11 @@ Aiiiiight.  Time to write that DrawPart.
 
 Man, I can't actually reuse subcanvas to do the implementation of a DrawPart.
 Well, I can probably lift most of the stuff right from it.
+
+All right, that's done... took relatively little working time, but relatively a 
+lot of clock time. 
+
+
+What's the example that will let me see this shit working?  Throw another 
+canvas onto the same example page, have it steal scribbles?  Nah, this should 
+be totally doable with just the current canvas and another menu entry.

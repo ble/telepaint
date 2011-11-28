@@ -41,7 +41,7 @@ ble.scribble.Simultaneous.prototype.start = function() {
 ble.scribble.Simultaneous.prototype.length = function() {
   var maxLength = 0;
   goog.array.forEach(this.drawings, function(drawing) {
-    maxLength = Math.max(drawing.length, maxLength);
+    maxLength = Math.max(drawing.length(), maxLength);
   });
   return maxLength;
 };
@@ -84,12 +84,15 @@ ble.scribble.Simultaneous.prototype.ratio_ = function() {
   return new goog.math.Size(d1.width / d0.width, d1.height / d0.height); 
 };
 
+/**
+ * @param {function(ble._2d.DrawPart): ble._2d.DrawPart} f
+ * @param {CanvasRenderingContext2D} ctx
+ */
 ble.scribble.Simultaneous.prototype.prepAndDraw_ = function(f, ctx) {
   var ratio = this.ratio_();
   var vSize = this.drawingSize;
   for(var i = 0; i < this.drawings.length; i++) {
     var drawing = f(this.drawings[i]);
-    drawing = new ble.scribble.Drawing(0, drawing); 
     var row = Math.floor(i / this.columns);
     var col = i % this.columns;
     var top = row * this.drawnSize.height;
@@ -123,6 +126,10 @@ ble.scribble.Simultaneous.prototype.draw = function(ctx) {
  * @override
  */
 ble.scribble.Simultaneous.prototype.at = function(time) {
+  if(time >= this.end())
+    return this;
+  if(time < this.start())
+    return ble._2d.nothing;
   var delta = time - this.start();
   var drawable = new ble._2d.Nothing();
   drawable.draw = goog.bind(this.prepAndDraw_, this, function(drawing) {

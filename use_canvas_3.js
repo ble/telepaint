@@ -36,7 +36,9 @@ ble.use_canvas_3 = function() {
 
     for(var i = 0; drawings.length < 9; i++)
       drawings.push(drawings[i]);
-    return drawings;
+    return drawings.map(function(drawing) {
+      return new ble.scribble.Drawing(0, drawing);
+    });
   };
 
   var makeMulti = function() {
@@ -48,12 +50,73 @@ ble.use_canvas_3 = function() {
         smallDrawingSize); 
   };
 
+
+  var animating = false;
+  var animulti = function() {
+    if(animating)
+      return;
+    var multi = makeMulti().withLength(3000);
+    if(window.webkitRequestAnimationFrame) {
+      animateRAF(multi);
+    } else {
+      animateInterval(multi);
+    }
+  };
+
+  var animateRAF = function(multi) {
+    animating = true;
+    var start = Date.now();
+    var length = multi.length();
+    var redraw = function(now) {
+      var delta = now - start;
+      withContext_reacharound(function(ctx) {
+        ctx.clearRect(0, 0, drawingSize.width, drawingSize.height);
+        multi.at(delta).draw(ctx);
+      });
+      
+      if(delta >= length)
+        finishAnimation();
+      else
+        window.webkitRequestAnimationFrame(redraw);
+    };
+    window.webkitRequestAnimationFrame(redraw);
+  };
+
+  var animateInterval = function(multi) {
+    animating = true;
+    var start = Date.now();
+    var length = multi.length();
+    var handle;
+    var redraw = function() {
+      var delta = Date.now() - start;
+      withContext_reacharound(function(ctx) {
+        ctx.clearRect(0, 0, drawingSize.width, drawingSize.height);
+        multi.at(delta).draw(ctx);
+      });
+      if(delta >= length) {
+        window.clearInterval(handle);
+        finishAnimation();
+      }
+    };
+    handle = window.setInterval(redraw, 15); 
+  };
+
+  var finishAnimation = function() {
+    animating = false;
+  };
+
+
+
+
+
+
   var createMenu = function() {
     var menu = new goog.ui.Menu();
     var makeNew = new goog.ui.MenuItem('New');
     var replay = new goog.ui.MenuItem('Replay');
     var save = new goog.ui.MenuItem('Save');
     var nineUp = new goog.ui.MenuItem('9 up');
+    var nineUpReplay = new goog.ui.MenuItem('9 up replay');
     var json = new goog.ui.MenuItem('Display JSON');
     
     menu.addChild(save, true);
@@ -61,6 +124,7 @@ ble.use_canvas_3 = function() {
     menu.addChild(replay, true);
     menu.addChild(json, true);
     menu.addChild(nineUp, true);
+    menu.addChild(nineUpReplay, true);
     menu.addChild(new goog.ui.MenuSeparator(), true);
     menu.render(container);
     menu.getElement().style["position"] = "relative";
@@ -129,6 +193,9 @@ ble.use_canvas_3 = function() {
           ctx.clearRect(0, 0, drawingSize.width, drawingSize.height);
           makeMulti().draw(ctx);
         });
+      } else if(target === nineUpReplay) {
+        animulti();
+
       } else if(goog.isDef(target._key_)) {
         if(goog.isDef(scribbles.data[target._key_])) {
           scribbles.currentKey = target._key_;

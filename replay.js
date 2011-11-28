@@ -370,7 +370,7 @@ ble._2d.EraseReplay.prototype.withStartAt = function(newStart) {
     this.lineWidth);
 };
 
-ble._2d.Replay.prototype.withLength = function(newLength) {
+ble._2d.EraseReplay.prototype.withLength = function(newLength) {
   var scaleFactor = newLength / this.length();
   var newTimes = this.times.map(function(t) { return scaleFactor * t; });
   return new ble._2d.EraseReplay(

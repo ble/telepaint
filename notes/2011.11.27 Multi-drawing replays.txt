@@ -59,3 +59,11 @@ be totally doable with just the current canvas and another menu entry.
 Now the "draw 9 at a time" thing works.  Animation next, mofos!
 
 Aiight, time for the quick and durrrty version of animating this mothabitch.
+
+Well, that worked.  I think the next steps would be to:
+  make a Drawable decorator that draws the decorated Drawable in a different 
+  coordinate system;
+  make the DrawPart specialization of that decorator;
+  make the time dependent coordinate system (i.e., moving sheet of paper) class 
+  and use it to make a sweet pictures going in a ring animation.
+  Think about time "tweakers", different kinds of playback;

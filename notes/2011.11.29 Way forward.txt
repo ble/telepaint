@@ -1,0 +1,31 @@
+There really isn't a lot to be done on the pure-browser side.
+  1. make position-scale decorators for drawparts
+  2. make trajectories for position-scale drawparts
+  3. make multi-drawing animation
+  4. clean up general wiring. (?)
+
+Then, I believe, the next productive step would be to define the server 
+resources that would make up the client-server interface and to get those 
+working at some minimal level.
+
+Then can come the writing of client code (everything that runs in the browser 
+is, in a certain sense, client code, but here I mean specifically "client to a 
+server of a particular kind") to exercise the server API and to expose the 
+client's connection to the server(s) (as an event target?) to the "pure 
+browser" code.
+
+The minimum viable server should have:
+  permanent hash URLs?
+    Admins get generation of room-creation invitations
+  temporary hash URLs
+    Room creators get generation of room-participation invitations
+  pre-game room chat & shared drawing
+  game status indicator
+  instant replay of what came before what you drew
+  saving to s3 on server-side, loading from s3 via XPC on browser-side
+  review of completed game for participants and non-participants
+  "vote to skip" when a player has been inactive for 2 minutes.
+
+I want to start using S3...
+
+  

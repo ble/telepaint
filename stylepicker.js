@@ -103,9 +103,9 @@ ble.scribble.style.StylePicker.prototype.getFillColor = function() {
 ble.scribble.style.StylePicker.prototype.getStyle = function() {
   var lineWidth = this.slider.getValue();
   if(this.getFilled()) {
-    return new ble._2d.path.PainterPixel(lineWidth, this.getStrokeColor(), this.getFillColor());
+    return new ble._2d.path.PainterVirtual(lineWidth, this.getStrokeColor(), this.getFillColor());
   } else {
-    return new ble._2d.path.PainterPixel(lineWidth, this.getStrokeColor()); 
+    return new ble._2d.path.PainterVirtual(lineWidth, this.getStrokeColor()); 
   }
 };
 

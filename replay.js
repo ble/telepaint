@@ -1,5 +1,4 @@
 goog.require('ble._2d');
-goog.require('ble._2d.path.PainterPixel');
 goog.require('ble._2d.path.painterDefault');
 
 goog.provide('ble._2d.DrawPart');

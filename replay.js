@@ -1,41 +1,11 @@
 goog.require('ble._2d');
 goog.require('ble._2d.path.painterDefault');
 
-goog.provide('ble._2d.DrawPart');
 goog.provide('ble._2d.Replay');
 goog.provide('ble._2d.StrokeReplay'); 
 goog.provide('ble._2d.PolylineReplay');
 goog.provide('ble._2d.EraseReplay');
 
-
-/**
- * @interface
- * @extends {ble.interval.AdjustableInterval}
- * @extends {ble._2d.Drawable}
- */
-ble._2d.DrawPart = function() {};
-
-//specialize the return types of the AdjustableInterval types...
-/**
- * @override
- * @param {number} newStart
- * @return {ble._2d.DrawPart}
- */
-ble._2d.DrawPart.prototype.withStartAt = function(newStart) {};
-
-/**
- * @override
- * @param {number} newLength
- * @return {ble._2d.DrawPart}
- */
-ble._2d.DrawPart.prototype.withLength = function(newLength) {};
-
-
-/**
- * @param {number} time
- * @return {ble._2d.Drawable}
- */
-ble._2d.DrawPart.prototype.at = function(time) {};
 
 /**
  * @constructor

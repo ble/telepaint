@@ -2,6 +2,7 @@ goog.require('goog.math.Size');
 goog.require('goog.functions');
 
 goog.require('ble._2d.DrawPart');
+goog.require('ble._2d.PipDecorator');
 goog.require('ble.scribble.Drawing');
 
 goog.provide('ble.scribble.Simultaneous');
@@ -89,30 +90,22 @@ ble.scribble.Simultaneous.prototype.ratio_ = function() {
  * @param {CanvasRenderingContext2D} ctx
  */
 ble.scribble.Simultaneous.prototype.prepAndDraw_ = function(f, ctx) {
-  var ratio = this.ratio_();
+
   var vSize = this.drawingSize;
+  var vBox = new goog.math.Box(0, vSize.width, vSize.height, 0);
+
+  var dWidth = this.drawnSize.width;
+  var dHeight = this.drawnSize.height;
   for(var i = 0; i < this.drawings.length; i++) {
     var drawing = f(this.drawings[i]);
     var row = Math.floor(i / this.columns);
     var col = i % this.columns;
-    var top = row * this.drawnSize.height;
-    var left = col * this.drawnSize.width;
-    ctx.save();
+    var top = row * dHeight;
+    var left = col * dWidth;
 
-    ctx.translate(left, top);
-    ctx.scale(ratio.width, ratio.height);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(vSize.width, 0);
-    ctx.lineTo(vSize.width, vSize.height);
-    ctx.lineTo(0, vSize.height);
-    ctx.closePath();
-    ctx.clip();
-    //just making shit up with this factor here...
-    ctx.lineWidth /= ble.util.hypot(ratio.width, ratio.height) / Math.sqrt(2);
-    drawing.draw(ctx);
-    ctx.restore();
-  } 
+    var pipBox = new goog.math.Box(top, left+dWidth, top+dHeight, left);
+    (new ble._2d.PipDecorator(drawing, vBox, pipBox)).draw(ctx);
+  }
 };
 
 /**

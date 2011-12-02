@@ -1,7 +1,9 @@
+goog.require('goog.math.Box');
+
 goog.provide('ble._2d');
 goog.provide('ble._2d.DrawSurface');
 goog.provide('ble._2d.Drawable');
-goog.provide('ble._2d.TimeDrawable');
+goog.provide('ble._2d.DrawPart');
 
 /**
  * @interface
@@ -22,6 +24,36 @@ ble._2d.Drawable = function() {};
  * @param {CanvasRenderingContext2D} context
  */
 ble._2d.Drawable.prototype.draw = function(context) {};
+
+/**
+ * @interface
+ * @extends {ble.interval.AdjustableInterval}
+ * @extends {ble._2d.Drawable}
+ */
+ble._2d.DrawPart = function() {};
+
+//specialize the return types of the AdjustableInterval types...
+/**
+ * @override
+ * @param {number} newStart
+ * @return {ble._2d.DrawPart}
+ */
+ble._2d.DrawPart.prototype.withStartAt = function(newStart) {};
+
+/**
+ * @override
+ * @param {number} newLength
+ * @return {ble._2d.DrawPart}
+ */
+ble._2d.DrawPart.prototype.withLength = function(newLength) {};
+
+
+/**
+ * @param {number} time
+ * @return {ble._2d.Drawable}
+ */
+ble._2d.DrawPart.prototype.at = function(time) {};
+
 
 /**
  * @constructor
@@ -53,3 +85,4 @@ ble._2d.pathCoordsWithin = function(ctx, coords, start, last) {
     ctx.lineTo(coords[2*i], coords[2*i+1]);
   }
 };
+

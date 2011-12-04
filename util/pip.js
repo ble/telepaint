@@ -67,13 +67,71 @@ ble._2d.PipDecorator.prototype.transform_ = function(ctx) {
   ctx.lineWidth /= (ratioWidth + ratioHeight) / 2;
 };
 
-///**
-// * @constructor
-// * @param {ble._2d.DrawPart} decorated
-// * @param {goog.math.Box} fixedSource
-// * @param {function(number): goog.math.Box} destinationFn
-// * @implements {ble._2d.DrawPart}
-// */
-//ble._2d.MovingPip = function(decorated, fixedSource, destinationFn) {
-//
-//};
+/**
+ * @constructor
+ * @param {ble._2d.DrawPart} decorated
+ * @param {goog.math.Box} fixedSource
+ * @param {function(number): goog.math.Box} destinationFn
+ * @implements {ble._2d.DrawPart}
+ */
+ble._2d.MovingPip = function(
+    decorated,
+    fixedSource,
+    destinationFn,
+    startMove,
+    endMove) {
+  this.decorated = decorated;
+  this.source = fixedSource;
+  this.destFn = destinationFn;
+  this.startMove = startMove;
+  this.endMove = endMove;
+};
+
+ble._2d.MovingPip.prototype.start = function() {
+  return this.decorated.start();
+};
+
+ble._2d.MovingPip.prototype.end = function() {
+  return Math.max(this.endMove, this.decorated.end());
+};
+
+ble._2d.MovingPip.prototype.length = function() {
+  return this.end() - this.start();
+};
+
+ble._2d.MovingPip.prototype.withStartAt = function(newStart) {
+  var delta = newStart - this.start();
+  return new ble._2d.MovingPip(
+      this.decorated.withStartAt(newStart),
+      this.source,
+      this.destFn,
+      //keep `this.StartMove - this.start()` constant
+      this.startMove + delta,
+      this.endMove + delta); 
+};
+
+ble._2d.MovingPip.prototype.withLength = function(newLength) {
+  var scaleFactor = newLength / this.length();
+  var newDecoratedLength = this.decorated.length() * scaleFactor;
+  return new ble._2d.MovingPip(
+      this.decorated.withLength(newDecoratedLength),
+      this.source,
+      this.destFn,
+      this.start() + (this.startMove - this.start()) * scaleFactor,
+      this.start() + (this.endMove - this.start()) * scaleFactor);
+};
+
+ble._2d.MovingPip.prototype.getBoxAt_ = function(time) {
+  var normalizedTime = (time - this.startMove) / (this.endMove - this.startMove);
+  normalizedTime = Math.max(0, Math.min(1, normalizedTime));
+  return this.destFn(normalizedTime);
+};
+
+ble._2d.MovingPip.prototype.draw = function(ctx) {
+  this.at(this.endMove).draw(ctx);
+};
+
+ble._2d.MovingPip.prototype.at = function(time) {
+  var box = this.getBoxAt_(time);
+  return new ble._2d.PipDecorator(this.decorated.at(time), this.source, box);
+};

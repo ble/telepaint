@@ -1,0 +1,6 @@
+So the time has come to have a concrete, specific replay animation.
+
+For starters: single stack, in a circle.
+
+First drawing starts at bottom of visible area, animates to completion, rotates up to top half of space
+As first drawing moves out of the way, second drawing is beneath the first.

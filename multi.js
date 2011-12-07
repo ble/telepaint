@@ -182,28 +182,30 @@ ble.scribble.Sequence.prototype.makeScenes = function() {
     this.drawings,
     function(drawing) {
       drawing = drawing.withStartAt(lastTime);
-      lastPictures.push(drawing);
+      var pip = new ble._2d.MovingPip(
+        drawing,
+        this.drawingSpace,
+        this.traj,
+        drawing.end(),
+        drawing.end() + this.moveTime);
+
+      lastPictures.push(pip);
       while(lastPictures.length > 2)
         lastPictures.shift();
 
-      scenes.push({pictures: lastPictures.slice(), time: lastTime, moving: false}); 
-      lastTime += drawing.length();
-
-      scenes.push({pictures: lastPictures.slice(), time: lastTime, moving: true}); 
-      lastTime += this.moveTime;
+      scenes.push({parts: lastPictures.slice(), time: lastTime});
+      lastTime += drawing.length() + this.moveTime; 
     },
     this);
   return scenes;
 };
 
 ble.scribble.Sequence.prototype.draw = function(ctx) {
-  var N = this.drawings.length;
-  var dN = this.drawings[N-1];
-  var dM = this.drawings[N-2];
-  var locN = this.traj(1);
-  var locM = this.traj(0);
-  (new ble._2d.PipDecorator(dN, this.drawingSpace, locN)).draw(ctx);
-  (new ble._2d.PipDecorator(dM, this.drawingSpace, locM)).draw(ctx);
+  goog.array.map(
+    this.scenes[this.scenes.length - 1].parts,
+    function(part) {
+      part.draw(ctx);
+    });
 };
 
 ble.scribble.Sequence.prototype.drawAt_ = function(time, ctx) {
@@ -214,36 +216,11 @@ ble.scribble.Sequence.prototype.drawAt_ = function(time, ctx) {
     time));
   if(ix < 0)
     return;
-  var scene = this.scenes[ix];
-  var pic0 = scene.pictures[0];
-  var pic1 = scene.pictures[1];
-  var lastPic = goog.isDef(pic1) ? pic1 : pic0;
-  var lastLoc;
-  if(scene.moving) {
-    console.log( (time - scene.time) / this.moveTime);
-    lastLoc = this.traj( (time - scene.time) / this.moveTime);
-  }
-  else
-    lastLoc = this.traj(0);
-
-  if(goog.isDef(pic1)) {
-    var lastScene = this.scenes[ix-1];
-    var prevPip = new ble._2d.MovingPip(
-        pic0,
-        this.drawingSpace,
-        this.traj,
-        lastScene.time,
-        scene.time);
-    prevPip.at(time).draw(ctx);
-  }
-
-  var lastPip = new ble._2d.MovingPip(
-      lastPic,
-      this.drawingSpace,
-      this.traj,
-      scene.time,
-      scene.time + this.moveTime);
-  lastPip.at(time).draw(ctx); 
+  goog.array.map(
+      this.scenes[ix].parts,
+      function(part) {
+        part.at(time).draw(ctx);
+      });
 }
 
 ble.scribble.Sequence.prototype.at = function(time) {

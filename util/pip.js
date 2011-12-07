@@ -35,6 +35,8 @@ ble._2d.PipDecorator.prototype.draw = function(ctx) {
 //restored after drawing is completed.
 ble._2d.PipDecorator.prototype.setup_ = function(ctx) {
   this.clip_(ctx);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(this.outer.left, this.outer.top, this.outer.right - this.outer.left, this.outer.bottom - this.outer.top);
   this.transform_(ctx);
 };
 
@@ -64,6 +66,7 @@ ble._2d.PipDecorator.prototype.transform_ = function(ctx) {
   ctx.translate(o.left, o.top);
   ctx.scale(ratioWidth, ratioHeight);
   ctx.translate(-i.left, -i.top);
+  //console.log([o.left, o.top, i.left, i.top, ratioWidth, ratioHeight]);
   ctx.lineWidth /= (ratioWidth + ratioHeight) / 2;
 };
 

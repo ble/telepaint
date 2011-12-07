@@ -130,3 +130,124 @@ ble.scribble.Simultaneous.prototype.at = function(time) {
   });
   return drawable;
 }; 
+
+
+/**
+ * @constructor
+ * @implements {ble._2d.DrawPart}
+ */
+ble.scribble.Sequence = function(drawings, drawingSize, traj, moveTime) {
+  this.drawings = drawings.slice();
+  this.drawingSize = drawingSize;
+  this.drawingSpace = new goog.math.Box(0, drawingSize.width, drawingSize.height, 0);
+  this.traj = traj;
+  this.moveTime = moveTime;
+  this.scenes = this.makeScenes();
+};
+
+ble.scribble.Sequence.prototype.start = function() {
+  return 0;
+};
+
+ble.scribble.Sequence.prototype.end = function() {
+  return this.scenes[this.scenes.length - 1].time + this.moveTime;
+};
+
+ble.scribble.Sequence.prototype.length = function() {
+  return this.end();
+};
+
+ble.scribble.Sequence.prototype.withStartAt = function(time) {
+  throw new Error("unsupported operation");
+};
+
+ble.scribble.Sequence.prototype.withLength = function(newLength) {
+  var scaleFactor = newLength / this.length();
+  return new ble.scribble.Sequence(
+      goog.array.map(
+        this.drawings,
+        function(d) { return d.withLength(d.length() * scaleFactor); }),
+      this.drawingSize,
+      this.traj,
+      this.moveTime * scaleFactor);
+};
+
+ble.scribble.Sequence.prototype.makeScenes = function() {
+  var lastTime = 0;
+  var lastPictures = [];
+
+  var scenes = [];
+ 
+  goog.array.map(
+    this.drawings,
+    function(drawing) {
+      drawing = drawing.withStartAt(lastTime);
+      lastPictures.push(drawing);
+      while(lastPictures.length > 2)
+        lastPictures.shift();
+
+      scenes.push({pictures: lastPictures.slice(), time: lastTime, moving: false}); 
+      lastTime += drawing.length();
+
+      scenes.push({pictures: lastPictures.slice(), time: lastTime, moving: true}); 
+      lastTime += this.moveTime;
+    },
+    this);
+  return scenes;
+};
+
+ble.scribble.Sequence.prototype.draw = function(ctx) {
+  var N = this.drawings.length;
+  var dN = this.drawings[N-1];
+  var dM = this.drawings[N-2];
+  var locN = this.traj(1);
+  var locM = this.traj(0);
+  (new ble._2d.PipDecorator(dN, this.drawingSpace, locN)).draw(ctx);
+  (new ble._2d.PipDecorator(dM, this.drawingSpace, locM)).draw(ctx);
+};
+
+ble.scribble.Sequence.prototype.drawAt_ = function(time, ctx) {
+  time -= this.start();
+  var ix = Math.floor(ble.util.rankBinarySearch(
+    function(x){ return x.time; },
+    this.scenes,
+    time));
+  if(ix < 0)
+    return;
+  var scene = this.scenes[ix];
+  var pic0 = scene.pictures[0];
+  var pic1 = scene.pictures[1];
+  var lastPic = goog.isDef(pic1) ? pic1 : pic0;
+  var lastLoc;
+  if(scene.moving) {
+    console.log( (time - scene.time) / this.moveTime);
+    lastLoc = this.traj( (time - scene.time) / this.moveTime);
+  }
+  else
+    lastLoc = this.traj(0);
+
+  if(goog.isDef(pic1)) {
+    var lastScene = this.scenes[ix-1];
+    var prevPip = new ble._2d.MovingPip(
+        pic0,
+        this.drawingSpace,
+        this.traj,
+        lastScene.time,
+        scene.time);
+    prevPip.at(time).draw(ctx);
+  }
+
+  var lastPip = new ble._2d.MovingPip(
+      lastPic,
+      this.drawingSpace,
+      this.traj,
+      scene.time,
+      scene.time + this.moveTime);
+  lastPip.at(time).draw(ctx); 
+}
+
+ble.scribble.Sequence.prototype.at = function(time) {
+  var result = new ble._2d.Nothing();
+  result.draw = goog.bind(this.drawAt_, this, time);
+  return result;
+};

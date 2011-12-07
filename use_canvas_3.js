@@ -8,6 +8,11 @@ goog.require('ble.scribble.style.EventType');
 goog.require('goog.events');
 goog.require('goog.ui.Menu');
 
+goog.require('goog.math.Vec2');
+goog.require('ble.traj');
+//goog.require('ble._2d.MovingPip');
+//goog.require('ble.traj');
+
 ble.use_canvas_3 = function() {
   var drawingSize = new goog.math.Size(640, 480);
   var smallDrawingSize = new goog.math.Size(213, 160);
@@ -41,6 +46,20 @@ ble.use_canvas_3 = function() {
     });
   };
 
+  var makeSeq = function() {
+    var drawingSize = new goog.math.Size(640, 480);
+    var start = new goog.math.Vec2(320, 360);
+    var fromAngle = Math.PI / 2;
+    var radius = 120;
+    var toAngle = 3 * Math.PI / 2;
+    var trajCenter = ble.traj.arc(start, fromAngle, radius, toAngle);
+
+    var drawnSize = new goog.math.Size(320, 240);
+    var traj = ble.traj.fixedSizeBoxTraj(trajCenter, drawnSize);
+
+    return new ble.scribble.Sequence(get9Drawings(), drawingSize, traj, 3000);
+  };
+
   var makeMulti = function() {
     return new ble.scribble.Simultaneous(
         0,
@@ -52,6 +71,44 @@ ble.use_canvas_3 = function() {
 
 
   var animating = false;
+
+  var aniseq = function() {
+    if(animating)
+      return;
+    var seq = makeSeq().withLength(60000);
+    var drawAt = function(time) {
+      withContext_reacharound(function(ctx) {
+        ctx.clearRect(0, 0, drawingSize.width, drawingSize.height);
+        seq.at(time).draw(ctx);
+      });
+    };
+    var seqRAF = function() {
+      var delta = Date.now() - start;
+      drawAt(delta);
+      if(delta >= seq.length())
+        animating = false;
+      else
+        window.webkitRequestAnimationFrame(seqRAF); 
+    };
+    var seqInterval = function() {
+      var delta = Date.now() - start;
+      drawAt(delta);
+      if(delta >= seq.length()) {
+        animating = false;
+        window.clearInterval(intervalHandle);
+      }
+    };
+
+    animating = true;
+    var start = Date.now(); 
+
+    if(window.webkitRequestAnimationFrame) {
+      seqRAF();
+    } else {
+      var intervalHandle = window.setInterval(seqInterval, 15);
+    }
+  };
+
   var animulti = function() {
     if(animating)
       return;
@@ -117,6 +174,7 @@ ble.use_canvas_3 = function() {
     var save = new goog.ui.MenuItem('Save');
     var nineUp = new goog.ui.MenuItem('9 up');
     var nineUpReplay = new goog.ui.MenuItem('9 up replay');
+    var sequentialReplay = new goog.ui.MenuItem('sequence replay');
     var json = new goog.ui.MenuItem('Display JSON');
     
     menu.addChild(save, true);
@@ -125,6 +183,7 @@ ble.use_canvas_3 = function() {
     menu.addChild(json, true);
     menu.addChild(nineUp, true);
     menu.addChild(nineUpReplay, true);
+    menu.addChild(sequentialReplay, true);
     menu.addChild(new goog.ui.MenuSeparator(), true);
     menu.render(container);
     menu.getElement().style["position"] = "relative";
@@ -195,7 +254,8 @@ ble.use_canvas_3 = function() {
         });
       } else if(target === nineUpReplay) {
         animulti();
-
+      } else if(target === sequentialReplay) {
+        aniseq();
       } else if(goog.isDef(target._key_)) {
         if(goog.isDef(scribbles.data[target._key_])) {
           scribbles.currentKey = target._key_;

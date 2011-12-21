@@ -1,0 +1,19 @@
+{application, telepaint,
+ [
+  {description, "server for telephone pictionary"},
+  {vsn, "0.0"},
+  {modules, []},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  crypto,
+                  inets,
+                  mochiweb,
+                  webmachine,
+                  mnesia
+                 ]},
+  {mod, { telepaint_app, []}},
+  {env, []}
+ ]}.
+

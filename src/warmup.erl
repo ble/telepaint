@@ -14,7 +14,10 @@
 start_app([AppName]) ->
   application:load(AppName),
   start_applications(get_application_start_dependencies(AppName)),
-  application:start(AppName).
+  application:start(AppName);
+
+start_app(AppName) ->
+  start_app([AppName]).
 
 get_application_start_dependencies(AppName) ->
   {ok, Dependencies} = application:get_key(AppName, applications),

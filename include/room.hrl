@@ -1,18 +1,35 @@
--record(room,
-  {id, name, game, observers}).
-
--record(game,
-  {id, start_stamp, players, state}).
-
--record(game_state,
-  {player_stacks, done_stacks}).
+-type timestamp() :: {non_neg_integer(), non_neg_integer(), non_neg_integer()}.
+-type id() :: binary().
 
 -record(player,
-  {id, name, pid}).
-
--record(stack,
-  {id, drawings}).
+  {id = <<>> :: id(),
+   name = <<>> :: binary() | undefined,
+   pid :: pid() | undefined}).
 
 -record(drawing,
-  {id, start_stamp, player_id, data}).
+  {id :: id(),
+   start_stamp :: timestamp(),
+   player_id :: id(),
+   data :: term()}).
+
+-record(stack,
+  {id :: id(),
+   drawings :: list(#drawing{})}).
+
+-record(game_state,
+  {player_stacks :: list(list(#stack{})),
+   done_stacks :: list(#stack{})}).
+
+-record(game,
+  {id :: id(),
+   start_stamp :: timestamp(),
+   players :: list(#player{}),
+   state :: waiting | #game_state{} | done}).
+
+-record(room,
+  {id :: id(),
+   name :: binary(),
+   game :: #game{} | undefined,
+   observers = [] :: list(#player{})}).
+
 

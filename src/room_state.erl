@@ -1,14 +1,14 @@
 -module(room_state).
 -include("room.hrl").
 
--export([make/1, add_observer/1, name_observer/3]).
+-export([make/1, add_observer/1, name_observer/3, bind_observer/3]).
 
 make(Name) ->
-  {ok, #room{id = id_unique:for(room), name=Name, game=none, observers=[]}}.
+  {ok, #room{id = id_unique:for(room), name=Name, game=undefined, observers=[]}}.
 
 add_observer(Room0) ->
   Id = id_unique:for(player),
-  Observer = #player{id=Id, name=none, pid=none},
+  Observer = #player{id=Id},
   Observers = [Observer | Room0#room.observers],
   Room1 = Room0#room{observers=Observers},
   {ok, {Room1, Id}}.
@@ -31,7 +31,7 @@ name_observer(Room0, Id, Name) ->
   case get_observer(Room0, Id) of
     {ok, O} ->
       Tag = case O#player.name of
-        none -> set;
+        undefined -> set;
         _ -> rename
       end,
       {ok, Room1} = put_observer(Room0, O#player{name=Name}),

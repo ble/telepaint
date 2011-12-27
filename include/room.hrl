@@ -17,6 +17,8 @@
 
 
 %so if we ignore persistence entirely, what's the right model?
+-record(room,
+  {id, name, game, observers}).
 
 -record(game,
   {id, start_stamp, players, stacks_by_player}).

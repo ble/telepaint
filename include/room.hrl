@@ -2,7 +2,10 @@
   {id, name, game, observers}).
 
 -record(game,
-  {id, start_stamp, players, stacks_by_player}).
+  {id, start_stamp, players, state}).
+
+-record(game_state,
+  {player_stacks, done_stacks}).
 
 -record(player,
   {id, name, pid}).

@@ -11,10 +11,8 @@ for(_Kind) ->
   Pad = [Digest, binary:part(Now, {byte_size(Now), -2})],
   Padded = iolist_to_binary(Pad),
   Based0 = base64:encode(Padded),
-  {ok, PatPlus} = re:compile(<<"\\+">>),
-  {ok, PatSlash} = re:compile(<<"/">>),
-  Based1 = re:replace(Based0, PatPlus, <<"_">>, [global]),
-  Based2 = re:replace(Based1, PatSlash, <<"-">>, [global]),
+  Based1 = binary:replace(Based0, <<"/">>, <<"_">>, [global]),
+  Based2 = binary:replace(Based1, <<"+">>, <<"-">>, [global]),
   iolist_to_binary(Based2).
   
 

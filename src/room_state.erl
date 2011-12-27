@@ -3,9 +3,11 @@
 
 -export([make/1, add_observer/1, name_observer/3, bind_observer/3]).
 
+-spec make(Name :: binary()) -> {ok, #room{}}.
 make(Name) ->
   {ok, #room{id = id_unique:for(room), name=Name, game=undefined, observers=[]}}.
 
+-spec add_observer(Room0 :: #room{}) -> {ok, {#room{}, id()}}.
 add_observer(Room0) ->
   Id = id_unique:for(player),
   Observer = #player{id=Id},
@@ -13,6 +15,9 @@ add_observer(Room0) ->
   Room1 = Room0#room{observers=Observers},
   {ok, {Room1, Id}}.
 
+-spec get_observer(Room :: #room{}, Id :: id()) ->
+  {ok, #player{}} |
+  {error, atom()}. 
 get_observer(Room, Id) ->
   Obs = Room#room.observers,
   case [O || O <- Obs, O#player.id =:= Id] of
@@ -21,12 +26,16 @@ get_observer(Room, Id) ->
     _ -> {error, duplicate}
   end.
 
+-spec put_observer(Room0 :: #room{}, Observer :: #player{}) -> {ok, #room{}}.
 put_observer(Room, Observer) ->
   Id = Observer#player.id,
   Obs0 = Room#room.observers,
   Obs1 = [Observer | [O || O <- Obs0, O#player.id =/= Id]],
   {ok, Room#room{observers = Obs1}}.
 
+-spec name_observer(Room0 :: #room{}, Id :: id(), Name :: binary()) ->
+  {ok, {set | rename, #room{}}} |
+  {error, atom()}.
 name_observer(Room0, Id, Name) ->
   case get_observer(Room0, Id) of
     {ok, O} ->
@@ -40,6 +49,9 @@ name_observer(Room0, Id, Name) ->
       X
   end.
 
+-spec bind_observer(Room0 :: #room{}, Id :: id(), Pid :: pid()) ->
+  {ok, #room{}} |
+  {error, atom()}.
 bind_observer(Room0, Id, Pid) ->
   case get_observer(Room0, Id) of
     {ok, O} ->

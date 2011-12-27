@@ -1,5 +1,6 @@
 -type timestamp() :: {non_neg_integer(), non_neg_integer(), non_neg_integer()}.
 -type id() :: binary().
+-type event() :: term().
 
 -record(player,
   {id = <<>> :: id(),
@@ -27,8 +28,8 @@
    state :: waiting | #game_state{} | done}).
 
 -record(room,
-  {id :: id(),
-   name :: binary(),
+  {id = <<>> :: id(),
+   name = <<>> :: binary(),
    game :: #game{} | undefined,
    observers = [] :: list(#player{})}).
 

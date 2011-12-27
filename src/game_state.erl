@@ -4,6 +4,36 @@
 -export([make/0, add_player/2, start_game/1, pass_stack/2]).
 -export([test/0]).
 -compile(export_all).
+
+-spec make() ->
+  {'ok',#game{players::[],state::'waiting'}}.
+
+-spec start_game(#game{}) ->
+  {'error','already_started'} |
+  {'ok',{[event()], #game{}}}.
+
+-spec passed_to(#stack{},#player{}) ->
+  {'ok',{[event()],#stack{}}}.
+
+-spec has_started(#game{}) -> boolean().
+-spec has_player(#game{},id()) -> boolean().
+
+-spec add_player(#game{},#player{}) ->
+  {'error','already_present' | 'too_late'} |
+  {'ok',{[event()],#game{}}}.
+
+-spec pass_stack(#game{},#player{}) ->
+  {'error','no_stack'} |
+  {'ok',{[event()],#game{}}}.
+
+-spec stacks_and_players(#game{}) ->
+  [{#player{},[#stack{}]}].
+
+-spec test() -> [[any(),...],...].
+
+
+
+
 make() ->
   {ok, #game{id=id_unique:for(game), start_stamp=erlang:now(), players=[], state=waiting}}.
 

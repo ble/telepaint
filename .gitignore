@@ -3,3 +3,4 @@
 deps
 doc
 ebin
+priv/mnesia/*

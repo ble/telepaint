@@ -13,7 +13,7 @@
 
 start_app([AppName]) ->
   application:load(AppName),
-  start_applications(get_application_start_dependencies(AppName)),
+  start_applications(get_application_start_dependencies(AppName), fun is_running/1),
   application:start(AppName);
 
 start_app(AppName) ->
@@ -30,10 +30,20 @@ get_application_start_dependencies(AppName) ->
     Dependencies),
   ToStart.
 
-start_applications(AppNames) ->
+was_started(R) ->
+  R =:= ok.
+
+is_running(R) ->
+  case R of
+    ok -> true;
+    {error, {already_started, _AppName}} -> true;
+    true -> false
+  end.
+
+start_applications(AppNames, OkFilter) ->
   Results = [application:start(App) || App <- AppNames],
   io:format("~p~n", [Results]),
   [] = lists:filter(
-    fun (Result) -> Result =/= ok end,
+    fun (Result) -> not OkFilter(Result) end,
     Results),
   ok.  

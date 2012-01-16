@@ -2,10 +2,9 @@
 -behaviour(gen_fsm).
 
 -export([start/0, last_poll_age/1, poll_after/2, enqueue/2]).
--export([handle_info/3, handle_event/3, init/1, terminate/3]).
+-export([handle_info/3, handle_sync_event/4, handle_event/3, init/1, terminate/3]).
 -export([waiting/2]).
 
--compile(export_all).
 -define(CULL_INTERVAL, 500).
 -define(CULL_AGE, 500).
 -define(WAIT_AGE, 150).
@@ -16,7 +15,8 @@ start() ->
   gen_fsm:start(?MODULE, [], []).
 
 last_poll_age(Pid) ->
-  gen_fsm:sync_send_all_state_event(Pid, last_poll_age).
+  When = gen_fsm:sync_send_all_state_event(Pid, last_poll_age),
+  interval(When, now()) div 1000.
 
 poll_after(Pid, After) ->
   gen_fsm:send_all_state_event(Pid, {poll_after, self(), After}),
@@ -80,16 +80,27 @@ waiting(timeout, State0) ->
 
 handle_event({poll_after, PollPid, After}, StateName, State0) ->
   {_, State1} = add_poll(State0, PollPid, After),
+  State2 = State1#pqs{poll_time = now()},
   case any_messages(State1) of
     true ->
-      {next_state, StateName, State1, ?CULL_INTERVAL};
+      {next_state, StateName, State2, ?CULL_INTERVAL};
     _ ->
-      {next_state, StateName, State1}
+      {next_state, StateName, State2}
   end;
 
 
 handle_event({enqueue, Msgs}, StateName, State0) ->
   {next_state, StateName, enqueue_messages(State0, Msgs), ?CULL_INTERVAL}.
+
+handle_sync_event(last_poll_age, _Pid,  waiting, S = #pqs{poll_time = T}) ->
+  State1 = cull_messages(S),
+  case any_messages(State1) of
+    true ->
+      {reply, T, waiting, State1, ?CULL_INTERVAL};
+    _ ->
+      {reply, T, waiting, State1}
+  end.
+
 
 handle_info({R, P}, StateName, State0) when is_reference(R) and is_pid(P) ->
   State1 = cull_messages(State0),
@@ -188,6 +199,10 @@ ago(Millis) ->
   U0 = T div ?E6,
   M = U0 div ?E6,
   {M, U0 rem ?E6, T rem ?E6}.
+
+interval(_Start = {X, Y, Z}, _End = {R, S, T}) ->
+  T - Z + ?E6 * (S - Y + ?E6 * (R - X)).
+
 
 later(X = {_A, _B, _C}, Y = {_D, _E, _F}) ->
   X > Y.

@@ -4,7 +4,7 @@
 
 -record(player,
   {id = <<>> :: id(),
-   name = <<>> :: binary() | undefined,
+   name = undefined :: binary() | undefined,
    pid :: pid() | undefined}).
 
 -record(drawing,

@@ -1,7 +1,7 @@
 -module(player_queue).
 -behaviour(gen_fsm).
 
--export([start/0, last_poll_age/1, poll_after/2, enqueue/2]).
+-export([start/0, start_link/0, last_poll_age/1, poll_after/2, enqueue/2]).
 -export([handle_info/3, handle_sync_event/4, handle_event/3, init/1, terminate/3]).
 -export([waiting/2]).
 
@@ -10,6 +10,9 @@
 -define(WAIT_AGE, 150).
 -define(E6, 1000000).
 -define(E3, 1000).
+
+start_link() ->
+  gen_fsm:start_link(?MODULE, [], []).
 
 start() ->
   gen_fsm:start(?MODULE, [], []).

@@ -1,11 +1,19 @@
 -module(room_state).
 -include("room.hrl").
 
--export([make/1, add_observer/1, name_observer/3, bind_observer/3]).
+-export([
+    make/1,
+    add_observer/1,
+    name_observer/3,
+    bind_observer/3,
+    get_observers/1]).
 
 -spec make(Name :: binary()) -> {ok, #room{}}.
 make(Name) ->
   {ok, #room{id = id_unique:for(room), name=Name, game=undefined, observers=[]}}.
+
+-spec get_observers(Room :: #room{}) -> {ok, [#player{}]}.
+get_observers(Room) -> {ok, Room#room.observers}.
 
 -spec add_observer(Room0 :: #room{}) -> {ok, {#room{}, id()}}.
 add_observer(Room0) ->

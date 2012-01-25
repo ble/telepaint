@@ -135,7 +135,7 @@ poll_timeout(State0 = #pqs{polling = Poll0}, Key = {R, P}) ->
     undefined ->
       State0;
     _ ->
-      io:format("Poll ~p timed out.~n", [Key]), 
+      %io:format("Poll ~p timed out.~n", [Key]), 
       P ! {self(), []},
       Poll1 = proplists:delete(Key, Poll0),
       State0#pqs{polling=Poll1}
@@ -144,7 +144,7 @@ poll_timeout(State0 = #pqs{polling = Poll0}, Key = {R, P}) ->
 cull_messages(State0 = #pqs{msgs = Msgs0}) ->
   Oldest = ago(?CULL_AGE),
   Msgs1 = [{X, T} || {X, T} <- Msgs0, later(T, Oldest)],
-  io:format("Cull before ~p after ~p~n", [length(Msgs0), length(Msgs1)]),
+  %io:format("Cull before ~p after ~p~n", [length(Msgs0), length(Msgs1)]),
   State0#pqs{msgs = Msgs1}.
 
 enqueue_messages(State0 = #pqs{msgs = Msgs0}, NewMsgs) ->
@@ -160,7 +160,7 @@ enqueue_messages(State0 = #pqs{msgs = Msgs0}, NewMsgs) ->
   %send them the messages
   lists:map(
     fun({{R, P}, _}) ->
-      io:format("Poll ~p received message.~n", [{R, P}]),
+      %io:format("Poll ~p received message.~n", [{R, P}]),
       P ! {self(), NewMsgs}
     end,
     PollNotify),

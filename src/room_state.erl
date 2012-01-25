@@ -21,7 +21,7 @@ add_observer(Room0) ->
   Observer = #player{id=Id},
   Observers = [Observer | Room0#room.observers],
   Room1 = Room0#room{observers=Observers},
-  {ok, {Room1, Id}}.
+  {ok, {Room1, Id, [{joined_room, Id}]}}.
 
 -spec get_observer(Room :: #room{}, Id :: id()) ->
   {ok, #player{}} |
@@ -52,7 +52,7 @@ name_observer(Room0, Id, Name) ->
         _ -> rename
       end,
       {ok, Room1} = put_observer(Room0, O#player{name=Name}),
-      {ok, {Tag, Room1}};
+      {ok, {Room1, Tag, [{is_named, Id, Name}]}};
     X ->
       X
   end.

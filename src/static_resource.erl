@@ -13,11 +13,22 @@
          provide_content/2,
          generate_etag/2]).
 
+ -export([file_contents/1]).
+
 -define(FILE_ROOT, "priv/www/").
 -record(context, {root,path=undefined,response_body=undefined,metadata=[]}).
 -include_lib("kernel/include/file.hrl").
 -include_lib("webmachine/include/webmachine.hrl").
-%-include("tpaint_util.hrl").
+
+file_contents(Name) ->
+  AbsRoot = filename:absname(?FILE_ROOT),
+  AbsPath = normalize_filename(filename:absname(Name, AbsRoot)),
+  case is_filename_prefix(AbsRoot, AbsPath) of
+    true ->
+      file:read_file(AbsPath) 
+    false ->
+      {error, bad_path}
+  end
 
 init([]) ->
   {ok, #context{root=?FILE_ROOT}};
@@ -27,17 +38,17 @@ init([Path]) ->
 allowed_methods(ReqData, Context) ->
   {['HEAD', 'GET'], ReqData, Context}.
 
-file_path(Context = #context{path=Path}, []) ->
-  file_path(Context#context{path=undefined}, Path);
-file_path(#context{path=undefined}, []) ->
-  false;
-file_path(Context = #context{path=undefined}, Name) ->
-  RelName = case Name of
-    "" -> "";
+strip(Name) ->
+  case Name of
     ["/" | Rest] -> Rest;
     _ -> Name
-  end,
-  RelName.
+  end.
+
+
+file_path(#context{path=Path}, _) when Path =/= undefined ->
+  strip(Path);
+file_path(_, Name) ->
+  strip(Name).
 
 as_str(F) when is_binary(F) ->
   binary_to_list(F);
@@ -68,10 +79,10 @@ file_exists(Context, Name) ->
   RelativePath = file_path(Context, Name),
   AbsPath = normalize_filename(filename:absname(RelativePath, AbsRoot)),
 
-  io:format("1.~p~n2.~p~n3.~p~n", [AbsRoot, RelativePath, AbsPath]),
+%  io:format("1.~p~n2.~p~n3.~p~n", [AbsRoot, RelativePath, AbsPath]),
   case is_filename_prefix(AbsRoot, AbsPath) of
     false ->
-      io:format("Someone is a naughty monkey.~n", []),
+%      io:format("Someone is a naughty monkey.~n", []),
       false;
     true ->
       case filelib:is_regular(AbsPath) of 
@@ -85,7 +96,7 @@ file_exists(Context, Name) ->
 resource_exists(ReqData, Context) ->
   Path = wrq:disp_path(ReqData),
   case file_exists(Context, Path) of 
-    {true, Name} ->
+    {true, _} ->
       %debug_msg("name: ~p~n", [Name]),
       {true, ReqData, Context};
     _ ->

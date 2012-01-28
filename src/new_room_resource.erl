@@ -43,7 +43,6 @@ get_room_name(Req) ->
   Body = wrq:req_body(Req),
   ParsedBody = mochiweb_util:parse_qs(Body),
   RoomName = proplists:get_value("roomName", ParsedBody),
-  %io:format("~p~n", [{ContentType, Body, ParsedBody, RoomName}]),
   case {ContentType, RoomName} of
     {_, undefined} ->
       error;
@@ -56,26 +55,21 @@ get_room_name(Req) ->
 process_post(Req0, Ctx) ->
   case get_room_name(Req0) of
     {ok, Name} ->
+
+%  %create a room
       {ok, Pid, RoomId} = room:start_link(Name),
+%  %create the first user for that room
       {ok, ObserverId} = room:add_observer(Pid),
-      {_, Cookie1} = mochiweb_cookies:cookie("roomId", RoomId),
-      {HCookie, Cookie2} = mochiweb_cookies:cookie("observerId", ObserverId),
-      Cookie = {HCookie, Cookie1 ++ "; " ++ Cookie2},
+%  %  set cookie identifying room (redundant)
+      Cookie1 = mochiweb_cookies:cookie("roomId", RoomId),
+%  %  set cookie identifying user
+      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),
+%  %  303 redirect to the url for the room client
       Loc = {"Location", ["/room_client/"] ++ binary_to_list(RoomId)},
-      Req1 = wrq:set_resp_headers([Cookie, Loc], Req0),
+      Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
       Req2 = wrq:do_redirect(true, Req1),
       {true, Req2, Ctx};
     _ ->
       {false, Req0, Ctx}
   end.
 
-%  io:format("posting posting 1 2 3~n", []),
-%  io:format("~p~n", [wrq:req_body(Req)]),
-%  %create a room
-%  %create the first user for that room
-%  %respond:
-%  %  303 redirect to the url for the room client
-%  %  set cookie identifying user
-%  %  set cookie identifying room (redundant)
-%  {true, Req, Ctx}.
-  

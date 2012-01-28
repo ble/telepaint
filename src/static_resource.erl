@@ -32,19 +32,54 @@ file_path(Context = #context{path=Path}, []) ->
 file_path(#context{path=undefined}, []) ->
   false;
 file_path(Context = #context{path=undefined}, Name) ->
-  RelName = case hd(Name) of
-    "/" -> tl(Name);
+  RelName = case Name of
+    "" -> "";
+    ["/" | Rest] -> Rest;
     _ -> Name
   end,
-  filename:join([Context#context.root, RelName]).
+  RelName.
+
+as_str(F) when is_binary(F) ->
+  binary_to_list(F);
+as_str(F) when is_list(F) ->
+  F.
+
+normalize_filename(F) when is_binary(F) ->
+  normalize_filename(as_str(F));
+
+normalize_filename(F) ->
+  Parts = filename:split(F),
+  filename:join(normalized(Parts)).
+
+normalized([_, ".." | Rest]) ->
+  normalized(Rest);
+normalized(["." | Rest]) ->
+  normalized(Rest);
+normalized([X | Rest]) ->
+  [X | normalized(Rest)];
+normalized([]) ->
+  [].
+
+is_filename_prefix(Prefix, Path) ->
+  lists:prefix(as_str(Prefix), as_str(Path)).
 
 file_exists(Context, Name) ->
-  NamePath = file_path(Context, Name),
-  case filelib:is_regular(NamePath) of 
-    true ->
-      {true, NamePath};
+  AbsRoot = filename:absname(Context#context.root),
+  RelativePath = file_path(Context, Name),
+  AbsPath = normalize_filename(filename:absname(RelativePath, AbsRoot)),
+
+  io:format("1.~p~n2.~p~n3.~p~n", [AbsRoot, RelativePath, AbsPath]),
+  case is_filename_prefix(AbsRoot, AbsPath) of
     false ->
-      false
+      io:format("Someone is a naughty monkey.~n", []),
+      false;
+    true ->
+      case filelib:is_regular(AbsPath) of 
+        true ->
+          {true, AbsPath};
+        false ->
+          false
+      end
   end.
 
 resource_exists(ReqData, Context) ->

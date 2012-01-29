@@ -25,10 +25,10 @@ file_contents(Name) ->
   AbsPath = normalize_filename(filename:absname(Name, AbsRoot)),
   case is_filename_prefix(AbsRoot, AbsPath) of
     true ->
-      file:read_file(AbsPath) 
+      file:read_file(AbsPath);
     false ->
       {error, bad_path}
-  end
+  end.
 
 init([]) ->
   {ok, #context{root=?FILE_ROOT}};

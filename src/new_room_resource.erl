@@ -4,7 +4,6 @@
     allowed_methods/2,
     is_authorized/2,
     content_types_provided/2,
-    content_types_accepted/2,
     to_html/2,
     process_post/2
 
@@ -26,9 +25,6 @@ is_authorized(Req, Ctx) ->
 
 allowed_methods(Req, Ctx) ->
   {['GET', 'POST'], Req, Ctx}.
-
-content_types_accepted(Req, Ctx) ->
-  {[{"text/html", to_html}], Req, Ctx}.
 
 content_types_provided(Req, Ctx) ->
   {[{"text/html", to_html}], Req, Ctx}.

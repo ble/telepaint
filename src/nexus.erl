@@ -2,23 +2,25 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, shutdown/1, make_room/2, lookup_room/2]).
+-export([start_link/1, shutdown/0, register_room/2, lookup_room/2, report/1]).
 
 -export([init/1, handle_call/3, terminate/2]).
 
--record(context, {n = 0, list = 0}).
+-record(context, {n = 0, list = []}).
 start_link(Number) ->
-  gen_server:start_link(?MODULE, Number, []).
+  gen_server:start_link({local, ?MODULE}, ?MODULE, Number, []).
 
-shutdown(Pid) ->
-  gen_server:call(Pid, shutdown).
+shutdown() ->
+  gen_server:call(?MODULE, shutdown).
 
-make_room(Pid, Name) ->
-  gen_server:call(Pid, {make_room, Name}).
+register_room(RoomPid, RoomId) ->
+  gen_server:call(?MODULE, {register_room, RoomPid, RoomId}).
 
 lookup_room(Pid, Id) ->
   gen_server:call(Pid, {lookup_room, Id}).
 
+report(Pid) ->
+  gen_server:call(Pid, report).
 
 init(Number) ->
   {ok, #context{n = Number}}.
@@ -26,15 +28,16 @@ init(Number) ->
 handle_call(shutdown, _, State) ->
   {stop, normal, ok, State};
 
-handle_call({make_room, Name}, _, State = #context{n = Number, list = Lst0}) ->
+handle_call({register_room, Pid, Id}, _, State = #context{list = Lst, n = N}) ->
+  L = length(Lst),
   if
-    Number > 0 ->
-      {ok, RoomPid, RoomId} = room:start_link(Name),
-      Lst1 = [{RoomId, RoomPid} | Lst0],
-      {reply, {ok, RoomId}, #context{n = Number - 1, list = Lst1}};
+    L < N ->
+      Lst1 = [{Id, Pid} | Lst],
+      {reply, ok, State#context{list = Lst1}};
     true ->
       {reply, {error, none_left}, State}
   end;
+
 
 handle_call({lookup_room, Id}, _, State = #context{list = Lst}) ->
   case proplists:get_value(Id, Lst) of
@@ -42,7 +45,10 @@ handle_call({lookup_room, Id}, _, State = #context{list = Lst}) ->
       {reply, {error, none_such}, State};
     Pid ->
       {reply, {ok, Pid}, State}
-  end.
+  end;
+
+handle_call(report, _, State) ->
+  {reply, {ok, State}, State}.
 
 terminate(Reason, _State) ->
   io:format("~p stopping: ~p\n", [?MODULE, Reason]).

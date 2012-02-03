@@ -51,9 +51,9 @@ get_room_name(Req) ->
 process_post(Req0, Ctx) ->
   case get_room_name(Req0) of
     {ok, Name} ->
-
 %  %create a room
       {ok, Pid, RoomId} = room:start_link(Name),
+      ok = nexus:register_room(Pid, RoomId),
 %  %create the first user for that room
       {ok, ObserverId} = room:add_observer(Pid),
 %  %  set cookie identifying room (redundant)

@@ -41,6 +41,7 @@ start_applications(AppNames) ->
 %% @spec start(_Type, _StartArgs) -> ServerRet
 %% @doc application start callback for tpaint.
 start(_Type, _StartArgs) ->
+  nexus:start_link(1),
     telepaint_web_sup:start_link().
 
 %% @spec stop(_State) -> ServerRet

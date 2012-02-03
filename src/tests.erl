@@ -9,11 +9,13 @@ test0() ->
   {ok, PlayerId} = room:add_observer(RoomPid),
   Result = room:name_observer(RoomPid, PlayerId, <<"hey you">>),
   {ok, Observers} = room:get_observers(RoomPid),
+  {ok, Found} = room:has_observer(RoomPid, PlayerId),
   {
     NexusPid,
     RoomId,
     RoomPid,
     PlayerId,
     Result,
-    Observers
+    Observers,
+    Found
   }.

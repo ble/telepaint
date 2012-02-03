@@ -8,7 +8,8 @@
     shutdown/1,
     add_observer/1,
     name_observer/3,
-    get_observers/1]).
+    get_observers/1,
+    has_observer/2]).
 
 -export([
     join_game/2
@@ -36,6 +37,9 @@ get_observers(Pid) ->
 
 join_game(Pid, PlayerId) ->
   gen_server:call(Pid, {join_game, PlayerId}).
+
+has_observer(Pid, PlayerId) ->
+  gen_server:call(Pid, {has_observer, PlayerId}).
 
 init(State) ->
   {ok, State}.
@@ -73,6 +77,13 @@ handle_call({name_observer, Id, Name}, _, State0) ->
       {reply, ok, State1};
     rename ->
       {reply, {error, no_rename}, State0}
+  end;
+
+handle_call({has_observer, PlayerId}, _, State) ->
+  {ok, Observers} = room_state:get_observers(State),
+  case [Observer || Observer <- Observers, Observer#player.id == PlayerId] of
+    [] -> {reply, {ok, false}, State};
+    _ -> {reply, {ok, true}, State}
   end;
 
 handle_call(shutdown, _, State) ->

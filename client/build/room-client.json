@@ -1,0 +1,9 @@
+{
+  "id": "room_client",
+  "paths": "../src",
+  "mode": "SIMPLE",
+  "level": "VERBOSE",
+  "inputs": [
+    "../src/room-client.js"
+  ]
+}

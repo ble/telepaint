@@ -56,7 +56,6 @@ process_post(Req0, Ctx) ->
       ok = nexus:register_room(Pid, RoomId),
 %  %create the first user for that room
       {ok, ObserverId} = room:add_observer(Pid),
-%  %  set cookie identifying room (redundant)
       Cookie1 = mochiweb_cookies:cookie("roomId", RoomId),
 %  %  set cookie identifying user
       Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),

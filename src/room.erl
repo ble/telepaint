@@ -9,7 +9,9 @@
     add_observer/1,
     name_observer/3,
     get_observers/1,
-    has_observer/2]).
+    has_observer/2,
+    get_state/1,
+    allow_anonymous_join/1]).
 
 -export([
     join_game/2
@@ -41,6 +43,14 @@ join_game(Pid, PlayerId) ->
 has_observer(Pid, PlayerId) ->
   gen_server:call(Pid, {has_observer, PlayerId}).
 
+get_state(Pid) ->
+  gen_server:call(Pid, get_state).
+
+%TODO: actually make this something determined by the room,
+%      set by the creator, etc.
+allow_anonymous_join(_Pid) ->
+  true.
+
 init(State) ->
   {ok, State}.
 
@@ -60,7 +70,7 @@ handle_call({join_game, ObserverId}, _, State0) ->
   
 
 handle_call(get_observers, _, State) ->
-  {reply, room_state:get_observers(State), State};
+  {reply, {ok, room_state:get_observers(State)}, State};
 
 handle_call(add_observer, _, State0) ->
   {ok, {State1, Id, Msgs}} = room_state:add_observer(State0),
@@ -80,11 +90,14 @@ handle_call({name_observer, Id, Name}, _, State0) ->
   end;
 
 handle_call({has_observer, PlayerId}, _, State) ->
-  {ok, Observers} = room_state:get_observers(State),
+  Observers = room_state:get_observers(State),
   case [Observer || Observer <- Observers, Observer#player.id == PlayerId] of
     [] -> {reply, {ok, false}, State};
     _ -> {reply, {ok, true}, State}
   end;
+
+handle_call(get_state, _, State) ->
+  {reply, {ok, now(), State}, State};
 
 handle_call(shutdown, _, State) ->
   {stop, normal, ok, State}.

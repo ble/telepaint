@@ -3,57 +3,53 @@
 -export([
     service_available/2,
     allowed_methods/2,
-    is_authorized/2,
+    forbidden/2,
     content_types_provided/2,
     to_html/2,
     resource_exists/2
   ]).
 
--record(room_context, {room_id, observer_id, room_pid}).
-
 -define(FORM_PATH, "priv/www/room_client.html").
 -include_lib("webmachine/include/webmachine.hrl").
+-include("room_context.hrl").
 
 init([]) ->
   {ok, #room_context{}}.
 
-service_available(Req, Ctx) ->
-  {true, Req, populate_context(Req, Ctx)}.
-
-
-populate_context(Req, Ctx) ->
-  UriRoomId = wrq:path_info(room_id, Req),
-  CookieRoomId = wrq:get_cookie_value("roomId", Req),
-  CookieObserverId = wrq:get_cookie_value("observerId", Req),
-  RoomId = if
-    UriRoomId == CookieRoomId ->
-      list_to_binary(UriRoomId);
-    true ->
-      undefined
-  end,
-  RoomPidLookup = case RoomId of
-    undefined ->
-      undefined;
-    _ ->
-      nexus:lookup_room(nexus, RoomId)
-  end,
-  RoomPid = case RoomPidLookup of
-    {ok, Pid} -> Pid;
-    _ -> undefined
-  end,
-  Ctx#room_context{
-    room_id = RoomId,
-    observer_id = CookieObserverId,
-    room_pid = RoomPid}.
-
-is_authorized(Req, Ctx) ->
-  Unauthorized = case Ctx#room_context.room_pid of
+%service availability is equated to the existence and
+%aliveness of the desired room process.
+service_available(Req, _) ->
+  Ctx = room_http:req_context(Req),
+  Available = case Ctx#room_context.room_pid of
     undefined -> false;
-    RoomPid ->
-      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id),
-      Present
+    Pid -> is_process_alive(Pid)
   end,
-  {not Unauthorized, Req, Ctx}.
+  {Available, Req, Ctx}.
+
+
+forbidden(Req0, Ctx) ->
+  RoomPid = Ctx#room_context.room_pid,
+  AlreadyInRoom = case Ctx#room_context.is_cookied of
+    true ->
+      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id),
+      Present;
+    _ -> false
+  end,
+  case not AlreadyInRoom andalso room:allow_anonymous_join(RoomPid) of
+    true ->
+      {ok, ObserverId} = room:add_observer(RoomPid),
+      Cookie1 = mochiweb_cookies:cookie("roomId", Ctx#room_context.room_id),
+      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),
+      Loc = {"Location", [<<"/room_client/">>, Ctx#room_context.room_id, <<"?join">>]},
+      Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
+      Req2 = wrq:do_redirect(true, Req1),
+      io:format("doin thangs~n", []),
+
+      %false, as in not forbidden.
+      {false, Req2, Ctx};
+    _ -> 
+      {not AlreadyInRoom, Req0, Ctx}
+  end.
 
 allowed_methods(Req, Ctx) ->
   {['GET'], Req, Ctx}.

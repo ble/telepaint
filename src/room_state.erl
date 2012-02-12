@@ -12,8 +12,8 @@
 make(Name) ->
   {ok, #room{id = id_unique:for(room), name=Name, game=undefined, observers=[]}}.
 
--spec get_observers(Room :: #room{}) -> {ok, [#player{}]}.
-get_observers(Room) -> {ok, Room#room.observers}.
+-spec get_observers(Room :: #room{}) -> [#player{}].
+get_observers(Room) -> Room#room.observers.
 
 -spec add_observer(Room0 :: #room{}) -> {ok, {#room{}, id()}}.
 add_observer(Room0) ->

@@ -19,7 +19,7 @@ var console = window.console;
  */ 
 ble.room.Client = function() {
   goog.events.EventTarget.call(this);
-  var pattern = /^http:\/\/([^\/]*)\/room_client\/([0-9a-zA-Z_-]+)(?:\?join)?$/;
+  var pattern = /^http:\/\/([^\/]*)\/room\/([0-9a-zA-Z_-]+)\/client(?:\?join)?$/;
   var match = window.location.href.match(pattern);
   if(!match)
     throw new Error('unexpected location');

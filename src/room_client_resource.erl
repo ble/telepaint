@@ -29,6 +29,7 @@ service_available(Req, _) ->
 
 forbidden(Req0, Ctx) ->
   RoomPid = Ctx#room_context.room_pid,
+  RoomId = Ctx#room_context.room_id,
   AlreadyInRoom = case Ctx#room_context.is_cookied of
     true ->
       {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id),
@@ -38,9 +39,10 @@ forbidden(Req0, Ctx) ->
   case not AlreadyInRoom andalso room:allow_anonymous_join(RoomPid) of
     true ->
       {ok, ObserverId} = room:add_observer(RoomPid),
-      Cookie1 = mochiweb_cookies:cookie("roomId", Ctx#room_context.room_id, [{path, "/"}]),
-      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId, [{path, "/"}]),
-      Loc = {"Location", [<<"/room_client/">>, Ctx#room_context.room_id, <<"?join">>]},
+      Path = binary_to_list(list_to_binary([<<"/room/">>, RoomId])),
+      Cookie1 = mochiweb_cookies:cookie("roomId", RoomId, [{path, Path}]),
+      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId, [{path, Path}]),
+      Loc = {"Location", [<<"/room/">>, Ctx#room_context.room_id, <<"/client?join">>]},
       Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
       Req2 = wrq:do_redirect(true, Req1),
 

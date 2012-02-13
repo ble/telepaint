@@ -60,7 +60,7 @@ process_post(Req0, Ctx) ->
 %  %  set cookie identifying user
       Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),
 %  %  303 redirect to the url for the room client
-      Loc = {"Location", ["/room_client/"] ++ binary_to_list(RoomId)},
+      Loc = {"Location", ["/room/"] ++ binary_to_list(RoomId) ++ "/client"},
       Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
       Req2 = wrq:do_redirect(true, Req1),
       {true, Req2, Ctx};

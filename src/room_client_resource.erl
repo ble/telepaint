@@ -38,15 +38,15 @@ forbidden(Req0, Ctx) ->
   case not AlreadyInRoom andalso room:allow_anonymous_join(RoomPid) of
     true ->
       {ok, ObserverId} = room:add_observer(RoomPid),
-      Cookie1 = mochiweb_cookies:cookie("roomId", Ctx#room_context.room_id),
-      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),
+      Cookie1 = mochiweb_cookies:cookie("roomId", Ctx#room_context.room_id, [{path, "/"}]),
+      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId, [{path, "/"}]),
       Loc = {"Location", [<<"/room_client/">>, Ctx#room_context.room_id, <<"?join">>]},
       Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
       Req2 = wrq:do_redirect(true, Req1),
-      io:format("doin thangs~n", []),
 
-      %false, as in not forbidden.
-      {false, Req2, Ctx};
+      %redirect basically just to start running
+      %the room client resource from the start.
+      {{halt, 303}, Req2, Ctx};
     _ -> 
       {not AlreadyInRoom, Req0, Ctx}
   end.

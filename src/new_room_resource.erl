@@ -39,11 +39,13 @@ get_room_name(Req) ->
   Body = wrq:req_body(Req),
   ParsedBody = mochiweb_util:parse_qs(Body),
   RoomName = proplists:get_value("roomName", ParsedBody),
+  io:format("~p~n", [{ContentType, RoomName}]),
   case {ContentType, RoomName} of
     {_, undefined} ->
       error;
-    {"application/x-www-form-urlencoded", X} when X =/= undefined ->
-      {ok, RoomName};
+    {"application/x-www-form-urlencoded", X}
+      when X =/= undefined andalso is_list(X) ->
+      {ok, list_to_binary(RoomName)};
     _ ->
       error
   end.

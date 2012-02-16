@@ -24,7 +24,7 @@ room(Room, {Mega, Unit, Micro}, ObserverId) ->
   Observers = [observer(O, ObserverId) || O <- room_state:get_observers(Room)],
   {[
     {<<"type">>, <<"room">>},
-    {<<"name">>, <<"pit of despair">>},
+    {<<"name">>, room_state:get_name(Room)},
     {<<"observers">>, Observers},
     {<<"when">>, [Mega, Unit, Micro]}
     ]}.

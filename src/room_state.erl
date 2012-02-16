@@ -6,7 +6,8 @@
     add_observer/1,
     name_observer/3,
     bind_observer/3,
-    get_observers/1]).
+    get_observers/1,
+    get_name/1]).
 
 -spec make(Name :: binary()) -> {ok, #room{}}.
 make(Name) ->
@@ -68,3 +69,5 @@ bind_observer(Room0, Id, Pid) ->
       X
   end.
 
+-spec get_name(Room :: #room{}) -> binary().
+get_name(Room) -> Room#room.name.

@@ -4,6 +4,6 @@
   "mode": "SIMPLE",
   "level": "VERBOSE",
   "inputs": [
-    "../src/room-client.js"
+    "../src/client.js"
   ]
 }

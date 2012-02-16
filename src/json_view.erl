@@ -25,6 +25,6 @@ room(Room, {Mega, Unit, Micro}, ObserverId) ->
   {[
     {<<"type">>, <<"room">>},
     {<<"name">>, <<"pit of despair">>},
-    {<<"population">>, Observers},
+    {<<"observers">>, Observers},
     {<<"when">>, [Mega, Unit, Micro]}
     ]}.

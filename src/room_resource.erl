@@ -54,7 +54,31 @@ post_is_create(Req, Ctx) ->
   {false, Req, Ctx}.
 
 process_post(Req, Ctx) ->
-  {true, wrq:set_resp_body(<<"{\"hey\": 0}">>, Req), Ctx}.
+  case wrq:get_req_header("Content-Type", Req) of
+    "application/json" ->
+      process_json(Req, Ctx);
+    _ ->
+      {false, Req, Ctx}
+  end.
+
+process_json(Req, Ctx) -> 
+  try
+    Json = jiffy:decode(wrq:req_body(Req)),
+    {PropList} = Json,
+    Name = proplists:get_value(<<"name">>, PropList),
+    room:name_observer(
+      Ctx#room_context.room_pid,
+      Ctx#room_context.observer_id,
+      Name),
+    RespJson = {[{<<"status">>, <<"ok">>}]},
+    {true, wrq:set_resp_body(jiffy:encode(RespJson), Req), Ctx}
+  catch
+    {error, {_, invalid_json}} ->
+      {false, Req, Ctx};
+    X ->
+      io:format("Unexpected error: ~p~n", [X]),
+      {false, Req, Ctx}
+  end.
 
 to_json(Req, Ctx) ->
   case wrq:method(Req) of

@@ -3,6 +3,8 @@ goog.require('goog.events');
 goog.require('goog.net.Cookies');
 goog.require('goog.net.XhrIo');
 
+goog.require('goog.ui.Prompt');
+
 goog.require('ble.hate');
 goog.require('ble.erlToDate');
 goog.require('ble.room.Observer');
@@ -60,8 +62,31 @@ cp.handleEvent = function(event) {
   console.log('Client.handleEvent called');
   console.log(event);
   if(event.type == eventType.FETCHED_STATE) {
-    dom.set(event.room);
+    this.state = event.room;
+    dom.set(this.state);
+    if(!goog.isDefAndNotNull(this.state.myName())) {
+      this.dlg = new goog.ui.Prompt(
+          "Choose your handle",
+          "Pick a name that others will see.",
+          goog.bind(this.pickName, this),
+          "modal-dialog");
+      this.dlg.setVisible(true);
+    }
+    
   }
+};
+
+cp.pickName = function(nameString) {
+  var acceptable = /\s*([!-~]+)\s*/;
+  var match = nameString.match(acceptable);
+  if(!match) {
+    var dlg = this.dlg;
+    var showAgain = goog.bind(dlg.setVisible, dlg, true);
+    window.setTimeout(showAgain, 0);
+    return;
+  }
+  console.log(match[1]);
+  this.connection.sendSetName(match[1]);
 };
 
 cp.setupLinks = function() {
@@ -130,6 +155,19 @@ ccp.fetchState = function() {
   xhr.send(roomUri, 'GET'); 
 };
 
+ccp.sendSetName = function(name) {
+   var xhr = new goog.net.XhrIo();
+  goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
+  var roomUri = ble.hate.links()['room'];
+  var rpc = ({'name': name});
+  xhr.send(
+    roomUri,
+    'POST',
+    JSON.stringify(rpc),
+    {'Content-Type': 'application/json'}); 
+ 
+};
+
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,6 +175,7 @@ var errorHandler = new goog.debug.ErrorHandler(function(e) {
   console.log("Intercepted error:");
   console.error(e);
   window.lastError = e;
+  throw e;
 });
 var dom = new ble.room.Dom();
 dom.render(document.body);

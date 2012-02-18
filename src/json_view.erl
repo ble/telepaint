@@ -6,19 +6,19 @@
     observer/2]).
 
 observer(Observer, SelfId) ->
-  NameString = case Observer#player.name of
-    undefined ->
-      <<"{ anonymous observer }">>;
-    Name ->
-      [<<"< ">>, Name, <<" >">>]
-  end,
-  Items0 = [{<<"name">>, NameString}, {<<"id">>, Observer#player.id}],
+  Items0 = [{<<"id">>, Observer#player.id}],
   Items1 = case Observer#player.id of
     SelfId ->
       [{<<"self">>, true} | Items0];
     _ -> Items0
   end,
-  {Items1}.
+  Items2 = case Observer#player.name of
+    undefined ->
+      Items1;
+    Name ->
+      [{<<"name">>, Name} | Items1]
+  end,
+  {Items2}.
 
 room(Room, {Mega, Unit, Micro}, ObserverId) ->
   Observers = [observer(O, ObserverId) || O <- room_state:get_observers(Room)],

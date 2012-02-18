@@ -1,8 +1,12 @@
 goog.provide('ble.room.Observer');
 goog.provide('ble.room.Model');
+
+////////////////////////////////////////////////////////////////////////////////
+                                                        goog.scope(function(){
+//////////////////////////////////////////////////////////////////////////////// 
 /**
  * @constructor
- * @param {string} name
+ * @param {?string} name
  * @param {string} id
  */
 ble.room.Observer = function(name, id) {
@@ -22,4 +26,10 @@ ble.room.Model = function(name, observers, obsSelf) {
   this.obsSelf = obsSelf;
 };
 
-
+var mp = ble.room.Model.prototype;
+mp.myName = function() {
+  return this.obsSelf.name;
+};
+////////////////////////////////////////////////////////////////////////////////
+                                                                             });
+//////////////////////////////////////////////////////////////////////////////// 

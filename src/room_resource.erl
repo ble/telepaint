@@ -3,10 +3,14 @@
 -export([
     service_available/2,
     allowed_methods/2,
+    resource_exists/2, 
     forbidden/2,
-    content_types_provided/2,
+
+    content_types_provided/2, 
     to_json/2,
-    resource_exists/2
+
+    post_is_create/2,
+    process_post/2
   ]).
 
 -include("room_context.hrl").
@@ -20,7 +24,6 @@ service_available(Req, _) ->
 
 %allow if the room exists and it has the observer
 forbidden(Req, Ctx) ->
-  io:format("~p~n", [Ctx]),
   Authorized = case Ctx#room_context.room_pid of
     undefined -> false;
     RoomPid ->
@@ -30,7 +33,7 @@ forbidden(Req, Ctx) ->
   {not Authorized, Req, Ctx}.
 
 allowed_methods(Req, Ctx) ->
-  {['GET'], Req, Ctx}.
+  {['GET', 'POST'], Req, Ctx}.
 
 %resource does not exist when the room cannot be looked up
 resource_exists(Req, Ctx) when
@@ -47,9 +50,20 @@ content_types_provided(Req, Ctx) ->
     Ctx
   }.
 
+post_is_create(Req, Ctx) ->
+  {false, Req, Ctx}.
+
+process_post(Req, Ctx) ->
+  {true, wrq:set_resp_body(<<"{\"hey\": 0}">>, Req), Ctx}.
+
 to_json(Req, Ctx) ->
-  {ok, When, RoomState} = room:get_state(Ctx#room_context.room_pid),
-  Json = json_view:room(RoomState, When, Ctx#room_context.observer_id),
-  {jiffy:encode(Json), Req, Ctx}.
+  case wrq:method(Req) of
+    'GET' ->
+      {ok, When, RoomState} = room:get_state(Ctx#room_context.room_pid),
+      Json = json_view:room(RoomState, When, Ctx#room_context.observer_id),
+      {jiffy:encode(Json), Req, Ctx};
+    'POST' ->
+      {jiffy:encode({[]}), Req, Ctx}
+  end.
 
 

@@ -49,11 +49,16 @@ dp.set = function(model) {
 dp.makeObserverDom = function(observer) {
   var dom = this.dom_;
   var clss = observer.self ? 'observer-other' : 'observer-self';
+  var anonymous = !goog.isDefAndNotNull(observer.name);
+  clss = anonymous ? clss + " observer-anonymous" : clss;
+  var nameText = !anonymous ?
+    "< " + observer.name + " >" :
+    "{ anonymous observer }";
   return dom.createDom('div',
       null,
       dom.createDom('a',
         {'title': observer.id,
-         'class': clss}, observer.name));
+         'class': clss}, nameText));
 };
 ////////////////////////////////////////////////////////////////////////////////
                                                                              });

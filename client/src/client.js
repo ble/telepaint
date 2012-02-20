@@ -94,9 +94,11 @@ cp.pickName = function(nameString) {
 };
 
 cp.setupLinks = function() {
+  var roomUri = '/room/' + this.roomId;
+  var queueUri = roomUri + '/queue/' + this.observerId;
   var obj = (
-      {'room': '/room/' + this.roomId,
-       'queue': '/queue/' + this.observerId});
+      {'room': roomUri,
+       'queue': queueUri});
   ble.hate.addLinks(obj);
 };
 

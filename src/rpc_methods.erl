@@ -1,7 +1,7 @@
 -module(rpc_methods).
 
 -compile({parse_transform, exprecs}).
--compile(export_all).
+-export([populate/2, unpopulate/1, unpopulate_response/1]).
 -export_records([set_name, chat]).
 
 -record(set_name,
@@ -40,4 +40,15 @@ unpopulate(Record) ->
   Fields = '#info-'(RecordName),
   { [{ atom_to_binary(Field, utf8),
        '#get-'(Field, Record) } || Field <- Fields]}.
+
+unpopulate_response(Record) ->
+  RecordName = element(1, Record),
+  Fields = '#info-'(RecordName),
+  { [ { <<"method">>,
+        atom_to_binary(RecordName, utf8) } | 
+
+       [  { atom_to_binary(Field, utf8),
+            '#get-'(Field, Record) } || Field <- Fields ]
+  ] }.
+
 

@@ -4,24 +4,23 @@
 
 -record(rpc_call,
   { version = <<"2.0">>,
-    method = <<"unspecified_method">>,
-    params = [],
-    id = undefined
-  }).
-
--record(rpc_response_error,
-  { code = -1,
-    message = <<"undescribed error">>,
-    data = none
+    method = <<"unspecified_method">> :: binary(),
+    params = [] :: [term()],
+    id = undefined :: undefined | binary() | integer()
   }).
 
 -record(rpc_response,
   { version = <<"2.0">>,
-    result = undefined,
-    error = undefined,
-    id = undefined
+    result = undefined :: term(),
+    error = undefined :: term(),
+    id = undefined :: undefined | binary() | integer()
   }).
 
+-record(rpc_response_error,
+  { code = -1 :: integer(),
+    message = <<"undescribed error">> :: binary(),
+    data = none :: undefined | term()
+  }).
 
 jif_obj(X) ->
   {jif_obj_(X)}.
@@ -51,7 +50,7 @@ jif(#rpc_response{version = V, result = R, error = undefined, id = I})
     when R =/= undefined ->
   jif_obj([
    {<<"version">>, V},
-   {<<"result">>, maybe_jif(R)},
+   {<<"result">>, rpc_methods:unpopulate(R)},
    {<<"id">>, I}]);
 
 
@@ -76,27 +75,4 @@ unjif_(PropList) ->
     id = Id,
     params = Params
   }.
-
-maybe_unjif(_Method, X) -> X.
-
-
-%-record(rpc_call,
-%  { version = <<"2.0">>,
-%    method = <<"unspecified_method">> :: binary(),
-%    params = [] :: [term()],
-%    id = undefined :: undefined | binary() | integer()
-%  }).
-
-%-record(rpc_response,
-%  { version = <<"2.0">>,
-%    result = undefined :: term(),
-%    error = undefined :: term(),
-%    id = undefined :: undefined | binary() | integer()
-%  }).
-
-%-record(rpc_response_error,
-%  { code = -1 :: integer(),
-%    message = <<"undescribed error">> :: binary(),
-%    data = none :: undefined | term()
-%  }).
 

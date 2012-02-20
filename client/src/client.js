@@ -5,6 +5,7 @@ goog.require('goog.net.XhrIo');
 
 goog.require('goog.ui.Prompt');
 
+goog.require('ble.json.RpcCall');
 goog.require('ble.hate');
 goog.require('ble.erlToDate');
 goog.require('ble.room.Observer');
@@ -86,7 +87,10 @@ cp.pickName = function(nameString) {
     return;
   }
   console.log(match[1]);
-  this.connection.sendSetName(match[1]);
+
+  this.connection.sendSetName(
+    this.state.obsSelf.id,
+    match[1]);
 };
 
 cp.setupLinks = function() {
@@ -155,11 +159,11 @@ ccp.fetchState = function() {
   xhr.send(roomUri, 'GET'); 
 };
 
-ccp.sendSetName = function(name) {
+ccp.sendSetName = function(who, name) {
    var xhr = new goog.net.XhrIo();
   goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
   var roomUri = ble.hate.links()['room'];
-  var rpc = ({'name': name});
+  var rpc = new ble.json.RpcCall('set_name', {'who': who, 'name': name});
   xhr.send(
     roomUri,
     'POST',

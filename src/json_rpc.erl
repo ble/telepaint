@@ -1,26 +1,7 @@
 -module(json_rpc).
 -export([unjif/1, jif/1]).
 -export_records([rpc_call, rpc_response, rpc_response_error]).
-
--record(rpc_call,
-  { version = <<"2.0">>,
-    method = <<"unspecified_method">> :: binary(),
-    params = [] :: [term()],
-    id = undefined :: undefined | binary() | integer()
-  }).
-
--record(rpc_response,
-  { version = <<"2.0">>,
-    result = undefined :: term(),
-    error = undefined :: term(),
-    id = undefined :: undefined | binary() | integer()
-  }).
-
--record(rpc_response_error,
-  { code = -1 :: integer(),
-    message = <<"undescribed error">> :: binary(),
-    data = none :: undefined | term()
-  }).
+-include("rpc.hrl").
 
 jif_obj(X) ->
   {jif_obj_(X)}.

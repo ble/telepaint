@@ -14,6 +14,8 @@
   ]).
 
 -include("room_context.hrl").
+-include("rpc.hrl").
+-include("rpc_methods.hrl").
 -include_lib("webmachine/include/webmachine.hrl").
 
 init([]) ->
@@ -63,15 +65,29 @@ process_post(Req, Ctx) ->
 
 process_json(Req, Ctx) -> 
   try
-    Json = jiffy:decode(wrq:req_body(Req)),
-    {PropList} = Json,
-    Name = proplists:get_value(<<"name">>, PropList),
-    room:name_observer(
-      Ctx#room_context.room_pid,
-      Ctx#room_context.observer_id,
-      Name),
-    RespJson = {[{<<"status">>, <<"ok">>}]},
-    {true, wrq:set_resp_body(jiffy:encode(RespJson), Req), Ctx}
+    Body = wrq:req_body(Req),
+    Json = jiffy:decode(Body),
+    Call = json_rpc:unjif(Json),
+
+    Params = Call#rpc_call.params,
+    Method = element(1, Params),
+
+    case Method of
+      set_name -> call_set_name(Call#rpc_call.id, Params, Req, Ctx);
+      _ -> io:format("unprocessed method: ~p~n", [Method])
+    end
+  
+%    io:format("~p~n", [{Method, Params}]),
+%    io:format("====>~p~n=-=->~p~n", [Call, Body]),
+%    {PropList} = Json,
+%    Name = proplists:get_value(<<"name">>, PropList),
+%    Result = room:name_observer(
+%      Ctx#room_context.room_pid,
+%      Ctx#room_context.observer_id,
+%      Name),
+%    io:format("---->~p~n", [Result]),
+%    RespJson = {[{<<"status">>, <<"ok">>}]},
+%    {true, wrq:set_resp_body(jiffy:encode(RespJson), Req), Ctx}
   catch
     {error, {_, invalid_json}} ->
       {false, Req, Ctx};
@@ -79,6 +95,20 @@ process_json(Req, Ctx) ->
       io:format("Unexpected error: ~p~n", [X]),
       {false, Req, Ctx}
   end.
+
+call_set_name(
+      Id,
+      Params = #set_name{who = NamedId, name = Name},
+      Req,
+      Ctx = #room_context{observer_id = NamedId, room_pid = RoomPid}) ->
+  ToJif = case room:name_observer(RoomPid, NamedId, Name) of
+    ok ->
+      #rpc_response{id = Id, result = Params};
+    {error, Code} when is_atom(Code) ->
+      #rpc_response{id = Id, error = atom_to_binary(Code, utf8)}
+  end,
+  Json = jiffy:encode(json_rpc:jif(ToJif)),
+  {true, wrq:set_resp_body(Json, Req), Ctx}.
 
 to_json(Req, Ctx) ->
   case wrq:method(Req) of

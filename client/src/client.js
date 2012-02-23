@@ -12,6 +12,8 @@ goog.require('ble.room.Observer');
 goog.require('ble.room.Model');
 goog.require('ble.room.Dom');
 
+goog.require('ble.comet.Basic');
+
 goog.require('goog.debug.ErrorHandler');
 
 goog.provide('ble.room.Client');
@@ -35,7 +37,7 @@ var eventType = ble.room.EventType;
 
 /**
  * @constructor
- * @param {ble.room.Dom}
+ * @param {ble.room.Dom} dom
  * @extends {goog.events.EventTarget}
  */ 
 ble.room.Client = function(dom) {
@@ -161,6 +163,7 @@ ccp.fetchState = function() {
   xhr.send(roomUri, 'GET'); 
 };
 
+var JSON = window.JSON;
 ccp.sendSetName = function(who, name) {
    var xhr = new goog.net.XhrIo();
   goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);

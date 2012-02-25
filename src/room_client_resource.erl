@@ -18,6 +18,7 @@ init([]) ->
 
 %service availability is equated to the existence and
 %aliveness of the desired room process.
+%TODO: make a non-running process give a different error
 service_available(Req, _) ->
   Ctx = room_http:req_context(Req),
   Available = case Ctx#room_context.room_pid of

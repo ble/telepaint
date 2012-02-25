@@ -1,7 +1,7 @@
 -module(room_http).
 
 -include("room_context.hrl").
--export([req_context/1]).
+-export([req_context/1, authorized/1]).
 
 get_bin_cookie(Key, Req) ->
   case wrq:get_cookie_value(Key, Req) of
@@ -39,3 +39,11 @@ req_context(Req) ->
     room_pid = RoomPid,
     is_cookied = IsCookied}.
 
+%determine if the room exists and it has the observer
+authorized(Ctx = #room_context{room_pid = RoomPid, observer_id = ObserverId}) ->
+  case RoomPid of
+    undefined -> false;
+    _ ->
+      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id)
+      Present
+  end.

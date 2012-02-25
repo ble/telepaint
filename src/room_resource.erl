@@ -26,13 +26,7 @@ service_available(Req, _) ->
 
 %allow if the room exists and it has the observer
 forbidden(Req, Ctx) ->
-  Authorized = case Ctx#room_context.room_pid of
-    undefined -> false;
-    RoomPid ->
-      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id),
-      Present
-  end,
-  {not Authorized, Req, Ctx}.
+  {not room_http:authorized(Ctx), Req, Ctx)}.
 
 allowed_methods(Req, Ctx) ->
   {['GET', 'POST'], Req, Ctx}.

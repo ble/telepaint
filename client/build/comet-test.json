@@ -1,5 +1,5 @@
 {
-  "id": "room_client",
+  "id": "comet_test",
   "paths": "../src",
   "mode": "SIMPLE",
   "level": "VERBOSE",

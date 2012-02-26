@@ -1,7 +1,7 @@
 goog.require('goog.net.XhrIo');
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
-
+goog.require('goog.functions');
 
 goog.provide('ble.comet.Basic');
 
@@ -28,7 +28,7 @@ ble.comet.Basic =
   this.uri = uri
   this.timeout = timeoutMillis;
   this.successWait = successWaitMillis;
-  this.retryWait = retryWaitMillis;
+  this.retryWait = goog.functions.constant(retryWaitMillis);
 
   this.previousFailures = 0;
   this.running = false;

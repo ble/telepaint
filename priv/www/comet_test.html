@@ -7,6 +7,10 @@
     var comet = new ble.comet.Basic("/comet_test.html", 10000, 1500, 5000);
     goog.events.listen(comet, comet.dispatchedEventTypes, function(e) {console.log(e.type);});
     comet.run();
+
+    var brokenComet = new ble.comet.Basic("/foasodfoasdf", 10000, 1500, 5000);
+    goog.events.listen(brokenComet, brokenComet.dispatchedEventTypes, function(e) {console.log(e.type);});
+    brokenComet.run();
   </script>
   </body>
 </html>

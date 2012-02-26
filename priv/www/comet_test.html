@@ -2,9 +2,9 @@
   <head>
   </head>
   <body>
-  <script src="http://127.0.0.1:9810/compile?id=comet_test&mode=RAW"></script>
+  <script src="http://127.0.0.1:9810/compile?id=comet_test"></script>
   <script>
-    var comet = new ble.comet.Queue("/queue_test.json", [0, 0, 0]);
+    var comet = new ble.comet.Queue("/queue_test", [0, 0, 0]);
     goog.events.listen(comet, comet.dispatchedEventTypes, function(e) {console.log(e.type);});
     comet.run();
 

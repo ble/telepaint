@@ -14,3 +14,9 @@ ble.json.RpcCall = function(method, params, id) {
   if(goog.isDefAndNotNull(id))
     this['id'] = id;
 };
+
+ble.json.RpcCall.coerce = function(obj) {
+  var call = new ble.json.RpcCall(obj['method'], obj['params'], obj['id']);
+  call['version'] = obj['version'];
+  return call;
+};

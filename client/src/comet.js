@@ -7,6 +7,8 @@ goog.require('goog.Uri.QueryData');
 
 goog.require('goog.functions');
 
+goog.require('ble.json.RpcCall');
+
 goog.provide('ble.comet.Basic');
 goog.provide('ble.comet.Queue');
 goog.provide('ble.comet.Queue.Update');
@@ -14,7 +16,7 @@ goog.provide('ble.comet.Queue.Update');
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
 ////////////////////////////////////////////////////////////////////////////////
-
+var console = window.console;
 //Basic comet loop:
 //  hit a fixed URL with get requests, again and again.
 /**
@@ -23,7 +25,7 @@ goog.provide('ble.comet.Queue.Update');
  * @param {string} uri
  * @param {number} timeoutMillis
  * @param {number} successWaitMillis
- * @param {function(number): number} retryWaitMillis
+ * @param {number} retryWaitMillis
  */ 
 ble.comet.Basic =
  function(
@@ -169,7 +171,7 @@ bcQp.processSuccess = function(event) {
   var xhr = event.target;
 
   /** @type {ble.json.RpcCall} */
-  var json = xhr.getResponseJson();
+  var json = ble.json.RpcCall.coerce(xhr.getResponseJson());
 
   var when = json['params']['when'];
 
@@ -181,19 +183,18 @@ bcQp.processSuccess = function(event) {
 
 };
 
-var updateType = 'UPDATE';
-
 /**
  * @constructor
  * @extends {goog.events.Event}
  */
 ble.comet.Queue.Update = function(target, json, when) {
-  goog.events.Event.call(updateType, target);
+  goog.events.Event.call(this, ble.comet.Queue.Update.EventType, when);
   this.json = json;
   this.when = when;
 };
+ble.comet.Queue.Update.EventType = 'UPDATE';
+var updateType = ble.comet.Queue.Update.EventType;
 
-ble.comet.Queue.Update.EventType = updateType;
 
 bcQp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, updateType, 'STARTED', 'STOPPED'];
 ////////////////////////////////////////////////////////////////////////////////

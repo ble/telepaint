@@ -44,6 +44,6 @@ authorized(Ctx = #room_context{room_pid = RoomPid, observer_id = ObserverId}) ->
   case RoomPid of
     undefined -> false;
     _ ->
-      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id)
+      {ok, Present} = room:has_observer(RoomPid, Ctx#room_context.observer_id),
       Present
   end.

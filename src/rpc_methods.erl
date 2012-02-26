@@ -28,11 +28,16 @@ populate(Method, {PropList}) ->
     StartRecord,
     PropList).
 
-unpopulate(Record) ->
+unpopulate(Record) 
+    when is_tuple(Record)
+    andalso is_atom(element(1, Record)) ->
   RecordName = element(1, Record),
   Fields = '#info-'(RecordName),
   { [{ atom_to_binary(Field, utf8),
-       '#get-'(Field, Record) } || Field <- Fields]}.
+       '#get-'(Field, Record) } || Field <- Fields]};
+
+unpopulate(Json) ->
+  Json.
 
 unpopulate_response(Record) ->
   RecordName = element(1, Record),

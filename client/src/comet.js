@@ -1,9 +1,15 @@
 goog.require('goog.net.XhrIo');
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.Event');
+
+goog.require('goog.Uri');
+goog.require('goog.Uri.QueryData');
+
 goog.require('goog.functions');
 
 goog.provide('ble.comet.Basic');
+goog.provide('ble.comet.Queue');
+goog.provide('ble.comet.Queue.Update');
 
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
@@ -79,9 +85,16 @@ bcBp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, types.SUCC
  */
 bcBp.send_ = function() {
   this.pendingSend = null;
-  this.xhr.send(this.getUri());
+  var uri = this.getUri();
+  this.preSend(uri);
+  this.xhr.send(uri);
   goog.events.listenOnce(this.xhr, this.xhrEventTypes, this);
 };
+
+/**
+ * @protected
+ */
+bcBp.preSend = function(uri) {};
 
 /**
  * @param {goog.events.Event} event
@@ -98,11 +111,17 @@ bcBp.handleEvent = function(event) {
     case types.ABORT:
       break;
     case types.SUCCESS:
-      this.dispatchEvent(event);
+      this.processSuccess(event);
       var delay = this.successWait;
       this.pendingSend = window.setTimeout(goog.bind(this.send_, this), delay);
       break;
+    default:
+      console.error('Unexpected event type:' + event.type);
   }
+};
+
+bcBp.processSuccess = function(event) {
+  this.dispatchEvent(event);
 };
 
 bcBp.disposeInternal = function() {
@@ -110,6 +129,73 @@ bcBp.disposeInternal = function() {
   ble.comet.Basic.superClass_.disposeInternal.call(this);
 };
 
+//Queue comet loop:
+//Keep on hitting up a URL with a query string dependent on the last time
+//reported to us by the server; get responses with a new reported time, use
+//that to update the reported time.
+/**
+ * @constructor
+ * @extends {ble.comet.Basic}
+ * @param {string} uri
+ * @param {Array.<number>} lastObservedTime
+ */
+ble.comet.Queue =
+ function(
+     uri,
+     lastObservedTime) {
+  ble.comet.Basic.call(this, uri, 10000, 1000, 5000);
+  this.lastObservedTime = lastObservedTime;
+};
+goog.inherits(ble.comet.Queue, ble.comet.Basic);
+
+var bcQp = ble.comet.Queue.prototype;
+
+bcQp.getUri = function() {
+  var query = new goog.Uri.QueryData();
+  query.add('mega', this.lastObservedTime[0]);
+  query.add('unit', this.lastObservedTime[1]);
+  query.add('micro', this.lastObservedTime[2]);
+  var uri = new goog.Uri(this.uri);
+  uri.setQueryData(query);
+  return uri.toString();
+};
+
+bcQp.preSend = function(uri) {
+  console.log('about to request ' + uri);
+};
+
+bcQp.processSuccess = function(event) {
+  /** @type {goog.net.XhrIo} */
+  var xhr = event.target;
+
+  /** @type {ble.json.RpcCall} */
+  var json = xhr.getResponseJson();
+
+  var when = json['params']['when'];
+
+  if(when.length != 3)
+    throw new Error('bad response from queue');
+
+  this.dispatchEvent(new ble.comet.Queue.Update(this, json, when));
+  this.lastObservedTime = when;
+
+};
+
+var updateType = 'UPDATE';
+
+/**
+ * @constructor
+ * @extends {goog.events.Event}
+ */
+ble.comet.Queue.Update = function(target, json, when) {
+  goog.events.Event.call(updateType, target);
+  this.json = json;
+  this.when = when;
+};
+
+ble.comet.Queue.Update.EventType = updateType;
+
+bcQp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, updateType, 'STARTED', 'STOPPED'];
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////

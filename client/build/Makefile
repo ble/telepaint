@@ -1,7 +1,7 @@
 SERVE=java -jar plovr.jar serve
 BUILD=java -jar plovr.jar build
 
-SRCS=room-client.json
+SRCS=room-client.json comet-test.json
 COMPILATIONS=${SRCS:.json=.js} 
 
 .SUFFIXES: .js .json

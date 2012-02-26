@@ -4,7 +4,7 @@
   "mode": "SIMPLE",
   "level": "VERBOSE",
   "inputs": [
-    "../src/client.js"
+    "../src/comet.js"
   ]
 }
 

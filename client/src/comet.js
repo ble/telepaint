@@ -72,6 +72,7 @@ var types = goog.net.EventType;
  * @protected
  */
 bcBp.xhrEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, types.SUCCESS];
+bcBp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, types.SUCCESS, 'STARTED', 'STOPPED'];
 
 /**
  * @private

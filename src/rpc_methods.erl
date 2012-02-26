@@ -39,7 +39,9 @@ unpopulate(Record)
 unpopulate(Json) ->
   Json.
 
-unpopulate_response(Record) ->
+unpopulate_response(Record)
+    when is_tuple(Record)
+    andalso is_atom(element(1, Record)) ->
   RecordName = element(1, Record),
   Fields = '#info-'(RecordName),
   { [ { <<"method">>,
@@ -47,6 +49,9 @@ unpopulate_response(Record) ->
 
        [  { atom_to_binary(Field, utf8),
             '#get-'(Field, Record) } || Field <- Fields ]
-  ] }.
+  ] };
+
+unpopulate_response(Json) ->
+  Json.
 
 

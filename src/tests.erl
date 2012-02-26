@@ -19,3 +19,14 @@ test0() ->
     Observers,
     Found
   }.
+
+player_queue() ->
+  Time0 = {0, 0, 0},
+  {ok, Pid} = player_queue:start(),
+  {Time1, X1} = player_queue:poll_after(Pid, Time0),
+  {Time2, X2} = player_queue:poll_after(Pid, Time1),
+  player_queue:enqueue(Pid, [asdf]),
+  {Time3, X3} = player_queue:poll_after(Pid, Time2),
+  {Time4, X4} = player_queue:poll_after(Pid, Time3),
+  {Time5, X5} = player_queue:poll_after(Pid, Time0),
+  {[Time1, Time2, Time3, Time4, Time5], {X1, X2, X3, X4, X5}}.

@@ -24,6 +24,10 @@ ble.room.Model = function(name, observers, obsSelf) {
   this.name = name;
   this.observers = observers;
   this.obsSelf = obsSelf;
+  this.byId = {};
+  for(var i = 0; i < observers.length; i++) {
+    this.byId[observers[i].id] = observers[i];
+  }
 };
 
 var mp = ble.room.Model.prototype;

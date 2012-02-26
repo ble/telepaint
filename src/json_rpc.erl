@@ -31,7 +31,7 @@ jif(#rpc_response{version = V, result = R, error = undefined, id = I})
     when R =/= undefined ->
   jif_obj([
    {<<"version">>, V},
-   {<<"result">>, rpc_methods:unpopulate(R)},
+   {<<"result">>, rpc_methods:unpopulate_response(R)},
    {<<"id">>, I}]);
 
 

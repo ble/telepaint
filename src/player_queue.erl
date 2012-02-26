@@ -5,9 +5,9 @@
 -export([handle_info/3, handle_sync_event/4, handle_event/3, init/1, terminate/3]).
 -export([waiting/2]).
 
--define(CULL_INTERVAL, 500).
--define(CULL_AGE, 500).
--define(WAIT_AGE, 150).
+-define(CULL_INTERVAL, 10000).
+-define(CULL_AGE, 10000).
+-define(WAIT_AGE, 5000).
 -define(E6, 1000000).
 -define(E3, 1000).
 
@@ -18,16 +18,18 @@ start() ->
   gen_fsm:start(?MODULE, [], []).
 
 last_poll_age(Pid) ->
-  When = gen_fsm:sync_send_all_state_event(Pid, last_poll_age),
+  When = gen_fsm:sync_send_all_state_event(Pid, last_poll_time),
   interval(When, now()) div 1000.
 
 poll_after(Pid, After) ->
   gen_fsm:send_all_state_event(Pid, {poll_after, self(), After}),
+  When = gen_fsm:sync_send_all_state_event(Pid, last_poll_time),
   receive
     {Pid, Msgs} ->
-      Msgs
+      Latest = lists:foldl(fun erlang:max/2, When, [Timestamp || {Timestamp, _} <- Msgs]),
+      {Latest, Msgs}
   after 2 * ?WAIT_AGE ->
-      []
+      {When, []} 
   end.
 
 enqueue(Pid, Msgs) ->
@@ -95,7 +97,7 @@ handle_event({poll_after, PollPid, After}, StateName, State0) ->
 handle_event({enqueue, Msgs}, StateName, State0) ->
   {next_state, StateName, enqueue_messages(State0, Msgs), ?CULL_INTERVAL}.
 
-handle_sync_event(last_poll_age, _Pid,  waiting, S = #pqs{poll_time = T}) ->
+handle_sync_event(last_poll_time, _Pid,  waiting, S = #pqs{poll_time = T}) ->
   State1 = cull_messages(S),
   case any_messages(State1) of
     true ->

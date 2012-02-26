@@ -54,7 +54,7 @@ ble.room.Client = function(dom) {
   this.state = null;
   this.lastUpdated = 0;
   this.connection = new ble.room.Client.Connection();
-  goog.events.listen(this.connection, eventType.FETCHED_STATE, this);
+  goog.events.listen(this.connection, [ble.rpc.EventTypes.RESPONSE, eventType.FETCHED_STATE], this);
 };
 goog.inherits(ble.room.Client, goog.events.EventTarget);
 
@@ -64,18 +64,52 @@ var cp = ble.room.Client.prototype;
 cp.handleEvent = function(event) {
   console.log('Client.handleEvent called');
   console.log(event);
-  if(event.type == eventType.FETCHED_STATE) {
-    this.state = event.room;
-    dom.set(this.state);
-    if(!goog.isDefAndNotNull(this.state.myName())) {
-      this.dlg = new goog.ui.Prompt(
-          "Choose your handle",
-          "Pick a name that others will see.",
-          goog.bind(this.pickName, this),
-          "modal-dialog");
-      this.dlg.setVisible(true);
-    }
-    
+  switch(event.type) {
+    case ble.rpc.EventTypes.RESPONSE:
+      this.handleMethod(event.method, event.result);
+      break;
+  }
+};
+
+cp.updateState = function(state) {
+  this.state = state;
+  this.dom.set(this.state);
+  if(!goog.isDefAndNotNull(this.state.myName())) {
+    this.dlg = new goog.ui.Prompt(
+        "Choose your handle",
+        "Pick a name that others will see.",
+        goog.bind(this.pickName, this),
+        "modal-dialog");
+    this.dlg.setVisible(true);
+  } 
+};
+
+cp.handleMethod = function(method, obj) {
+  switch(method) {
+    case "set_name":
+      var who = obj['who'], name = obj['name'];
+      this.state.byId[who].name = name;
+      this.dom.set(this.state);
+      break;
+
+    case "room_state":
+      var rO = obj['observers'];
+      var observers = [];
+      var self = null;
+      for(var i = 0; i < rO.length; i++) {
+        var obs = new Observer(rO[i]['name'], rO[i]['id']);
+        if(rO[i]['self'])
+          self = obs;
+        observers.push(obs);
+      }
+      var model = new ble.room.Model(obj['name'], observers, self);
+      this.updateState(model);
+      this.connection.pollCometFrom(obj['when']);
+      break;
+
+    default:
+      console.error('Unknown method: ' + method);
+      console.error(obj);
   }
 };
 
@@ -126,7 +160,11 @@ ccp.handleEvent = function(event) {
     /** @type {goog.net.XhrIo} */
     var xhr = event.target;
     var obj = xhr.getResponseJson(); 
-    this.handleResponse(obj);
+    if(ble.json.RpcResponse.isResponse(obj)) {
+      this.handleRpc(ble.json.RpcResponse.coerce(obj));
+    } else {
+      this.handleResponse(obj);
+    }
     goog.events.unlisten(event.target, event.type, this);
   }
   if(event.type == goog.net.EventType.ERROR) {
@@ -134,25 +172,36 @@ ccp.handleEvent = function(event) {
   }
 };
 
-ccp.handleResponse = function(respObj) {
-  var type = respObj['type'];
-  if(type == 'room') {
-    var observers = [];
-    var self = null;
-
-    var respObservers = respObj['observers'];
-    for(var i = 0; i < respObservers.length; i++) {
-      var respObs = respObservers[i];
-      var o = new Observer(respObs['name'], respObs['id']);
-      observers.push(o);
-      if(respObs.self)
-        self = o;
-    };
-    var fetchEvent = new goog.events.Event(eventType.FETCHED_STATE);
-    fetchEvent.room = new Model(respObj.name, observers, self);
-    this.dispatchEvent(fetchEvent);
+ccp.handleRpc = function(o) {
+  var res = o['result'];
+  if(goog.isDefAndNotNull(res)) {
+    var method = res['method'];
+    var event = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
+    event.method = method;
+    event.target = this;
+    event.result = res;
+    this.dispatchEvent(event);
   } else {
-    console.error(['don\'t know how to handle response:', respObj]);
+    console.error(o);
+    console.error(o['error']);
+  }
+};
+
+ccp.handleResponse = function(respObj) {
+};
+
+ccp.pollCometFrom = function(when) {
+  this.stopComet(); 
+  this.comet = new ble.comet.Queue(ble.hate.links()['queue'], when);
+  goog.events.listen(this.comet, this.comet.dispatchedEventTypes, this);
+  this.comet.run();
+};
+
+ccp.stopComet = function() {
+  if(goog.isDefAndNotNull(this.comet)) {
+    this.comet.stop();
+    goog.events.unlisten(this.comet, this.comet.dispatchedEventTypes, this);
+    this.comet = null;
   }
 };
 

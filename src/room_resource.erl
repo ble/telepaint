@@ -109,7 +109,8 @@ to_json(Req, Ctx) ->
     'GET' ->
       {ok, When, RoomState} = room:get_state(Ctx#room_context.room_pid),
       Json = json_view:room(RoomState, When, Ctx#room_context.observer_id),
-      {jiffy:encode(Json), Req, Ctx};
+      Response = #rpc_response{result = Json},
+      {jiffy:encode(json_rpc:jif(Response)), Req, Ctx};
     'POST' ->
       {jiffy:encode({[]}), Req, Ctx}
   end.

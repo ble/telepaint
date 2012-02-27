@@ -26,8 +26,10 @@ poll_after(Pid, After) ->
   When = gen_fsm:sync_send_all_state_event(Pid, last_poll_time),
   receive
     {Pid, Msgs} ->
-      Latest = lists:foldl(fun erlang:max/2, When, [Timestamp || {Timestamp, _} <- Msgs]),
-      {Latest, Msgs}
+      Latest = lists:foldl(fun erlang:max/2, When, [Timestamp || {_, Timestamp} <- Msgs]),
+      Stripped = [X || {X, _} <- Msgs],
+      io:format("~p: ~p~n", [After, {Msgs, Latest}]),
+      {Latest, Stripped}
   after 2 * ?WAIT_AGE ->
       {When, []} 
   end.
@@ -151,6 +153,7 @@ cull_messages(State0 = #pqs{msgs = Msgs0}) ->
 
 enqueue_messages(State0 = #pqs{msgs = Msgs0}, NewMsgs) ->
   TNow = now(),
+  StampedMsgs = [{X, TNow} || X <- NewMsgs],
 
   %pick which polling processes will receive the messages
   {PollNotify, PollRetain} = lists:partition(
@@ -163,13 +166,12 @@ enqueue_messages(State0 = #pqs{msgs = Msgs0}, NewMsgs) ->
   lists:map(
     fun({{R, P}, _}) ->
       %io:format("Poll ~p received message.~n", [{R, P}]),
-      P ! {self(), NewMsgs}
+      P ! {self(), StampedMsgs}
     end,
     PollNotify),
 
   %remove the processes which have received messages
   %add the messages enqueued
-  StampedMsgs = [{X, TNow} || X <- NewMsgs],
   State0#pqs{polling = PollRetain, msgs = StampedMsgs ++ Msgs0}.
 
 %add polling process
@@ -193,7 +195,7 @@ add_poll(State0 = #pqs{msgs = Msgs, polling = Poll0}, Pid, After) ->
       Poll1 = [PollItem | Poll0],
       {poll_wait, State0#pqs{polling = Poll1}};
     _ ->
-      Pid ! {self(), [X || {X, _} <- MsgSend]},
+      Pid ! {self(), MsgSend},
       {poll_sent, State0}
   end.
 

@@ -76,23 +76,23 @@ cp.updateState = function(state) {
   this.dom.set(this.state);
   if(!goog.isDefAndNotNull(this.state.myName())) {
     this.dlg = new goog.ui.Prompt(
-        "Choose your handle",
-        "Pick a name that others will see.",
+        'Choose your handle',
+        'Pick a name that others will see.',
         goog.bind(this.pickName, this),
-        "modal-dialog");
+        'modal-dialog');
     this.dlg.setVisible(true);
   } 
 };
 
 cp.handleMethod = function(method, obj) {
   switch(method) {
-    case "set_name":
+    case 'set_name':
       var who = obj['who'], name = obj['name'];
       this.state.byId[who].name = name;
       this.dom.set(this.state);
       break;
 
-    case "room_state":
+    case 'room_state':
       var rO = obj['observers'];
       var observers = [];
       var self = null;
@@ -105,6 +105,14 @@ cp.handleMethod = function(method, obj) {
       var model = new ble.room.Model(obj['name'], observers, self);
       this.updateState(model);
       this.connection.pollCometFrom(obj['when']);
+      break;
+
+    case 'join_room':
+      var who = obj['who'], name = obj['name'];
+      if(!name) name = null;
+      var joined = new ble.room.Observer(name, who);
+      this.state.addObserver(joined);
+      this.updateState(this.state);
       break;
 
     default:
@@ -153,7 +161,8 @@ goog.inherits(ble.room.Client.Connection, goog.events.EventTarget);
 
 var ccp = ble.room.Client.Connection.prototype;
 ccp.handleEvent = function(event) {
-  console.log("Connection.handleEvent called");
+  console.log('Connection.handleEvent called');
+  console.log(event);
   if(event.type == goog.net.EventType.SUCCESS) {
     console.log(event.target);
 
@@ -163,13 +172,27 @@ ccp.handleEvent = function(event) {
     if(ble.json.RpcResponse.isResponse(obj)) {
       this.handleRpc(ble.json.RpcResponse.coerce(obj));
     } else {
-      this.handleResponse(obj);
+      console.error(event);
     }
     goog.events.unlisten(event.target, event.type, this);
   }
   if(event.type == goog.net.EventType.ERROR) {
     console.error(event);
   }
+  if(event.type == ble.comet.Queue.Update.EventType) {
+    var obj = event.json;
+    if(obj['result']['method'] !== 'queue_update')
+      throw new Error('unexpected method on comet update');
+    var messages = obj['result']['messages'];
+    for(var i = 0; i < messages.length; i++) {
+      var message = messages[i];
+      var event = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
+      event.method = message['method'];
+      event.target = this;
+      event.result = message;
+      this.dispatchEvent(event);
+    }
+  };
 };
 
 ccp.handleRpc = function(o) {
@@ -185,9 +208,6 @@ ccp.handleRpc = function(o) {
     console.error(o);
     console.error(o['error']);
   }
-};
-
-ccp.handleResponse = function(respObj) {
 };
 
 ccp.pollCometFrom = function(when) {
@@ -230,7 +250,7 @@ ccp.sendSetName = function(who, name) {
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////
 var errorHandler = new goog.debug.ErrorHandler(function(e) {
-  console.log("Intercepted error:");
+  console.log('Intercepted error:');
   console.error(e);
   window.lastError = e;
   throw e;

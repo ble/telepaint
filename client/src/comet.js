@@ -170,10 +170,9 @@ bcQp.processSuccess = function(event) {
   /** @type {goog.net.XhrIo} */
   var xhr = event.target;
 
-  /** @type {ble.json.RpcCall} */
-  var json = ble.json.RpcCall.coerce(xhr.getResponseJson());
+  var json = ble.json.RpcResponse.coerce(xhr.getResponseJson());
 
-  var when = json['params']['when'];
+  var when = json['result']['when'];
 
   if(when.length != 3)
     throw new Error('bad response from queue');

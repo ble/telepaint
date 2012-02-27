@@ -30,6 +30,17 @@ ble.room.Model = function(name, observers, obsSelf) {
   }
 };
 
+ble.room.Model.prototype.addObserver = function(observer) {
+  var already = this.byId[observer.id];
+  if(!already) {
+    this.observers.push(observer);
+    this.byId[observer.id] = observer;
+  } else {
+    if(observer.name)
+      already.name = observer.name;
+  }
+};
+
 var mp = ble.room.Model.prototype;
 mp.myName = function() {
   return this.obsSelf.name;

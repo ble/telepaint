@@ -70,7 +70,6 @@ process_json(Req, Ctx) ->
       set_name ->
         call_set_name(Call#rpc_call.id, Params, Req, Ctx);
       chat ->
-        io:format("~p~n", [{Call, Ctx}]),
         call_chat(Call#rpc_call.id, Params, Req, Ctx);
       _ ->
         io:format("unprocessed method: ~p~n", [Method]),

@@ -1,5 +1,6 @@
 -module(room_state).
 -include("room.hrl").
+-include("rpc_methods.hrl").
 
 -export([
     make/1,
@@ -7,6 +8,7 @@
     name_observer/3,
     bind_observer/3,
     get_observers/1,
+    get_observer/2,
     get_name/1]).
 
 -spec make(Name :: binary()) -> {ok, #room{}}.
@@ -22,7 +24,8 @@ add_observer(Room0) ->
   Observer = #player{id=Id},
   Observers = [Observer | Room0#room.observers],
   Room1 = Room0#room{observers=Observers},
-  {ok, {Room1, Id, [{joined_room, Id}]}}.
+  Messages = [#join_room{who = Id, name = undefined}],
+  {ok, {Room1, Id, Messages}}.
 
 -spec get_observer(Room :: #room{}, Id :: id()) ->
   {ok, #player{}} |
@@ -30,7 +33,7 @@ add_observer(Room0) ->
 get_observer(Room, Id) ->
   Obs = Room#room.observers,
   case [O || O <- Obs, O#player.id =:= Id] of
-    [] -> {error, nonesuch};
+    [] -> {error, none_such};
     [Target] -> {ok, Target};
     _ -> {error, duplicate}
   end.
@@ -53,7 +56,8 @@ name_observer(Room0, Id, Name) ->
         _ -> rename
       end,
       {ok, Room1} = put_observer(Room0, O#player{name=Name}),
-      {ok, {Room1, Tag, [{is_named, Id, Name}]}};
+      Messages = [#set_name{who = Id, name = Name}],
+      {ok, {Room1, Tag, Messages}};
     X ->
       X
   end.

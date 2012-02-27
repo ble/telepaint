@@ -2,7 +2,7 @@
 
 -compile({parse_transform, exprecs}).
 -export([populate/2, unpopulate/1, unpopulate_response/1]).
--export_records([set_name, chat]).
+-export_records([set_name, chat, join_room]).
 -include("rpc_methods.hrl").
 
 bin_to_atom(Binary) ->
@@ -39,6 +39,11 @@ unpopulate(Record)
 unpopulate(Json) ->
   Json.
 
+unpopulate_response(#queue_update{time = [A, B, C], messages = Rpcs}) ->
+  { [ { <<"method">>, <<"queue_update">>},
+      { <<"when">>, [A, B, C]},
+      { <<"messages">>, [unpopulate_response(X) || X <- Rpcs]}] };
+
 unpopulate_response(Record)
     when is_tuple(Record)
     andalso is_atom(element(1, Record)) ->
@@ -48,7 +53,9 @@ unpopulate_response(Record)
         atom_to_binary(RecordName, utf8) } | 
 
        [  { atom_to_binary(Field, utf8),
-            '#get-'(Field, Record) } || Field <- Fields ]
+            Value } || Field <- Fields,
+                                        Value <- ['#get-'(Field, Record)],
+                                        Value =/= undefined]
   ] };
 
 unpopulate_response(Json) ->

@@ -9,6 +9,7 @@
     add_observer/1,
     name_observer/3,
     get_observers/1,
+    get_observer/2,
     has_observer/2,
     get_state/1,
     allow_anonymous_join/1]).
@@ -37,6 +38,9 @@ name_observer(Pid, Id, Name) ->
 get_observers(Pid) ->
   gen_server:call(Pid, get_observers).
 
+get_observer(Pid, ObserverId) ->
+  gen_server:call(Pid, {get_observer, ObserverId}).
+
 join_game(Pid, PlayerId) ->
   gen_server:call(Pid, {join_game, PlayerId}).
 
@@ -55,8 +59,7 @@ init(State) ->
   {ok, State}.
 
 handle_call({join_game, ObserverId}, _, State0) ->
-  case get_observer(State0, ObserverId) of
-    undefined -> {reply, {error, none_such}, State0};
+  case room_state:get_observer(State0, ObserverId) of
     {error, Reason} -> {reply, {error, Reason}, State0};
     {ok, Player} ->
       Game0 = State0#room.game,
@@ -71,6 +74,9 @@ handle_call({join_game, ObserverId}, _, State0) ->
 
 handle_call(get_observers, _, State) ->
   {reply, {ok, room_state:get_observers(State)}, State};
+
+handle_call({get_observer, ObserverId}, _, State) ->
+  {reply, room_state:get_observer(State, ObserverId), State};
 
 handle_call(add_observer, _, State0) ->
   {ok, {State1, Id, Msgs}} = room_state:add_observer(State0),
@@ -104,13 +110,6 @@ handle_call(shutdown, _, State) ->
 
 terminate(Reason, _State) ->
   io:format("~p stopping: ~p\n", [?MODULE, Reason]).
-
-get_observer(State, Id) ->
-  case [Player || Player <- State#room.observers, Player#player.id == Id] of
-    [] -> undefined;
-    [P] -> {ok, P};
-    _ -> {error, duplicate}
-  end.
 
 send_to_all(State, Msgs) ->
   [player_queue:enqueue(Pid, Msgs) ||

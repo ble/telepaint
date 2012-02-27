@@ -55,6 +55,7 @@ ble.room.Client = function(dom) {
   this.lastUpdated = 0;
   this.connection = new ble.room.Client.Connection();
   goog.events.listen(this.connection, [ble.rpc.EventTypes.RESPONSE, eventType.FETCHED_STATE], this);
+  goog.events.listen(this.dom, [ble.room.Dom.EventType.CHAT], this);
 };
 goog.inherits(ble.room.Client, goog.events.EventTarget);
 
@@ -68,6 +69,11 @@ cp.handleEvent = function(event) {
     case ble.rpc.EventTypes.RESPONSE:
       this.handleMethod(event.method, event.result);
       break;
+    case ble.room.Dom.EventType.CHAT:
+      this.connection.sendChat(event.msg);
+      break;
+    default:
+      console.log("Unhandled event of type " + event.type);
   }
 };
 
@@ -113,6 +119,11 @@ cp.handleMethod = function(method, obj) {
       var joined = new ble.room.Observer(name, who);
       this.state.addObserver(joined);
       this.updateState(this.state);
+      break;
+
+    case 'chat':
+      var who = obj['who'], message = obj['message'];
+      this.dom.chat(this.state.getObserver(who), message);
       break;
 
     default:
@@ -188,6 +199,7 @@ ccp.handleEvent = function(event) {
       var message = messages[i];
       var event = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
       event.method = message['method'];
+      console.log(event.method + event.method + event.method);
       event.target = this;
       event.result = message;
       this.dispatchEvent(event);
@@ -244,6 +256,20 @@ ccp.sendSetName = function(who, name) {
     JSON.stringify(rpc),
     {'Content-Type': 'application/json'}); 
  
+};
+
+ccp.sendChat = function(message) {
+  var xhr = new goog.net.XhrIo();
+  goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
+  var roomUri = ble.hate.links()['room'];
+  var rpc = new ble.json.RpcCall('chat', {'message': message});
+  xhr.send(
+    roomUri,
+    'POST',
+    JSON.stringify(rpc),
+    {'Content-Type': 'application/json'}); 
+ 
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

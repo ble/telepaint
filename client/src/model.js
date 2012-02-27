@@ -33,12 +33,16 @@ ble.room.Model = function(name, observers, obsSelf) {
 ble.room.Model.prototype.addObserver = function(observer) {
   var already = this.byId[observer.id];
   if(!already) {
-    this.observers.push(observer);
+    this.observers.unshift(observer);
     this.byId[observer.id] = observer;
   } else {
     if(observer.name)
       already.name = observer.name;
   }
+};
+
+ble.room.Model.prototype.getObserver = function(id) {
+  return this.byId[id];
 };
 
 var mp = ble.room.Model.prototype;

@@ -1,0 +1,22 @@
+
+.chat-input {
+
+}
+
+.room-observers {
+  display: inline-block;
+}
+
+.chat-space {
+  display: block;
+  width: 300px;
+  height: 300px;
+}
+.chat-pane {
+  display: inline-block;
+  vertical-align: top;
+  border: 1px black solid;
+}
+.chat-input {
+  width: 100%;
+}

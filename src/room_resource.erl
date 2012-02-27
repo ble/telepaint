@@ -67,21 +67,19 @@ process_json(Req, Ctx) ->
     Method = element(1, Params),
 
     case Method of
-      set_name -> call_set_name(Call#rpc_call.id, Params, Req, Ctx);
-      _ -> io:format("unprocessed method: ~p~n", [Method])
+      set_name ->
+        call_set_name(Call#rpc_call.id, Params, Req, Ctx);
+      chat ->
+        io:format("~p~n", [{Call, Ctx}]),
+        call_chat(Call#rpc_call.id, Params, Req, Ctx);
+      _ ->
+        io:format("unprocessed method: ~p~n", [Method]),
+        Error = #rpc_response_error{message = <<"Unknown method">>},
+        Response = #rpc_response{error = Error, id = Call#rpc_call.id},
+        JsonResponse = json_rpc:jif(Response),
+        io:format("unprocessed method: ~p~n", [JsonResponse]),
+        {true, wrq:set_resp_body(jiffy:encode(JsonResponse), Req), Ctx}
     end
-  
-%    io:format("~p~n", [{Method, Params}]),
-%    io:format("====>~p~n=-=->~p~n", [Call, Body]),
-%    {PropList} = Json,
-%    Name = proplists:get_value(<<"name">>, PropList),
-%    Result = room:name_observer(
-%      Ctx#room_context.room_pid,
-%      Ctx#room_context.observer_id,
-%      Name),
-%    io:format("---->~p~n", [Result]),
-%    RespJson = {[{<<"status">>, <<"ok">>}]},
-%    {true, wrq:set_resp_body(jiffy:encode(RespJson), Req), Ctx}
   catch
     {error, {_, invalid_json}} ->
       {false, Req, Ctx};
@@ -89,6 +87,15 @@ process_json(Req, Ctx) ->
       io:format("Unexpected error: ~p~n", [X]),
       {false, Req, Ctx}
   end.
+
+call_chat(
+  RpcId,
+  Params,
+  Req, Ctx = #room_context{observer_id = ObserverId, room_pid = RoomPid}) ->
+  MsgResponse = Params#chat{who = ObserverId},
+  room:send_to_all(RoomPid, MsgResponse),
+  Response = #rpc_response{id = RpcId, result = [<<"ok">>]},
+  {true, wrq:set_resp_body(jiffy:encode(json_rpc:jif(Response)), Req), Ctx}.
 
 call_set_name(
       Id,

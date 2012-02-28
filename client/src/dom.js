@@ -47,13 +47,12 @@ dp.enterDocument = function() {
 };
 
 dp.handleEvent = function(event) {
-  console.log("foo");
   if(event.type == goog.events.EventType.SUBMIT) {
-    console.log(this.chatInput.value);
     event.preventDefault();
     var chatEvent = new goog.events.Event(ble.room.Dom.EventType.CHAT);
     chatEvent.msg = this.chatInput.value;
     this.dispatchEvent(chatEvent);
+    this.chatInput.value = "";
   }
 };
 

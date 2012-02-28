@@ -31,9 +31,10 @@ var Model = ble.room.Model;
 ble.room.EventType = ({
   FETCHED_STATE: 'FETCHED_STATE',
   UPDATE: 'UPDATE',
-  DISCONNECTED: 'DISCONNECTED'
+  DISCONNECTED: 'DISCONNECTED',
+  RPC_FAILED: 'RPC_FAILED'
 });
-var eventType = ble.room.EventType;
+var EventType = ble.room.EventType;
 
 /**
  * @constructor
@@ -54,7 +55,7 @@ ble.room.Client = function(dom) {
   this.state = null;
   this.lastUpdated = 0;
   this.connection = new ble.room.Client.Connection();
-  goog.events.listen(this.connection, [ble.rpc.EventTypes.RESPONSE, eventType.FETCHED_STATE], this);
+  goog.events.listen(this.connection, [ble.rpc.EventTypes.RESPONSE, EventType.FETCHED_STATE, EventType.RPC_FAILED], this);
   goog.events.listen(this.dom, [ble.room.Dom.EventType.CHAT], this);
 };
 goog.inherits(ble.room.Client, goog.events.EventTarget);
@@ -69,25 +70,45 @@ cp.handleEvent = function(event) {
     case ble.rpc.EventTypes.RESPONSE:
       this.handleMethod(event.method, event.result);
       break;
+
     case ble.room.Dom.EventType.CHAT:
       this.connection.sendChat(event.msg);
+      break;
+
+    case EventType.RPC_FAILED:
+      this.handleFailedRpc(event);
       break;
     default:
       console.log("Unhandled event of type " + event.type);
   }
 };
 
+cp.handleFailedRpc = function(event) {
+  switch(event.method) {
+    case 'set_name':
+      this.promptForName('Server says: "' + event.error.message + '"');
+      break;
+    default:
+      console.error('RPC ' + event.method + ' failed.');
+  }
+};
+
+cp.promptForName = function(message) {
+  message = goog.isDefAndNotNull(message) ? message : 'Pick a name that others will see.'; 
+  if(!goog.isDefAndNotNull(this.state.myName())) {
+     this.dlg = new goog.ui.Prompt(
+         'Choose your handle',
+         message,
+         goog.bind(this.pickName, this),
+         'modal-dialog');
+     this.dlg.setVisible(true);
+  } 
+};
+
 cp.updateState = function(state) {
   this.state = state;
   this.dom.set(this.state);
-  if(!goog.isDefAndNotNull(this.state.myName())) {
-    this.dlg = new goog.ui.Prompt(
-        'Choose your handle',
-        'Pick a name that others will see.',
-        goog.bind(this.pickName, this),
-        'modal-dialog');
-    this.dlg.setVisible(true);
-  } 
+  this.promptForName();
 };
 
 cp.handleMethod = function(method, obj) {
@@ -133,7 +154,7 @@ cp.handleMethod = function(method, obj) {
 };
 
 cp.pickName = function(nameString) {
-  var acceptable = /\s*([!-~]+)\s*/;
+  var acceptable = /\s*([a-zA-Z0-9_][!-~]+)\s*/;
   var match = nameString.match(acceptable);
   if(!match) {
     var dlg = this.dlg;
@@ -180,9 +201,16 @@ ccp.handleEvent = function(event) {
     /** @type {goog.net.XhrIo} */
     var xhr = event.target;
     var obj = xhr.getResponseJson(); 
-    if(ble.json.RpcResponse.isResponse(obj)) {
+    if(ble.json.RpcResponse.isResponse(obj) && goog.isDefAndNotNull(obj['result'])) {
       this.handleRpc(ble.json.RpcResponse.coerce(obj));
     } else {
+      if(xhr.rpc) {
+        var method = xhr.rpc['method'];
+        var event = new goog.events.Event(EventType.RPC_FAILED);
+        event.method = method;
+        event.error = obj['error'];
+        this.dispatchEvent(event);
+      }
       console.error(event);
     }
     goog.events.unlisten(event.target, event.type, this);
@@ -250,6 +278,7 @@ ccp.sendSetName = function(who, name) {
   goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
   var roomUri = ble.hate.links()['room'];
   var rpc = new ble.json.RpcCall('set_name', {'who': who, 'name': name});
+  xhr.rpc = rpc;
   xhr.send(
     roomUri,
     'POST',
@@ -263,6 +292,7 @@ ccp.sendChat = function(message) {
   goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
   var roomUri = ble.hate.links()['room'];
   var rpc = new ble.json.RpcCall('chat', {'message': message});
+  xhr.rpc = rpc;
   xhr.send(
     roomUri,
     'POST',

@@ -96,19 +96,39 @@ call_chat(
   Response = #rpc_response{id = RpcId, result = [<<"ok">>]},
   {true, wrq:set_resp_body(jiffy:encode(json_rpc:jif(Response)), Req), Ctx}.
 
+
+
 call_set_name(
       Id,
       Params = #set_name{who = NamedId, name = Name},
       Req,
       Ctx = #room_context{observer_id = NamedId, room_pid = RoomPid}) ->
-  ToJif = case room:name_observer(RoomPid, NamedId, Name) of
-    ok ->
-      #rpc_response{id = Id, result = Params};
-    {error, Code} when is_atom(Code) ->
-      #rpc_response{id = Id, error = atom_to_binary(Code, utf8)}
-  end,
-  Json = jiffy:encode(json_rpc:jif(ToJif)),
-  {true, wrq:set_resp_body(Json, Req), Ctx}.
+  case name_acceptable(Name) of
+    true ->
+      ToJif = case room:name_observer(RoomPid, NamedId, Name) of
+        ok ->
+          #rpc_response{id = Id, result = Params};
+        {error, Code} when is_atom(Code) ->
+          #rpc_response{id = Id, error = atom_to_binary(Code, utf8)}
+      end,
+      Json = jiffy:encode(json_rpc:jif(ToJif)),
+      {true, wrq:set_resp_body(Json, Req), Ctx};
+    false ->
+      ErrorResp = #rpc_response{
+        id = Id,
+        error = #rpc_response_error{message = <<"bad name">>}
+      },
+      {true, wrq:set_resp_body(jiffy:encode(json_rpc:jif(ErrorResp)), Req), Ctx}
+  end.
+
+name_acceptable(Name) ->
+  io:format("~p~n", [Name]),
+  Pattern = <<"^[a-zA-Z0-9_][!-~]+$">>,
+  {ok, Compiled} = re:compile(Pattern),
+  case re:run(Name, Compiled) of
+    {match, _} -> true;
+    _ -> false
+  end.
 
 to_json(Req, Ctx) ->
   case wrq:method(Req) of

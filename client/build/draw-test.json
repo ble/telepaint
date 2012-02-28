@@ -1,0 +1,10 @@
+{
+  "id": "draw_test",
+  "paths": "../src",
+  "mode": "ADVANCED",
+  "level": "VERBOSE",
+  "inputs": [
+    "../src/subcanvas/use_canvas_3.js",
+  ],
+  "externs": ["../src/subcanvas/extern_webkitRAF.js"]
+}

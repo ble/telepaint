@@ -163,20 +163,6 @@ ccp.sendSetName = function(who, name) {
  
 };
 
-ccp.sendChat = function(message) {
-  var xhr = new goog.net.XhrIo();
-  goog.events.listenOnce(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
-  var roomUri = ble.hate.links()['room'];
-  var rpc = new ble.json.RpcCall('chat', {'message': message});
-  xhr.rpc = rpc;
-  xhr.send(
-    roomUri,
-    'POST',
-    JSON.stringify(rpc),
-    {'Content-Type': 'application/json'}); 
-}; 
-
-
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////

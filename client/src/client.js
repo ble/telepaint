@@ -77,10 +77,6 @@ cp.handleEvent = function(event) {
       this.handleMethod(event.result.method, event.result);
       break;
 
-    case ble.rpc.EventTypes.ERROR:
-      this.handleFailedRpc(event);
-      break;
-
     case ble.room.Dom.EventType.CHAT:
       var rpc = new ble.json.RpcCall(
           'chat',
@@ -90,16 +86,6 @@ cp.handleEvent = function(event) {
 
     default:
       console.log("Unhandled event of type " + event.type);
-  }
-};
-
-cp.handleFailedRpc = function(event) {
-  switch(event.method) {
-    case 'set_name':
-      this.promptForName('Server says: "' + event.error.message + '"');
-      break;
-    default:
-      console.error('RPC ' + event.method + ' failed.');
   }
 };
 
@@ -167,7 +153,7 @@ cp.handleMethod = function(method, obj) {
 };
 
 cp.pickName = function(nameString) {
-  var acceptable = /\s*([a-zA-Z0-9_][!-~]+)\s*/;
+  var acceptable = /^\s*([a-zA-Z0-9_][!-~]+)\s*$/;
   var match = nameString.match(acceptable);
   if(!match) {
     var dlg = this.dlg;
@@ -176,10 +162,27 @@ cp.pickName = function(nameString) {
     return;
   }
   console.log(match[1]);
+  var rpc = new ble.json.RpcCall(
+      'set_name',
+      {'who': this.state.obsSelf.id,
+       'name': match[1]});
+  goog.events.listen(
+      rpc,
+      [ble.rpc.EventTypes.CALL_ERROR, ble.rpc.EventTypes.TRANSPORT_ERROR],
+      this.handleSetNameResponse,
+      false,
+      this);
+  this.connection.postRpc(rpc);
+};
 
-  this.connection.sendSetName(
-    this.state.obsSelf.id,
-    match[1]);
+cp.handleSetNameResponse = function(event) {
+  switch(event.type) {
+    case ble.rpc.EventTypes.CALL_ERROR:
+      this.promptForName('Server says: "' + event.error.message + '"');
+      break;
+    default:
+      this.promptForName();
+  }
 };
 
 cp.setupLinks = function() {

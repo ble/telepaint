@@ -17,6 +17,8 @@ ble.rpc.EventTypes = ({
   TRANSPORT_ERROR: 'TRANSPORT_ERROR',
   FORMAT_ERROR: 'FORMAT_ERROR'});
 
+ble.rpc.EventTypes.ALL = goog.object.getValues(ble.rpc.EventTypes);
+
 var g = goog.isDefAndNotNull;
 
 ble.json.rpcVersion = "2.0";

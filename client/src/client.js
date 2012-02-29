@@ -166,9 +166,10 @@ cp.pickName = function(nameString) {
       'set_name',
       {'who': this.state.obsSelf.id,
        'name': match[1]});
-  goog.events.listen(
+  console.log(ble.rpc.EventTypes.ALL);
+  goog.events.listenOnce(
       rpc,
-      [ble.rpc.EventTypes.CALL_ERROR, ble.rpc.EventTypes.TRANSPORT_ERROR],
+      ble.rpc.EventTypes.ALL,
       this.handleSetNameResponse,
       false,
       this);
@@ -176,12 +177,11 @@ cp.pickName = function(nameString) {
 };
 
 cp.handleSetNameResponse = function(event) {
-  switch(event.type) {
-    case ble.rpc.EventTypes.CALL_ERROR:
-      this.promptForName('Server says: "' + event.error.message + '"');
-      break;
-    default:
-      this.promptForName();
+  if(event.type == ble.rpc.EventTypes.CALL_ERROR) { 
+    this.promptForName('Server says: "' + event.error.message + '"');
+  } else if(event.type == ble.rpc.EventTypes.TRANSPORT_ERROR ||
+            event.type == ble.rpc.EventTypes.FORMAT_ERROR) {
+    this.promptForName('The server might be having problems...');
   }
 };
 

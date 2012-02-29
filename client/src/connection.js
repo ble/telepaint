@@ -68,7 +68,7 @@ ccp.handleEvent = function(event) {
         } else {
           this.dispatchEvent(dispEvent);
         }
-      } else if(xhr.rpc) {
+      } else if(obj['error']) {
         dispEvent = new Event(rpcTypes.CALL_ERROR);
         dispEvent.target = rpc;
         dispEvent.error = obj['error'];

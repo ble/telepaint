@@ -8,11 +8,12 @@ goog.require('goog.ui.Prompt');
 goog.require('ble.json.RpcCall');
 goog.require('ble.hate');
 goog.require('ble.erlToDate');
+
+goog.require('ble.room.Connection');
+
 goog.require('ble.room.Observer');
 goog.require('ble.room.Model');
 goog.require('ble.room.Dom');
-
-goog.require('ble.comet.Basic');
 
 goog.require('goog.debug.ErrorHandler');
 
@@ -31,8 +32,7 @@ var Model = ble.room.Model;
 ble.room.EventType = ({
   FETCHED_STATE: 'FETCHED_STATE',
   UPDATE: 'UPDATE',
-  DISCONNECTED: 'DISCONNECTED',
-  RPC_FAILED: 'RPC_FAILED'
+  DISCONNECTED: 'DISCONNECTED'
 });
 var EventType = ble.room.EventType;
 
@@ -54,9 +54,15 @@ ble.room.Client = function(dom) {
   this.observerId = c.get('observerId');
   this.state = null;
   this.lastUpdated = 0;
-  this.connection = new ble.room.Client.Connection();
-  goog.events.listen(this.connection, [ble.rpc.EventTypes.RESPONSE, EventType.FETCHED_STATE, EventType.RPC_FAILED], this);
-  goog.events.listen(this.dom, [ble.room.Dom.EventType.CHAT], this);
+  this.connection = new ble.room.Connection();
+  goog.events.listen(
+      this.connection,
+      [ble.rpc.EventTypes.RESPONSE],
+      this);
+  goog.events.listen(
+      this.dom,
+      [ble.room.Dom.EventType.CHAT],
+      this);
 };
 goog.inherits(ble.room.Client, goog.events.EventTarget);
 
@@ -68,16 +74,20 @@ cp.handleEvent = function(event) {
   console.log(event);
   switch(event.type) {
     case ble.rpc.EventTypes.RESPONSE:
-      this.handleMethod(event.method, event.result);
+      this.handleMethod(event.result.method, event.result);
+      break;
+
+    case ble.rpc.EventTypes.ERROR:
+      this.handleFailedRpc(event);
       break;
 
     case ble.room.Dom.EventType.CHAT:
-      this.connection.sendChat(event.msg);
+      var rpc = new ble.json.RpcCall(
+          'chat',
+          {'message': event.msg});
+      this.connection.postRpc(rpc);
       break;
 
-    case EventType.RPC_FAILED:
-      this.handleFailedRpc(event);
-      break;
     default:
       console.log("Unhandled event of type " + event.type);
   }
@@ -185,125 +195,6 @@ cp.fetchState = function() {
   this.connection.fetchState();
 };
 
-/**
- * @constructor
- * @extends {goog.events.EventTarget}
- */
-ble.room.Client.Connection = function() {
-  goog.events.EventTarget.call(this);
-};
-goog.inherits(ble.room.Client.Connection, goog.events.EventTarget);
-
-var ccp = ble.room.Client.Connection.prototype;
-ccp.handleEvent = function(event) {
-  console.log('Connection.handleEvent called');
-  console.log(event);
-  if(event.type == goog.net.EventType.SUCCESS) {
-    console.log(event.target);
-
-    /** @type {goog.net.XhrIo} */
-    var xhr = event.target;
-    var obj = xhr.getResponseJson(); 
-    if(ble.json.RpcResponse.isResponse(obj) && goog.isDefAndNotNull(obj['result'])) {
-      this.handleRpc(ble.json.RpcResponse.coerce(obj));
-    } else {
-      if(xhr.rpc) {
-        var method = xhr.rpc['method'];
-        var dispEvent = new goog.events.Event(EventType.RPC_FAILED);
-        dispEvent.method = method;
-        dispEvent.error = obj['error'];
-        this.dispatchEvent(dispEvent);
-      }
-      console.error(event);
-    }
-    goog.events.unlisten(event.target, event.type, this);
-  }
-  if(event.type == goog.net.EventType.ERROR) {
-    console.error(event);
-  }
-  if(event.type == ble.comet.Queue.Update.EventType) {
-    var obj = event.json;
-    if(obj['result']['method'] !== 'queue_update')
-      throw new Error('unexpected method on comet update');
-    var messages = obj['result']['messages'];
-    for(var i = 0; i < messages.length; i++) {
-      var message = messages[i];
-      var dispEvent = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
-      dispEvent.method = message['method'];
-      console.log(dispEvent.method + dispEvent.method + dispEvent.method);
-      dispEvent.target = this;
-      dispEvent.result = message;
-      this.dispatchEvent(dispEvent);
-    }
-  };
-};
-
-ccp.handleRpc = function(o) {
-  var res = o['result'];
-  if(goog.isDefAndNotNull(res)) {
-    var method = res['method'];
-    var event = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
-    event.method = method;
-    event.target = this;
-    event.result = res;
-    this.dispatchEvent(event);
-  } else {
-    console.error(o);
-    console.error(o['error']);
-  }
-};
-
-ccp.pollCometFrom = function(when) {
-  this.stopComet(); 
-  this.comet = new ble.comet.Queue(ble.hate.links()['queue'], when);
-  goog.events.listen(this.comet, this.comet.dispatchedEventTypes, this);
-  this.comet.run();
-};
-
-ccp.stopComet = function() {
-  if(goog.isDefAndNotNull(this.comet)) {
-    this.comet.stop();
-    goog.events.unlisten(this.comet, this.comet.dispatchedEventTypes, this);
-    this.comet = null;
-  }
-};
-
-ccp.fetchState = function() {
-  var xhr = new goog.net.XhrIo();
-  goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
-  var roomUri = ble.hate.links()['room'];
-  xhr.send(roomUri, 'GET'); 
-};
-
-var JSON = window.JSON;
-ccp.sendSetName = function(who, name) {
-   var xhr = new goog.net.XhrIo();
-  goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
-  var roomUri = ble.hate.links()['room'];
-  var rpc = new ble.json.RpcCall('set_name', {'who': who, 'name': name});
-  xhr.rpc = rpc;
-  xhr.send(
-    roomUri,
-    'POST',
-    JSON.stringify(rpc),
-    {'Content-Type': 'application/json'}); 
- 
-};
-
-ccp.sendChat = function(message) {
-  var xhr = new goog.net.XhrIo();
-  goog.events.listen(xhr,[goog.net.EventType.ERROR, goog.net.EventType.SUCCESS], this);
-  var roomUri = ble.hate.links()['room'];
-  var rpc = new ble.json.RpcCall('chat', {'message': message});
-  xhr.rpc = rpc;
-  xhr.send(
-    roomUri,
-    'POST',
-    JSON.stringify(rpc),
-    {'Content-Type': 'application/json'}); 
- 
-
-};
 
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });

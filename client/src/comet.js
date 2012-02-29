@@ -89,8 +89,8 @@ bcBp.send_ = function() {
   this.pendingSend = null;
   var uri = this.getUri();
   this.preSend(uri);
-  this.xhr.send(uri);
   goog.events.listenOnce(this.xhr, this.xhrEventTypes, this);
+  this.xhr.send(uri);
 };
 
 /**

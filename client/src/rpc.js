@@ -1,4 +1,7 @@
+goog.require('goog.events.EventTarget');
+
 goog.provide('ble.json.RpcCall');
+goog.provide('ble.json.RpcResponse');
 goog.provide('ble.rpc.EventTypes');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8,9 +11,11 @@ goog.provide('ble.rpc.EventTypes');
  * @enum {string}
  */
 ble.rpc.EventTypes = ({
-  CALL: 'CALL',
   RESPONSE: 'RESPONSE',
-  ERROR: 'ERROR'});
+  CALL_SUCCESS: 'CALL_SUCCESS',
+  CALL_ERROR: 'ERROR',
+  TRANSPORT_ERROR: 'TRANSPORT_ERROR',
+  FORMAT_ERROR: 'FORMAT_ERROR'});
 
 var g = goog.isDefAndNotNull;
 
@@ -20,19 +25,32 @@ ble.json.rpcVersion = "2.0";
  * @param {string} method
  * @param {*} params
  * @param {(string|number)=} id
+ * @extends {goog.events.EventTarget}
  */
 ble.json.RpcCall = function(method, params, id) {
-  this['version'] = ble.json.rpcVersion;
-  this['method'] = method;
-  this['params'] = params;
+  goog.events.EventTarget.call(this);
+  this.version = ble.json.rpcVersion;
+  this.method = method;
+  this.params = params;
   if(goog.isDefAndNotNull(id))
-    this['id'] = id;
+    this.id = id;
 };
+goog.inherits(ble.json.RpcCall, goog.events.EventTarget);
 
 ble.json.RpcCall.coerce = function(obj) {
   var call = new ble.json.RpcCall(obj['method'], obj['params'], obj['id']);
-  call['version'] = obj['version'];
+  call.version = obj['version'];
   return call;
+};
+
+ble.json.RpcCall.prototype.toJSON = function() {
+  var obj = {
+    'version': this.version,
+    'method': this.method,
+    'params': this.params };
+  if(goog.isDefAndNotNull(this.id))
+    obj['id'] = this.id;
+  return obj;
 };
 
 /**

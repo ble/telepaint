@@ -93,6 +93,9 @@ cp.handleFailedRpc = function(event) {
   }
 };
 
+/**
+ * @param {string=} message
+ */
 cp.promptForName = function(message) {
   message = goog.isDefAndNotNull(message) ? message : 'Pick a name that others will see.'; 
   if(!goog.isDefAndNotNull(this.state.myName())) {
@@ -206,10 +209,10 @@ ccp.handleEvent = function(event) {
     } else {
       if(xhr.rpc) {
         var method = xhr.rpc['method'];
-        var event = new goog.events.Event(EventType.RPC_FAILED);
-        event.method = method;
-        event.error = obj['error'];
-        this.dispatchEvent(event);
+        var dispEvent = new goog.events.Event(EventType.RPC_FAILED);
+        dispEvent.method = method;
+        dispEvent.error = obj['error'];
+        this.dispatchEvent(dispEvent);
       }
       console.error(event);
     }
@@ -225,12 +228,12 @@ ccp.handleEvent = function(event) {
     var messages = obj['result']['messages'];
     for(var i = 0; i < messages.length; i++) {
       var message = messages[i];
-      var event = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
-      event.method = message['method'];
-      console.log(event.method + event.method + event.method);
-      event.target = this;
-      event.result = message;
-      this.dispatchEvent(event);
+      var dispEvent = new goog.events.Event(ble.rpc.EventTypes.RESPONSE);
+      dispEvent.method = message['method'];
+      console.log(dispEvent.method + dispEvent.method + dispEvent.method);
+      dispEvent.target = this;
+      dispEvent.result = message;
+      this.dispatchEvent(dispEvent);
     }
   };
 };

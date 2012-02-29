@@ -156,6 +156,10 @@ ble.scribble.MutableDrawing.prototype.setCurrent = function(item) {
   this.current = item;
 };
 
+ble.scribble.MutableDrawing.prototype.getCurrent = function() {
+  return this.current;
+};
+
 ble.scribble.MutableDrawing.prototype.recordCurrent = function() {
   this.add(this.current.withStartAt(this.length()));
   this.current = null;

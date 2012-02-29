@@ -33,6 +33,13 @@ ble.scribble.Canvas = function(width, height, opt_drawing) {
 };
 goog.inherits(ble.scribble.Canvas, ble.scratch.Canvas);
 
+/** @enum{string} */
+ble.scribble.Canvas.EventType = ({
+  START: 'SCRIBBLE-START',
+  PROGRESS: 'SCRIBBLE-PROGRESS',
+  END: 'SCRIBBLE-END'
+});
+
 ble.scribble.Canvas.prototype.repaintComplete = function(ctx) {
   ctx.clearRect(0, 0, this.width_px, this.height_px);
   this.drawing.draw(ctx);
@@ -109,8 +116,12 @@ ble.scribble.Canvas.prototype.handleEvent = function(event) {
     this.withContext(this.repaintComplete);
   } else if(event.type == ble.mocap.EventType.END) {
     drawing.setCurrent(this.converter(event.capture, this.style));
+    var forwarded = new goog.events.Event(ble.scribble.Canvas.EventType.END);
+    forwarded.capture = event.capture;
+    forwarded.target = this;
+    if(!this.dispatchEvent(forwarded))
+      return;
     drawing.recordCurrent();
-    this.dispatchEvent(event);
   }
 
 };

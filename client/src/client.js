@@ -57,7 +57,7 @@ ble.room.Client = function(dom) {
   this.connection = new ble.room.Connection();
   goog.events.listen(
       this.connection,
-      [ble.rpc.EventTypes.RESPONSE],
+      [ble.rpc.EventType.RESPONSE],
       this);
   goog.events.listen(
       this.dom,
@@ -73,7 +73,7 @@ cp.handleEvent = function(event) {
   console.log('Client.handleEvent called');
   console.log(event);
   switch(event.type) {
-    case ble.rpc.EventTypes.RESPONSE:
+    case ble.rpc.EventType.RESPONSE:
       this.handleMethod(event.result.method, event.result);
       break;
 
@@ -166,10 +166,10 @@ cp.pickName = function(nameString) {
       'set_name',
       {'who': this.state.obsSelf.id,
        'name': match[1]});
-  console.log(ble.rpc.EventTypes.ALL);
+  console.log(ble.rpc.EventType.ALL);
   goog.events.listenOnce(
       rpc,
-      ble.rpc.EventTypes.ALL,
+      ble.rpc.EventType.ALL,
       this.handleSetNameResponse,
       false,
       this);
@@ -177,10 +177,10 @@ cp.pickName = function(nameString) {
 };
 
 cp.handleSetNameResponse = function(event) {
-  if(event.type == ble.rpc.EventTypes.CALL_ERROR) { 
+  if(event.type == ble.rpc.EventType.CALL_ERROR) { 
     this.promptForName('Server says: "' + event.error.message + '"');
-  } else if(event.type == ble.rpc.EventTypes.TRANSPORT_ERROR ||
-            event.type == ble.rpc.EventTypes.FORMAT_ERROR) {
+  } else if(event.type == ble.rpc.EventType.TRANSPORT_ERROR ||
+            event.type == ble.rpc.EventType.FORMAT_ERROR) {
     this.promptForName('The server might be having problems...');
   }
 };

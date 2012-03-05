@@ -1,6 +1,7 @@
 goog.provide('ble.scribble.Canvas');
 goog.provide('ble.scribble.UI');
 
+goog.require('ble.scribble.style.StylePicker');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
 goog.require('ble.scribble.MutableDrawing');
@@ -118,6 +119,7 @@ ble.scribble.Canvas.prototype.handleEvent = function(event) {
     drawing.setCurrent(this.converter(event.capture, this.style));
     var forwarded = new goog.events.Event(ble.scribble.Canvas.EventType.END);
     forwarded.capture = event.capture;
+    forwarded.drawPart = drawing.getCurrent();
     forwarded.target = this;
     if(!this.dispatchEvent(forwarded))
       return;

@@ -2,7 +2,7 @@ goog.require('goog.events.EventTarget');
 
 goog.provide('ble.json.RpcCall');
 goog.provide('ble.json.RpcResponse');
-goog.provide('ble.rpc.EventTypes');
+goog.provide('ble.rpc.EventType');
 
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
@@ -10,14 +10,14 @@ goog.provide('ble.rpc.EventTypes');
 /**
  * @enum {string}
  */
-ble.rpc.EventTypes = ({
+ble.rpc.EventType = ({
   RESPONSE: 'RESPONSE',
   CALL_SUCCESS: 'CALL_SUCCESS',
   CALL_ERROR: 'ERROR',
   TRANSPORT_ERROR: 'TRANSPORT_ERROR',
   FORMAT_ERROR: 'FORMAT_ERROR'});
 
-ble.rpc.EventTypes.ALL = goog.object.getValues(ble.rpc.EventTypes);
+ble.rpc.EventType.ALL = goog.object.getValues(ble.rpc.EventType);
 
 var g = goog.isDefAndNotNull;
 

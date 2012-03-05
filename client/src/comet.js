@@ -75,12 +75,12 @@ bcBp.getUri = function() {
   return this.uri;
 };
 
-var types = goog.net.EventType;
+var netType = goog.net.EventType;
 /**
  * @protected
  */
-bcBp.xhrEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, types.SUCCESS];
-bcBp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, types.SUCCESS, 'STARTED', 'STOPPED'];
+bcBp.xhrEventType = [netType.ERROR, netType.ABORT, netType.TIMEOUT, netType.SUCCESS];
+bcBp.dispatchedEventType = [netType.ERROR, netType.ABORT, netType.TIMEOUT, netType.SUCCESS, 'STARTED', 'STOPPED'];
 
 /**
  * @private
@@ -89,7 +89,7 @@ bcBp.send_ = function() {
   this.pendingSend = null;
   var uri = this.getUri();
   this.preSend(uri);
-  goog.events.listenOnce(this.xhr, this.xhrEventTypes, this);
+  goog.events.listenOnce(this.xhr, this.xhrEventType, this);
   this.xhr.send(uri);
 };
 
@@ -103,16 +103,16 @@ bcBp.preSend = function(uri) {};
  */
 bcBp.handleEvent = function(event) {
   switch (event.type) {
-    case types.ERROR:
-    case types.TIMEOUT:
+    case netType.ERROR:
+    case netType.TIMEOUT:
       var delay = this.retryWait(this.previousFailures);
       this.previousFailures++;
       this.pendingSend = window.setTimeout(goog.bind(this.send_, this), delay);
       this.dispatchEvent(event);
       break;
-    case types.ABORT:
+    case netType.ABORT:
       break;
-    case types.SUCCESS:
+    case netType.SUCCESS:
       this.processSuccess(event);
       var delay = this.successWait;
       this.pendingSend = window.setTimeout(goog.bind(this.send_, this), delay);
@@ -195,7 +195,7 @@ ble.comet.Queue.Update.EventType = 'UPDATE';
 var updateType = ble.comet.Queue.Update.EventType;
 
 
-bcQp.dispatchedEventTypes = [types.ERROR, types.ABORT, types.TIMEOUT, updateType, 'STARTED', 'STOPPED'];
+bcQp.dispatchedEventType = [netType.ERROR, netType.ABORT, netType.TIMEOUT, updateType, 'STARTED', 'STOPPED'];
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////

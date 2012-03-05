@@ -165,4 +165,6 @@ ble.scribble.MutableDrawing.prototype.recordCurrent = function() {
   this.current = null;
 };
 
-
+ble.scribble.MutableDrawing.prototype.addAtEnd = function(part) {
+  this.add(part.withStartAt(this.length()));
+};

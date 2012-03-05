@@ -29,7 +29,7 @@ populate(Method, {PropList}) ->
     PropList).
 
 unpopulate(Record) 
-    when is_tuple(Record)
+    when is_tuple(Record) andalso tuple_size(Record) > 1
     andalso is_atom(element(1, Record)) ->
   RecordName = element(1, Record),
   Fields = '#info-'(RecordName),
@@ -45,7 +45,7 @@ unpopulate_response(#queue_update{time = [A, B, C], messages = Rpcs}) ->
       { <<"messages">>, [unpopulate_response(X) || X <- Rpcs]}] };
 
 unpopulate_response(Record)
-    when is_tuple(Record)
+    when is_tuple(Record) andalso tuple_size(Record) > 1
     andalso is_atom(element(1, Record)) ->
   RecordName = element(1, Record),
   Fields = '#info-'(RecordName),

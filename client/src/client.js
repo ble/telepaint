@@ -57,6 +57,7 @@ ble.room.Client = function(dom) {
   this.state = null;
   this.lastUpdated = 0;
   this.connection = new ble.room.Connection();
+  this.game = null;
   goog.events.listen(
       this.connection,
       [ble.rpc.EventType.RESPONSE],
@@ -70,6 +71,22 @@ goog.inherits(ble.room.Client, goog.events.EventTarget);
 
 
 var cp = ble.room.Client.prototype;
+
+cp.gameRegistry = (function() {
+  var games = [ble.game.GroupDraw];
+  var result = {};
+  for(var i = 0; i < games.length; i++) {
+    var game = games[i];
+    result[game.methodPrefix] = game;
+  };
+  return result;
+})();
+
+cp.startGame = function(game) {
+  this.game = game;
+  this.gamePrefix = game.methodPrefix;
+  this.dom.setGame(game);
+};
 
 cp.handleEvent = function(event) {
   console.log('Client.handleEvent called');
@@ -113,44 +130,62 @@ cp.updateState = function(state) {
 };
 
 cp.handleMethod = function(method, obj) {
-  switch(method) {
-    case 'set_name':
-      var who = obj['who'], name = obj['name'];
-      this.state.byId[who].name = name;
-      this.dom.set(this.state);
-      break;
+  var parts = method.split(/:/);
+  if(parts.length == 1) {
+    switch(method) {
+      case 'set_name':
+        var who = obj['who'], name = obj['name'];
+        this.state.byId[who].name = name;
+        this.dom.set(this.state);
+        break;
 
-    case 'room_state':
-      var rO = obj['observers'];
-      var observers = [];
-      var self = null;
-      for(var i = 0; i < rO.length; i++) {
-        var obs = new Observer(rO[i]['name'], rO[i]['id']);
-        if(rO[i]['self'])
-          self = obs;
-        observers.push(obs);
-      }
-      var model = new ble.room.Model(obj['name'], observers, self);
-      this.updateState(model);
-      this.connection.pollCometFrom(obj['when']);
-      break;
+      case 'room_state':
+        var rO = obj['observers'];
+        var observers = [];
+        var self = null;
+        for(var i = 0; i < rO.length; i++) {
+          var obs = new Observer(rO[i]['name'], rO[i]['id']);
+          if(rO[i]['self'])
+            self = obs;
+          observers.push(obs);
+        }
+        var model = new ble.room.Model(obj['name'], observers, self);
+        this.updateState(model);
+        this.connection.pollCometFrom(obj['when']);
+        break;
 
-    case 'join_room':
-      var who = obj['who'], name = obj['name'];
-      if(!name) name = null;
-      var joined = new ble.room.Observer(name, who);
-      this.state.addObserver(joined);
-      this.updateState(this.state);
-      break;
+      case 'join_room':
+        var who = obj['who'], name = obj['name'];
+        if(!name) name = null;
+        var joined = new ble.room.Observer(name, who);
+        this.state.addObserver(joined);
+        this.updateState(this.state);
+        break;
 
-    case 'chat':
-      var who = obj['who'], message = obj['message'];
-      this.dom.chat(this.state.getObserver(who), message);
-      break;
+      case 'chat':
+        var who = obj['who'], message = obj['message'];
+        this.dom.chat(this.state.getObserver(who), message);
+        break;
 
-    default:
-      console.error('Unknown method: ' + method);
-      console.error(obj);
+      default:
+        console.error('Unknown method: ' + method);
+        console.error(obj);
+    }
+  } else if(parts.length == 2) {
+    var gameName = parts[0];
+    var gameMethod = parts[1];
+    if(gameMethod == 'init') {
+      var constructor = this.gameRegistry[gameName];
+      var game = constructor.varArgs(obj['params']);
+      game.bindToClient(this);
+      this.startGame(game);
+    }
+    console.log(gameName + " " + gameMethod);
+    console.log(this.gameRegistry[gameName]);
+    console.log(obj);
+  } else {
+    console.error('Unknown method: ' + method);
+    console.error(obj);
   }
 };
 

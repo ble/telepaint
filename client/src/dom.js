@@ -71,7 +71,12 @@ dp.set = function(model) {
 };
 
 dp.setGame = function(component) {
-  this.addChild(component, true);
+  if(goog.isDefAndNotNull(this.game)) {
+    this.removeChild(this.game);
+    this.game.dispose();
+  }
+  this.game = component;
+  this.addChild(this.game, true);
 };
 
 /**

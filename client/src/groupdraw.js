@@ -14,9 +14,9 @@ view (in the form of DOM elements), and controller (in the form of
 event handlers and targets).
 
 The GroupDraw must handle at least 3 kinds of events:
-1) User draws something (ble.scribble.Canvas.EventType.END)
-2) Server acks sent draw part (ble.rpc.CALL_SUCCESS)
-3) Server reports that something was drawn by a peer (ble.rpc.RESPONSE)
+1) User draws something (ble.scribble.Canvas.EventType.END on canvas)
+2) Server acks sent draw part (ble.rpc.CALL_SUCCESS on submitted RPC)
+3) Server reports that something was drawn by a peer (ble.rpc.RESPONSE on queue)
 
 For ease of prototyping, it will be a Component for right now.
 */
@@ -42,11 +42,20 @@ ble.game.GroupDraw = function(width, height) {
 };
 goog.inherits(ble.game.GroupDraw, goog.ui.Component);
 
+ble.game.GroupDraw.varArgs = function(params) { 
+  if(params.length != 2)
+    throw new Error();
+  return new ble.game.GroupDraw(params[0], params[1]);
+};
+
 var GDp = ble.game.GroupDraw.prototype;
 
 ble.game.GroupDraw.methodPrefix = "group_draw";
 GDp.methodPrefix = ble.game.GroupDraw.methodPrefix;
 
+GDp.bindToClient = function(client) {
+  console.log(client);
+};
 /**
  * @param {ble.room.Connection?} connection
  */

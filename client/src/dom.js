@@ -39,10 +39,12 @@ dp.createDom = function() {
   this.chatForm = chatForm;
   this.chatInput = chatInput;
   this.chatSpace = chatSpace;
+
   this.setElementInternal(container);
 };
 
 dp.enterDocument = function() {
+  goog.base(this, 'enterDocument');
   goog.events.listen(this.chatForm, goog.events.EventType.SUBMIT, this);
 };
 
@@ -66,6 +68,10 @@ dp.set = function(model) {
 
   dom.removeChildren(this.observerContainer);
   dom.append(this.observerContainer, goog.array.map(model.observers, this.makeObserverDom, this));
+};
+
+dp.setGame = function(component) {
+  this.addChild(component, true);
 };
 
 /**

@@ -15,6 +15,8 @@ goog.require('ble.room.Observer');
 goog.require('ble.room.Model');
 goog.require('ble.room.Dom');
 
+goog.require('ble.game.GroupDraw');
+
 goog.require('goog.debug.ErrorHandler');
 
 goog.provide('ble.room.Client');

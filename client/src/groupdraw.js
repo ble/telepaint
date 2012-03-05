@@ -42,17 +42,22 @@ ble.game.GroupDraw = function(width, height) {
 };
 goog.inherits(ble.game.GroupDraw, goog.ui.Component);
 
+var GDp = ble.game.GroupDraw.prototype;
+
+ble.game.GroupDraw.methodPrefix = "group_draw";
+GDp.methodPrefix = ble.game.GroupDraw.methodPrefix;
+
 /**
  * @param {ble.room.Connection?} connection
  */
-ble.game.GroupDraw.prototype.bindConnection = function(connection) {
+GDp.bindConnection = function(connection) {
   if(goog.isDefAndNotNull(this.connection))
     throw new Error('');
   this.connection = connection;
   this.handler.listen(this.connection, rpcType.RESPONSE, this.handleReceived);
 };
 
-ble.game.GroupDraw.prototype.enterDocument = function() {
+GDp.enterDocument = function() {
   goog.base(this, 'enterDocument');
   this.canvas = this.UI.canvas;
   this.drawing = this.UI.canvas.drawing;
@@ -60,7 +65,7 @@ ble.game.GroupDraw.prototype.enterDocument = function() {
   this.handler.listen(this.canvas, canvasType.END, this.handleDraw); 
 };
 
-ble.game.GroupDraw.prototype.handleDraw = function(event) {
+GDp.handleDraw = function(event) {
   var canvas = event.target;
   var drawing = canvas.drawing;
   var drawPart = drawing.getCurrent();

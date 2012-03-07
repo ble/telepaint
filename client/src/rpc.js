@@ -3,6 +3,7 @@ goog.require('goog.events.EventTarget');
 goog.provide('ble.json.RpcCall');
 goog.provide('ble.json.RpcResponse');
 goog.provide('ble.rpc.EventType');
+goog.provide('ble.rpc.id');
 
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
@@ -19,6 +20,12 @@ ble.rpc.EventType = ({
 
 ble.rpc.EventType.ALL = goog.object.getValues(ble.rpc.EventType);
 
+ble.rpc.id = function() {
+  var scale = 1 << 30;
+  var ts = Date.now();
+  var random = Math.floor(scale * Math.random());
+  return ts ^ random;
+};
 var g = goog.isDefAndNotNull;
 
 ble.json.rpcVersion = "2.0";

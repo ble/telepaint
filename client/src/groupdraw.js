@@ -39,6 +39,7 @@ ble.game.GroupDraw = function(width, height) {
   this.UI = new ble.scribble.UI(width, height);
   this.addChild(this.UI, true);
   this.handler = new goog.events.EventHandler(this);
+  this.pendingDraw = {};
 };
 goog.inherits(ble.game.GroupDraw, goog.ui.Component);
 
@@ -54,7 +55,8 @@ ble.game.GroupDraw.methodPrefix = "group_draw";
 GDp.methodPrefix = ble.game.GroupDraw.methodPrefix;
 
 GDp.bindToClient = function(client) {
-  console.log(client);
+  this.client = client;
+  this.bindConnection(client.connection);
 };
 /**
  * @param {ble.room.Connection?} connection
@@ -80,15 +82,50 @@ GDp.handleDraw = function(event) {
   var drawPart = drawing.getCurrent();
   drawing.setCurrent(null);
   canvas.withContext(canvas.repaintComplete);
-  window.setTimeout(
-      goog.bind(drawing.addAtEnd, drawing, drawPart),
-      1000);
-  window.setTimeout(
-      goog.bind(canvas.withContext, canvas, canvas.repaintComplete),
-      1500);
-  return false; //don't allow the default action (append to drawing)
+  var rpc = new ble.json.RpcCall(
+      this.methodPrefix + ':' + 'draw',
+      {'who': this.client.state.obsSelf.id,
+       'what': drawPart});
+  rpc.id = ble.rpc.id();
+  this.pendingDraw[rpc.id] = {
+    drawPart: drawPart,
+    drawing: drawing,
+    canvas: canvas
+  },
+  this.handler.listenOnce(
+      rpc,
+      rpcType.ALL,
+      this.handleDrawResponse);
+  this.connection.postRpc(rpc);
+  return false;
 };
 
+GDp.handleDrawResponse = function(event) {
+  var rpc = event.target;
+  switch(event.type) {
+    case rpcType.CALL_SUCCESS:
+      var pend = this.pendingDraw[rpc.id];
+      pend.drawing.addAtEnd(pend.drawPart);
+      pend.canvas.withContext(pend.canvas.repaintComplete);
+      break;
+    default:
+      console.log(event.type);
+  }
+  delete this.pendingDraw[rpc.id];
+};
+
+GDp.handleReceived = function(event) {
+  var method = event.method;
+  if(!method.match('^' + this.methodPrefix + ':')) {
+    return;
+  }
+  var parts = method.split(/:/);
+  method = parts[1];
+  switch(method) {
+    case 'draw':
+      var drawPart = event.result;
+  };
+};
 
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });

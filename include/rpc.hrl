@@ -2,7 +2,8 @@
   { version = <<"2.0">>,
     method = <<"unspecified_method">> :: binary(),
     params = [] :: [term()],
-    id = undefined :: undefined | binary() | integer()
+    id = undefined :: undefined | binary() | integer(),
+    prefixed = false :: false | true
   }).
 
 -record(rpc_response,
@@ -15,6 +16,6 @@
 -record(rpc_response_error,
   { code = -1 :: integer(),
     message = <<"undescribed error">> :: binary(),
-    data = none :: undefined | term()
+    data = undefined :: undefined | term()
   }).
 

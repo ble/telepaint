@@ -63,21 +63,35 @@ process_json(Req, Ctx) ->
     Json = jiffy:decode(Body),
     Call = json_rpc:unjif(Json),
 
+    Id = Call#rpc_call.id,
     Params = Call#rpc_call.params,
     Method = element(1, Params),
-
-    case Method of
-      set_name ->
-        call_set_name(Call#rpc_call.id, Params, Req, Ctx);
-      chat ->
-        call_chat(Call#rpc_call.id, Params, Req, Ctx);
-      _ ->
-        io:format("unprocessed method: ~p~n", [Method]),
-        Error = #rpc_response_error{message = <<"Unknown method">>},
-        Response = #rpc_response{error = Error, id = Call#rpc_call.id},
+    case Call#rpc_call.prefixed of
+      true ->
+        {PrefixStr, _} = json_rpc:proc_method(Call#rpc_call.method),
+        group_draw = group_draw,
+        PrefixAtom = rpc_methods:bin_to_atom(PrefixStr),
+        Response = case PrefixAtom of
+          undefined ->
+            #rpc_response{
+              error = #rpc_response_error{ message = <<"Unknown method prefix">> },
+              id = Id};
+          Atom ->
+            #rpc_response{
+              result = [<<"ok">>],
+              id = Id}
+        end,
         JsonResponse = json_rpc:jif(Response),
-        io:format("unprocessed method: ~p~n", [JsonResponse]),
-        {true, wrq:set_resp_body(jiffy:encode(JsonResponse), Req), Ctx}
+        {true, wrq:set_resp_body(jiffy:encode(JsonResponse), Req), Ctx};
+      false ->
+        case Method of
+          set_name ->
+            call_set_name(Id, Params, Req, Ctx);
+          chat ->
+            call_chat(Id, Params, Req, Ctx);
+          _ ->
+            call_unprocessed(Id, Method, Req, Ctx)
+        end
     end
   catch
     {error, {_, invalid_json}} ->
@@ -86,6 +100,17 @@ process_json(Req, Ctx) ->
       io:format("Unexpected error: ~p~n", [X]),
       {false, Req, Ctx}
   end.
+
+call_unprocessed(
+  RpcId,
+  Method,
+  Req,
+  Ctx) ->
+    io:format("unprocessed method: ~p~n", [Method]),
+    Error = #rpc_response_error{message = <<"Unknown method">>},
+    Response = #rpc_response{error = Error, id = RpcId},
+    JsonResponse = json_rpc:jif(Response),
+    {true, wrq:set_resp_body(jiffy:encode(JsonResponse), Req), Ctx}.
 
 call_chat(
   RpcId,

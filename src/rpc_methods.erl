@@ -2,7 +2,8 @@
 
 -compile({parse_transform, exprecs}).
 -export([populate/2, unpopulate/1, unpopulate_response/1]).
--export_records([set_name, chat, join_room]).
+-compile(export_all).
+-export_records([set_name, chat, join_room, draw]).
 -include("rpc_methods.hrl").
 
 bin_to_atom(Binary) ->

@@ -14,3 +14,7 @@
 -record(queue_update,
   { time = [0, 0, 0],
     messages = [] }).
+
+-record(draw,
+  { who = undefined,
+    what = undefined }).

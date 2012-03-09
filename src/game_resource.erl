@@ -68,8 +68,22 @@ process_json(Req, Ctx) ->
     Method = element(1, Params),
     case Method of
       draw ->
+        {Success, Response} = case room:game_action(
+            Ctx#room_context.room_pid, 
+            Ctx#room_context.observer_id,
+            Params) of
+          ok ->
+            {true, #rpc_response{id = Id, result = [<<"ok">>]}};
+          {error, Atom} when is_atom(Atom) ->
+            Error = #rpc_response_error{message = list_to_binary(atom_to_list(Atom))},
+            {false, #rpc_response{id = Id, error = Error}};
+          {error, Something} ->
+            Error = #rpc_response_error{message = Something},
+            {false, #rpc_response{id = Id, error = Error}}
+        end,
+        JsonResult = jiffy:encode(json_rpc:jif(Response)),
         io:format("All right, we call it a draw.~n", []),
-        call_unprocessed(Id, Method, Req, Ctx);
+        {Success, wrq:set_resp_body(JsonResult, Req), Ctx};
       _ ->
         call_unprocessed(Id, Method, Req, Ctx)
     end

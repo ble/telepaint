@@ -8,6 +8,7 @@
     shutdown/1,
     add_observer/1,
     name_observer/3,
+    game_action/3,
     get_observers/1,
     get_observer/2,
     has_observer/2,
@@ -36,6 +37,9 @@ add_observer(Pid) ->
 
 name_observer(Pid, Id, Name) ->
   gen_server:call(Pid, {name_observer, Id, Name}).
+
+game_action(Pid, ObserverId, Action) ->
+  ok.
 
 get_observers(Pid) ->
   gen_server:call(Pid, get_observers).

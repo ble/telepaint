@@ -34,6 +34,7 @@ ccp.handleQueueUpdate = function(event)  {
     return;
   }
 
+  console.log(event);
   var obj = event.json;
   if(obj['result']['method'] !== 'queue_update') {
     console.error('unexpected method on comet update');

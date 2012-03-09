@@ -63,16 +63,17 @@ process_json(Req, Ctx) ->
     Json = jiffy:decode(Body),
     Call = json_rpc:unjif(Json),
 
+    ObserverId = Ctx#room_context.observer_id,
+    RoomPid = Ctx#room_context.room_pid, 
     Id = Call#rpc_call.id,
     Params = Call#rpc_call.params,
     Method = element(1, Params),
     case Method of
       draw ->
-        {Success, Response} = case room:game_action(
-            Ctx#room_context.room_pid, 
-            Ctx#room_context.observer_id,
-            Params) of
+        {Success, Response} = case room:game_action(RoomPid, ObserverId, Params) of
           ok ->
+            DrawResponse = Params#draw{who = ObserverId},
+            room:send_to_all(RoomPid, DrawResponse),
             {true, #rpc_response{id = Id, result = [<<"ok">>]}};
           {error, Atom} when is_atom(Atom) ->
             Error = #rpc_response_error{message = list_to_binary(atom_to_list(Atom))},

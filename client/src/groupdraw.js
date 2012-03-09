@@ -116,14 +116,11 @@ GDp.handleDrawResponse = function(event) {
 
 GDp.handleReceived = function(event) {
   var method = event.method;
-  if(!method.match('^' + this.methodPrefix + ':')) {
-    return;
-  }
-  var parts = method.split(/:/);
-  method = parts[1];
   switch(method) {
     case 'draw':
       var drawPart = event.result;
+      console.log(event.id);
+      console.log(event);
   };
 };
 

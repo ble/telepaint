@@ -100,7 +100,7 @@ cp.handleEvent = function(event) {
       var rpc = new ble.json.RpcCall(
           'chat',
           {'message': event.msg});
-      this.connection.postRpc(rpc);
+      this.connection.postRoom(rpc);
       break;
 
     default:
@@ -210,7 +210,7 @@ cp.pickName = function(nameString) {
       this.handleSetNameResponse,
       false,
       this);
-  this.connection.postRpc(rpc);
+  this.connection.postRoom(rpc);
 };
 
 cp.handleSetNameResponse = function(event) {
@@ -224,10 +224,12 @@ cp.handleSetNameResponse = function(event) {
 
 cp.setupLinks = function() {
   var roomUri = '/room/' + this.roomId;
+  var gameUri = roomUri + '/game';
   var queueUri = roomUri + '/queue/' + this.observerId;
   var obj = (
       {'room': roomUri,
-       'queue': queueUri});
+       'queue': queueUri,
+       'game': gameUri});
   ble.hate.addLinks(obj);
 };
 

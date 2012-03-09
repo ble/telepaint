@@ -83,7 +83,7 @@ GDp.handleDraw = function(event) {
   drawing.setCurrent(null);
   canvas.withContext(canvas.repaintComplete);
   var rpc = new ble.json.RpcCall(
-      this.methodPrefix + ':' + 'draw',
+      'draw',
       {'who': this.client.state.obsSelf.id,
        'what': drawPart});
   rpc.id = ble.rpc.id();
@@ -96,7 +96,7 @@ GDp.handleDraw = function(event) {
       rpc,
       rpcType.ALL,
       this.handleDrawResponse);
-  this.connection.postRpc(rpc);
+  this.connection.postGame(rpc);
   return false;
 };
 

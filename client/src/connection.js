@@ -134,18 +134,27 @@ ccp.stopComet = function() {
 
 /**
  * @param {ble.json.RpcCall} call
+ * @param {string} endpoint
  */
-ccp.postRpc = function(call) {
+ccp.postRpc = function(call, endpoint) {
   var xhr = new goog.net.XhrIo();
   goog.events.listenOnce(
       xhr,
       [goog.net.EventType.ERROR, goog.net.EventType.SUCCESS],
       this);
-  var roomUri = ble.hate.links()['room'];
+  var roomUri = ble.hate.links()[endpoint];
   var headers = {'Content-Type': 'application/json'};
   xhr.rpc = call;
   xhr.isPost = true;
   xhr.send(roomUri, 'POST', JSON.stringify(call), headers);
+};
+
+ccp.postRoom = function(call) {
+  this.postRpc(call, 'room');
+};
+
+ccp.postGame = function(call) {
+  this.postRpc(call, 'game');
 };
 
 ccp.getRpc = function(uri) {

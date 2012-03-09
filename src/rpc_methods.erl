@@ -3,8 +3,9 @@
 -compile({parse_transform, exprecs}).
 -export([populate/2, unpopulate/1, unpopulate_response/1]).
 -compile(export_all).
--export_records([set_name, chat, join_room, draw]).
 -include("rpc_methods.hrl").
+-include("rpc.hrl").
+-export_records([set_name, chat, join_room, draw, rpc_call, rpc_response, rpc_response_error]).
 
 bin_to_atom(Binary) ->
   try
@@ -34,16 +35,18 @@ unpopulate(Record)
     andalso is_atom(element(1, Record)) ->
   RecordName = element(1, Record),
   Fields = '#info-'(RecordName),
-  { [{ atom_to_binary(Field, utf8),
-       '#get-'(Field, Record) } || Field <- Fields]};
+  { [{ atom_to_binary(Field, utf8), unpopulate(Value) }
+      || Field <- Fields, Value <- ['#get-'(Field, Record)], Value =/= undefined]};
 
 unpopulate(Json) ->
   Json.
 
+ 
+
 unpopulate_response(#queue_update{time = [A, B, C], messages = Rpcs}) ->
   { [ { <<"method">>, <<"queue_update">>},
       { <<"when">>, [A, B, C]},
-      { <<"messages">>, [unpopulate_response(X) || X <- Rpcs]}] };
+      { <<"messages">>, [unpopulate(X) || X <- Rpcs]}] };
 
 unpopulate_response(Record)
     when is_tuple(Record) andalso tuple_size(Record) > 1

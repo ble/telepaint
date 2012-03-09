@@ -72,8 +72,8 @@ process_json(Req, Ctx) ->
       draw ->
         {Success, Response} = case room:game_action(RoomPid, ObserverId, Params) of
           ok ->
-            DrawResponse = Params#draw{who = ObserverId},
-            room:send_to_all(RoomPid, DrawResponse),
+            DrawBroadcast = json_rpc:as_call(Params#draw{who = ObserverId}, Id),
+            room:send_to_all(RoomPid, DrawBroadcast),
             {true, #rpc_response{id = Id, result = [<<"ok">>]}};
           {error, Atom} when is_atom(Atom) ->
             Error = #rpc_response_error{message = list_to_binary(atom_to_list(Atom))},

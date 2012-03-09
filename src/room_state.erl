@@ -24,7 +24,7 @@ add_observer(Room0) ->
   Observer = #player{id=Id},
   Observers = [Observer | Room0#room.observers],
   Room1 = Room0#room{observers=Observers},
-  Messages = [#join_room{who = Id, name = undefined}],
+  Messages = [json_rpc:as_call(#join_room{who = Id, name = undefined})],
   {ok, {Room1, Id, Messages}}.
 
 -spec get_observer(Room :: #room{}, Id :: id()) ->
@@ -56,7 +56,7 @@ name_observer(Room0, Id, Name) ->
         _ -> rename
       end,
       {ok, Room1} = put_observer(Room0, O#player{name=Name}),
-      Messages = [#set_name{who = Id, name = Name}],
+      Messages = [json_rpc:as_call(#set_name{who = Id, name = Name})],
       {ok, {Room1, Tag, Messages}};
     X ->
       X

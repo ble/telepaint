@@ -1,8 +1,19 @@
 -module(json_rpc).
--export([unjif/1, jif/1]).
+-export([unjif/1, jif/1, as_call/1, as_call/2]).
 -export_records([rpc_call, rpc_response, rpc_response_error]).
 -include("rpc.hrl").
 
+as_call(Record) ->
+  as_call(Record, undefined).
+
+as_call(Record, Id)
+    when is_tuple(Record) andalso tuple_size(Record) > 1
+    andalso is_atom(element(1, Record)) ->
+  #rpc_call{
+    id = Id,
+    method = list_to_binary(atom_to_list(element(1, Record))),
+    params = Record}.
+ 
 jif_obj(X) ->
   {jif_obj_(X)}.
 

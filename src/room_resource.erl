@@ -97,8 +97,8 @@ call_chat(
   RpcId,
   Params,
   Req, Ctx = #room_context{observer_id = ObserverId, room_pid = RoomPid}) ->
-  MsgResponse = Params#chat{who = ObserverId},
-  room:send_to_all(RoomPid, MsgResponse),
+  Broadcast = json_rpc:as_call(Params#chat{who = ObserverId}, RpcId),
+  room:send_to_all(RoomPid, Broadcast),
   Response = #rpc_response{id = RpcId, result = [<<"ok">>]},
   {true, wrq:set_resp_body(jiffy:encode(json_rpc:jif(Response)), Req), Ctx}.
 

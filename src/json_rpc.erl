@@ -1,5 +1,5 @@
 -module(json_rpc).
--export([unjif/1, jif/1, proc_method/1]).
+-export([unjif/1, jif/1]).
 -export_records([rpc_call, rpc_response, rpc_response_error]).
 -include("rpc.hrl").
 
@@ -45,41 +45,15 @@ jif(#rpc_response{version = V, result = undefined, error = E, id = I})
 unjif({PropList}) ->
   unjif_(PropList).
 
-%unjif_(PropList) ->
-%  Version = proplists:get_value(<<"version">>, PropList),
-%  Id = proplists:get_value(<<"id">>, PropList),
-%  Method = proplists:get_value(<<"method">>, PropList),
-%  Params = rpc_methods:populate(Method, proplists:get_value(<<"params">>, PropList)),
-%  #rpc_call{
-%    version = Version,
-%    method = Method,
-%    id = Id,
-%    params = Params
-%  }.
-
-proc_method(MethodFull) ->
-  {ok, MethodPattern} = re:compile("(?:(\\w+):)(\\w+)"),
-  {Prefix, Method} = case re:run(MethodFull, MethodPattern) of
-    {match, [_, GameP, MethodP]} ->
-      [GameN, MethodN] = [binary_part(MethodFull, X) || X <- [GameP, MethodP]],
-      {GameN, MethodN};
-    _ ->
-      {undefined, MethodFull}
-  end,
-  {Prefix, Method}.
-
 unjif_(PropList) ->
   Version = proplists:get_value(<<"version">>, PropList),
   Id = proplists:get_value(<<"id">>, PropList),
-  MethodFull = proplists:get_value(<<"method">>, PropList),
-
-  {Prefix, Method} = proc_method(MethodFull),
+  Method = proplists:get_value(<<"method">>, PropList),
   Params = rpc_methods:populate(Method, proplists:get_value(<<"params">>, PropList)),
   #rpc_call{
-      version = Version,
-      method = MethodFull,
-      id = Id,
-      params = Params,
-      prefixed = (Prefix =/= undefined)
-    }.
-  
+    version = Version,
+    method = Method,
+    id = Id,
+    params = Params
+  }.
+

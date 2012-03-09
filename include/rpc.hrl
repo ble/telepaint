@@ -2,8 +2,7 @@
   { version = <<"2.0">>,
     method = <<"unspecified_method">> :: binary(),
     params = [] :: [term()],
-    id = undefined :: undefined | binary() | integer(),
-    prefixed = false :: false | true
+    id = undefined :: undefined | binary() | integer()
   }).
 
 -record(rpc_response,

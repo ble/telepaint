@@ -28,7 +28,7 @@ poll_after(Pid, After) ->
     {Pid, Msgs} ->
       Latest = lists:foldl(fun erlang:max/2, When, [Timestamp || {_, Timestamp} <- Msgs]),
       Stripped = [X || {X, _} <- Msgs],
-      {Latest, Stripped}
+      {Latest, lists:reverse(Stripped)}
   after 2 * ?WAIT_AGE ->
       {When, []} 
   end.

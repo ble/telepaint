@@ -12,7 +12,7 @@ send_to(RoomId, Msg) ->
   {ok, RoomPid} = nexus:lookup_room(nexus, RoomId)
  ,{ok, Observers} = room:get_observers(RoomPid)
  ,QueuePids = [Observer#player.pid || Observer <- Observers]
- ,Messages = as_list(Msg)
+ ,Messages = [json_rpc:as_call(M) || M <- as_list(Msg)]
  ,[player_queue:enqueue(Pid, Messages) || Pid <- QueuePids]
  .
 
@@ -20,7 +20,7 @@ send_to(RoomId, ObserverId, Msg) ->
   {ok, RoomPid} = nexus:lookup_room(nexus, RoomId)
  ,{ok, Observer} = room:get_observer(RoomPid, ObserverId) 
  ,QueuePid = Observer#player.pid
- ,Messages = as_list(Msg)
+ ,Messages = [json_rpc:as_call(M) || M <- as_list(Msg)]
  ,player_queue:enqueue(QueuePid, Messages)
  .
 

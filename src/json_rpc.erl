@@ -3,8 +3,8 @@
 -export_records([rpc_call, rpc_response, rpc_response_error]).
 -include("rpc.hrl").
 
-as_call(Record) ->
-  as_call(Record, undefined).
+as_call(Thing) ->
+  as_call(Thing, undefined).
 
 as_call(Record, Id)
     when is_tuple(Record) andalso tuple_size(Record) > 1
@@ -12,7 +12,17 @@ as_call(Record, Id)
   #rpc_call{
     id = Id,
     method = list_to_binary(atom_to_list(element(1, Record))),
-    params = Record}.
+    params = Record};
+
+as_call({PropList0}, Id) ->
+  Method = proplists:get_value(<<"method">>, PropList0),
+  PropList1 = proplists:delete(<<"method">>, PropList0), 
+  #rpc_call{
+    id = Id,
+    method = Method,
+    params = {PropList1}
+  }.
+
  
 jif_obj(X) ->
   {jif_obj_(X)}.

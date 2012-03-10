@@ -1,0 +1,25 @@
+DrawPart methods, in order
+
+//interval methods
+start ---> impl. in replay
+end ---> impl. in replay
+length ---> impl. in replay
+//adjustableinterval methods
+withStartAt
+withLength
+//drawable method
+draw
+//defined by drawpart methods
+at
+
+//for serialization
+//declared abstract by replay, not part of drawpart
+toJSON
+
+
+//for deserialization, not part of drawpart
+_tag
+bless
+
+//for conversion, not part of drawpart
+static fromMocap

@@ -1,0 +1,69 @@
+So how do I want to do multi-drawing replays?
+
+The best thing would be to have multiple layers <= 2 is all that's really
+needed, but requires almost all the functionality of the truly general case.
+
+For better or worse, multiple layers of drawing coordinate embedding really
+would best be brought to my current framework along with a cleaner separation 
+of functionality:
+  1. coordinate embedding-- rectangle R in coordinate system C maps to 
+  rectangle R' in coordinate system C'
+  2. event management for embedded coordinates-- a click at pixel (x,y) on 
+  canvas C falls within rectangle R and within R's coordinate system C, pixel 
+  (x, y) maps to (x', y').
+
+Rather than going hog-wild on another refactor quest, it would be nice to have 
+a product to show the benefits of the last refactoring.  What would that be?
+
+Pretty simple: animate multiple drawings simultaneously on a single canvas.
+(Again, the reason for having multiple layers of embedding as mentioned above 
+would be to allow panning and zooming around multiple drawings; I can do 
+multiple drawings in a fixed frame in an unmoving configuration easily, but 
+panning and zooming require either an outer frame of reference or manually 
+moving around subcanvas boundaries, which would be awkward.)
+
+So, that's roughly target.  The specific target:
+  9 drawings in a 3x3 configuration, filling up the space of one full-size 
+  drawing;
+  animating simultaneously, then animating sequentially.
+
+In concrete, software-implementation terms, this will require:
+  a canvas
+  animation handling functionality
+  a DrawPart corresponding to the simultaneous or sequential drawings
+  input drawings.
+
+The input drawings can be recorded in the current 'motion capture harness' (to 
+make it sound fancier than it actually is), the animation functionality can be 
+mostly lifted from earlier versions (hopefully giving a few seeds of a general 
+animation idea), the canvas is implemented, and the drawable is probably pretty 
+easy to do.
+
+DIFFERENT TOPIC, NOTE AGAIN: time alignment of stuff was a point of friction; 
+was that due to some basic misunderstanding or just because I hadn't thought it 
+through and was trying to make it work while really tired?
+
+Aiiiiight.  Time to write that DrawPart.
+
+Man, I can't actually reuse subcanvas to do the implementation of a DrawPart.
+Well, I can probably lift most of the stuff right from it.
+
+All right, that's done... took relatively little working time, but relatively a 
+lot of clock time. 
+
+
+What's the example that will let me see this shit working?  Throw another 
+canvas onto the same example page, have it steal scribbles?  Nah, this should 
+be totally doable with just the current canvas and another menu entry.
+
+Now the "draw 9 at a time" thing works.  Animation next, mofos!
+
+Aiight, time for the quick and durrrty version of animating this mothabitch.
+
+Well, that worked.  I think the next steps would be to:
+  make a Drawable decorator that draws the decorated Drawable in a different 
+  coordinate system;
+  make the DrawPart specialization of that decorator;
+  make the time dependent coordinate system (i.e., moving sheet of paper) class 
+  and use it to make a sweet pictures going in a ring animation.
+  Think about time "tweakers", different kinds of playback;

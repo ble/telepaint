@@ -1,0 +1,27 @@
+So the goal right now is to enable good animations.
+
+What's a good animation?
+Multiple drawings occurring simultaneously.
+New pages / sheets sliding across the screen.
+
+I've already done a refactoring of drawing things so that they can be more easily time-sliced.
+
+I can either backfit that onto the existing UI stuff or I can move ahead and try to make a composition of drawings so that they can be fully animated...
+
+Backfit it is.  Good to finish refactorings before you forget what you were doing.
+
+Okay, part of the refactor is to make an immutable drawing and a mutable drawing.
+The mutable drawing needs to have a 'currently being drawn' draw item.
+It would be nice if I could have multiple items currently being drawn, but that's
+actually kinda tricky.
+
+REVISIT: multiple 'currently being drawn items' for multi-person drawing.
+
+
+
+Time alignment of shit is not right. Durn.
+
+OKAY, turns out I was just getting too tired to program. Loool.
+
+
+Okay, next step: multi-drawing replay.

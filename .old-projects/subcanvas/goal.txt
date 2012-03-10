@@ -1,0 +1,39 @@
+WHY ARE THESE PREVIOUS GOALS SO TL;DR?
+\/  \/   \/   \/   \/   \/   \/   \/   \/   \/   \/  \/ 
+
+Next goals: 
+ Undo plan:
+  Painter has
+    canonical representation of drawing; how drawing will be saved and transmitted
+    playback representation of drawing; all strokes and undos, times scaled for playback
+    intermediate representation of drawing:
+      call method to indicate that you are starting animation of the drawing
+       ---> side effects creating new empty intermediate representation
+      call method indicating the time at which the drawing will next be painted
+      ---> walk playback representation: 
+        process every item that starts between the last update time and the new one:
+          replays are added as "pushes".
+          undos are executed as "pops".  
+
+  In creating a drawing, undos push an undo onto the canonical representation and thus pop a replay off
+  the actual painting; redos pop an undo off the canonical representation IFF the last item in the
+  canonical representation is an undo.  Because redos remove the original undo from the canonical
+  representation, undoing and redoing one or more times WILL NOT APPEAR IN THE PLAYBACK.
+
+  Alternative: can we allow people to be really annoying and undo/redo things multiple times?  well, if
+  we're taking the time to make undos behave nicely with this whole canonical/playback/intermediate
+  representation, it may be worth doing as it won't make things that much MORE complicated...
+
+/\  /\   /\   /\   /\   /\   /\   /\   /\   /\   /\  /\ 
+
+Not sure I like the way it's going; too many responsibilities in one place.
+Seems like if I just started by adding an undo button and wiring things up,
+I might well come up with a simpler solution.
+
+
+Still valid goals:
+  Animate multiple drawings in sequence (events on end of animation)
+  Add drawing functionality for a "table view" or "race view" w/ panning, zooming
+
+New goal:
+  Play, pause, ffw, rewind animation of drawings / stacks / games

@@ -1,0 +1,10 @@
+{
+  "id": "subcanvas-3",
+  "paths": ".",
+  "mode": "ADVANCED",
+  "level": "VERBOSE",
+  "inputs": [
+    "use_canvas_3.js",
+  ],
+  "externs": ["extern_webkitRAF.js"]
+}

@@ -44,7 +44,7 @@ ccp.handleQueueUpdate = function(event)  {
   var messages = obj['result']['messages'];
   for(var i = 0; i < messages.length; i++) {
     var message = messages[i];
-    dispEvent = new Event(rpcType.RESPONSE);
+    var dispEvent = new Event(rpcType.RESPONSE);
     dispEvent.method = message['method'];
 //    console.log(dispEvent.method + dispEvent.method + dispEvent.method);
     dispEvent.target = this;
@@ -66,7 +66,7 @@ ccp.handleNetSuccess = function(event) {
     var result = response.result;
     var isPost = xhr.isPost;
     var type = isPost ? rpcType.CALL_SUCCESS : rpcType.RESPONSE;
-    dispEvent = new Event(type);
+    var dispEvent = new Event(type);
     dispEvent.result = result;
     dispEvent.response = response;
     if(isPost) {
@@ -96,7 +96,7 @@ ccp.handleEvent = function(event) {
     var xhr = event.target;
     var rpc = xhr.rpc; 
 
-    dispEvent = new Event(rpcType.TRANSPORT_ERROR);
+    var dispEvent = new Event(rpcType.TRANSPORT_ERROR);
     dispEvent.target = rpc;
     rpc.dispatchEvent(dispEvent);
     xhr.dispose();

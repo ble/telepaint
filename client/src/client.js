@@ -20,12 +20,12 @@ goog.require('ble.game.GroupDraw');
 goog.require('goog.debug.ErrorHandler');
 
 goog.provide('ble.room.Client');
-var console = window.console;
 
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
 ////////////////////////////////////////////////////////////////////////////////
 
+var console = window.console;
 var Observer = ble.room.Observer;
 var Model = ble.room.Model;
 /**
@@ -130,7 +130,7 @@ cp.updateState = function(state) {
 cp.handleMethod = function(method, obj) {
   var parts = method.split(/:/);
   var call = ble.json.RpcCall.coerce(obj);
-  var method = call.method;
+  //var method = call.method;
   var params = call.params; 
   if(parts.length == 1) {
     switch(method) {

@@ -58,6 +58,9 @@ ble.scribble.Canvas.prototype.finishAnimation = function() {
 };
 
 ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
+  if(!goog.isNumber(duration_millis)) {
+    throw new Error("non-numerical duration");
+  }
   if(this.animating)
     return;
   this.animating = true;

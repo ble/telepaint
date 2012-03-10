@@ -138,7 +138,6 @@ GDp.handleDrawResponse = function(event) {
     default:
       console.log(event.type);
   }
-  delete this.pendingDraw[rpc.id];
 };
 
 GDp.handleReceived = function(event) {
@@ -152,6 +151,7 @@ GDp.handleReceived = function(event) {
       if(this.receiveDraw(id)) {
         this.drawing.addAtEnd(drawPart);
         this.canvas.withContext(this.canvas.repaintComplete);
+        window.setTimeout(goog.bind(this.canvas.replayAll, this.canvas, 1000), 10);
       }
   };
 };

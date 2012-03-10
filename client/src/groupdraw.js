@@ -56,6 +56,11 @@ ble.game.GroupDraw.methodPrefix = "group_draw";
 GDp.methodPrefix = ble.game.GroupDraw.methodPrefix;
 GDp.deserializer = ble.scribbleDeserializer;
 
+GDp.dispose = function() {
+  this.handler.dispose();
+  goog.base(this, 'dispose');
+};
+
 GDp.bindToClient = function(client) {
   this.client = client;
   this.bindConnection(client.connection);

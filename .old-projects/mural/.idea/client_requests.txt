@@ -1,0 +1,92 @@
+OMG chunked responses are so sexy.
+
+It's unclear how well they will work with the httpc module and/or the XHR
+interface, but I want 'em.  It's also unclear whether they can tell if the
+browser is still actually listening to the response...
+
+
+Okay,
+
+Creator:
+GET persistent chunked-response request (should it ever error or complete,
+start it again with a little time delay)
+POST image URL
+{chunk-back} server URL of the appropriate image OR
+             some manner of error indicating that the given url is bunk
+POST tile size in pixels, # of rows and columns
+{chunk-back} ok, URLs for participants and observers OR
+             error, your tile sizes are jacked bro try again
+Long period of chilling out while the following occur:
+[{chunk-back} somebody chats something OR
+             somebody starts observing OR
+             a participant picks a name OR
+             a participant draws a stroke,
+ POST chat message]
+POST "it's done!"
+{chunk-back} ok; here's the URL you should go to to view this lovely mural now
+that it's done!
+
+Participant:
+GET persistent chunked-response request
+{chunk-back} mural image URL (on mural server)
+             all strokes up to the current time
+POST the name (pseudonym, really) of this participant
+{chunk-back} okay, your pseudonym looks legit to me
+POST each stroke as it is drawn by the participant on the canvas
+POST chat message
+{chunk-back} each stroke as it is drawn by other participants on the canvas OR
+             chat messages OR
+             creator calling the mural done
+
+Observer:
+Same as the participant, only no posting strokes.
+
+
+URLs:
+for creator:
+"secret" mural creation URL -> cookie + redirect to unique URL
+(cookie active for path /murals/$mural_name2)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/make_mural/{$mural_name =~ [a-zA-Z0-9_]}
+
+unique creation URL -> client code for creation
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/{murals/$mural_name2 == murals/$mural_name + time}/{$creator == some hash of the time, the mural name, and something else too}
+
+mural creation chunkback URL -> the aforementioned stream of messages
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2/$creator/connect    and
+/murals/$mural_name2/$creator/reconnect
+
+
+post image URL -> server acknowledge or error
+post tile size -> server acknowledge or error
+post chat messages -> server acknowledge or error
+post mural done -> display completed URL
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2/$creator/(choose_image|tile_size|chat|mural_done)
+
+
+for participant:
+unique edit mural chunk URL -> cookie + client code for participation
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2/{$participant == some hash}
+
+mural participant chunkback URL -> the aforementioned stream of messages
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2/$participant/(connect|reconnect)
+
+POST "hi, my name is"
+POST stroke
+POST chat message
+/murals/$mural_name2/$participant/(name|stroke|chat)
+
+
+for observer:
+mural URL -> client code for observation
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2
+
+mural observer chunkback URL -> aforementioned stream of messages.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+/murals/$mural_name2/(connect|reconnect)

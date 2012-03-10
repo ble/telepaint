@@ -1,0 +1,12 @@
+/ebin
+/doc
+/_test
+/.eunit
+/docs
+.DS_Store
+/TEST-*.xml
+/deps
+*.swp
+mnesia
+priv/www/js
+priv/mural_img

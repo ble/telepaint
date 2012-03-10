@@ -1,0 +1,21 @@
+Mural:
+
+Choose a picture, chop it up into chunks, and draw it freehand in your browser
+with friends.
+
+Major project components:
+
+Erlang http server;
+Javascript client code to run in browser, written for / analyzed and compiled
+by the lovely Google Closure Compiler;
+and of course a wild (and wildly optimistic) idea:
+Erlang port driver using V8 to execute Javascript, simulate clients using
+client code.  Meaningful load testing without a complete rewrite of client
+code, taking advantage of Erlang's capabilities for launching a bazumptillion
+processes.
+
+Goal:
+Write some stuff that works, have fun.
+Accept that 5 hours out of 48 have passed and you won't write any code until
+you've slept, woken up, and eaten.
+Try to enjoy the process of planning this stuff.

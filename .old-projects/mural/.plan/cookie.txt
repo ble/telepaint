@@ -1,0 +1,7 @@
+/murals/$name$hash/{$participanthash | $creatorhash} bind cookie to req host on
+first access, disallow access from other hosts
+[Is there an easy way to permit switching browsers?
+  Link cookie to request host on first access, disallow access from other hosts.]
+
+participant cookie permits: stroke, chat
+creator cookie permits: chat, choose_image, tile_size, mural_done

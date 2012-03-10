@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>
+      Mural Client
+    </title>
+
+    <script src="http://127.0.0.1:9810/compile?id=client-test&mode=RAW" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id="divvy">
+      <form>
+        <label for="rows">Rows:</label>
+        <input type="text" id="rows" value=""/>
+        <label for="columns">Columns:</label>
+        <input type="text" id="cols" value=""/>
+      </form>
+    </div>
+    <div id="img" style="position:relative">
+    </div>
+    <div id="dbg">
+      <div>
+        <input type="text" id="img_url_text"/>
+        <a href="javascript:doPost()">Do post</a>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var channel;
+      var doPost;
+      var tmp;
+      var rest = function() {
+        var baseUrl = window.location.toString();
+        var msgStream = baseUrl + "/connect/" + Date.now();
+
+        var handleOpen = function() {
+          show("<b>OPEN</b>");
+        };
+        var handleHeaders = function() {
+          show("<b>HEADERS</b>");
+        };
+        var handleData = function(event) {
+          var data = event.data;
+          show("<i>" + goog.json.serialize(event.data) + "</i>");
+          for(var i = 0; i < data.length; i++) { 
+            if(data[i].mural && data[i].mural.image_url) 
+              setImage(data[i].mural.image_url);
+            if(data[i].image_url) 
+              setImage(data[i].mural.image_url);
+          }
+        };
+        var handleDone = function() {
+          show("<b>DONE</b>");
+        };
+
+        var postUrl = baseUrl + "/choose_image";
+        
+        doPost = function() {
+          var pxhr = new XMLHttpRequest();
+          var textBox = document.getElementById("img_url_text");
+          pxhr.open("POST", postUrl);
+          pxhr.setRequestHeader("Content-Type", "text/json");
+          pxhr.send(goog.json.serialize(textBox.value));
+        }
+        var domHelper = new goog.dom.DomHelper();
+        splitImage = new ble.mural.SplitImage("file:///Users/ellis/Workspace/spawnfest/mural/mural_server/priv/mural_img/AFHqi70WbOKL", 5, 2);
+        splitImage.render(domHelper.getElement("img"));
+        var clipImage = new ble.mural.ClippedImage(splitImage.img_url, {
+            'top':0,
+            'left':0,
+            'right':0,
+            'bottom':0
+            });
+        clipImage.render(domHelper.getElement("img"));
+        goog.events.listen(
+            splitImage,
+            ble.mural.EventTypes.RECTANGLEHOVER,
+            function(e) {
+              var box = e.getSourceRect();
+              clipImage.setBox(box);
+            });
+        var container = document.getElementById("dbg");
+        var show = function(text) {
+          container.innerHTML += "<div>" + text + "</div>";
+        };
+
+        channel = new ble.net.ChunkedChannel();
+        goog.events.listen(channel, ble.net.EventType.OPEN, handleOpen);
+        goog.events.listen(channel, ble.net.EventType.HEADERS, handleHeaders);
+        goog.events.listen(channel, ble.net.EventType.DATA, handleData);
+        goog.events.listen(channel, ble.net.EventType.DONE, handleDone);
+        channel.open("GET", msgStream);
+        channel.send();
+      }; 
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+      var rowsText = document.getElementById("rows");
+      var colsText = document.getElementById("cols");
+      goog.events.listen(rowsText, goog.events.EventType.INPUT, function(e) {console.log(rowsText.value);});
+      goog.events.listen(colsText, goog.events.EventType.INPUT, function(e) {console.log(colsText.value);});
+    </script>
+  </body>
+</html>

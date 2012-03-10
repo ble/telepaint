@@ -1,0 +1,27 @@
+
+
+Client-server interactions
+
+Creator:
+Provide image URL
+See server's loaded version of image, confirm it is okay
+Provide server with number of rows and columns, tile size in pixels.
+Receive urls for each tile and for observers.
+
+
+Participant:
+Receive the mural image and the portion to be drawn
+Synchronize with the drawing strokes that have already been completed
+[for now, avoid anything that might make maintaining the correct canvas image
+more complicated than simply drawing all completed strokes then drawing each
+new stroke as it comes in]
+Send drawing strokes to the server
+See others strokes filling in other portions of the mural
+(strictly client side:
+  choose color and stroke width
+  toggle mural background
+  pan about the mural and see others' sections)
+
+Observer:
+Receive drawing strokes already completed
+Receive new drawing strokes as they come in

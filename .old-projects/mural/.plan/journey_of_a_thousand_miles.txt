@@ -1,0 +1,58 @@
+x Review what you've done.
+
+x Make an initial build/debug system for the client components.
+
+x Test Closure CRMC with current server
+
+x Fix issues with the Closure CRMC
+
+x Add unique part to 'connect' URL to prevent issues with multiple requests in same browser
+
+o Describe how the server will be implemented in terms of mnesia tables,
+  chunked responses, and processes / gen_server or gen_fsms
+
+o Make the server design more concrete and implement as much of it as
+  possible.
+
+o Design the general structure of the Javascript client(s), identifying func-
+  tionality common to more than one part, taking care to decouple canvas
+  drawing from server-client communication from all things DOM.
+
+o Implement and test the Javascript client for the mural creator.
+
+o Implement and test the Javascript client for a mural participant.
+
+o Identify what portion of the previous clients is necessary to create a
+  "headless" participant client and what would need to be added.  Assume
+  no browser functionality except for XMLHttpRequest (to be provided by C++
+  code linked with V8) and cookies (to be provided by everyone's favorite
+  module, httpc).
+
+o Take a fucking break and draw some goofy pictures using mural.  Are you even
+  going to get this far?  Who cares? :)
+
+o Read up on port drivers in greater detail.
+
+o Think about what behavior your crazy V8 port driver (which will provide
+  XHR functionality through calling back into httpc... okay, maybe we need a
+  port driver and a module or two wrapping it to provide this functionality,
+  but you get the gist) will require.
+
+o Write a trivial port driver and wrapper module that will achieve some of the
+  tricky aspects of the calling back and forth:
+  public wrapper api -> port driver
+  port driver -> httpc
+  asynchronously completing httpc -> port driver
+  etc.
+
+o Be utterly amazed if you have any clue what you are doing at this point.
+
+o Define the structure of the V8 port driver and its wrapper code.
+
+o Implement the port driver and test it sans wrapper code.
+
+o Implement wrapper code.
+
+o Wait for pigs to fly.
+
+o Realize Spawnfest ended two months ago.

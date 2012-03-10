@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>Canvas Test</title>
+<script src="http://localhost:9810/compile?id=sketch"></script>
+<link rel="stylesheet" href="demo.css">
+<link rel="stylesheet" href="sketch.css">
+<link rel="stylesheet" href="slider.css">
+<link rel="stylesheet" href="hsvapalette.css">
+</head>
+<body>
+  <div style="display: table;">
+    <div style="display: table-row;">
+      <div id="preview" style="display: table-cell;">
+      </div>  
+      <div id="picker" style="display: table-cell;">
+      </div>
+      <div id="strokewidth" style="display: table-cell;">
+      </div>
+      <div id="cmd" style="display: table-cell; vertical-align: middle">
+        <ul>
+          <li><a href="javascript:undo()">undo</a></li>
+          <li><a href="javascript:redo()">redo</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div style="display: table;">
+    <div style="display: table-row;">
+      <div id="container" class="bordered">
+    </div>
+  </div>
+
+  <script>
+  function main() {
+    var cont = goog.dom.getElement("container");
+    var prev = goog.dom.getElement("preview");
+    var pick = goog.dom.getElement("picker");
+    var width = goog.dom.getElement("strokewidth");
+
+    var sketch = new ble.scratch.Sketch(cont, prev, pick, width);
+
+    sketch.makeSketchDom();
+
+  }
+  main();
+  </script>
+</body>
+</html>

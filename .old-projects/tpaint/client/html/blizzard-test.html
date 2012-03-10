@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Blizzard test</title>
+    <style type="text/css">
+      body { background-color: #000000; }
+    </style>
+    <script src="/static-compiled/js/blizzard-test.js"></script>
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      var rest = function() {
+        ble.blizzard.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+    </script>
+  </body>
+</html>

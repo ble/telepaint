@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>Icon test</title>
+    <style type="text/css">
+      body { background-color: #fff; }
+      .goog-slider-vertical { width: 20px; height: 185px; background-color: #888;}
+    </style>
+    <link rel="stylesheet" href="../css/hsvapalette.css"/>
+    <link rel="stylesheet" href="../css/slider.css"/>
+    <script src="http://127.0.0.1:9810/compile?id=icon-test&mode=RAW"></script>
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      var rest = function() {
+        ble.icon.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+    </script>
+  </body>
+</html>

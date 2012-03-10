@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>Sheet test</title>
+    <script src="/static-compiled/js/sheet-test.js"></script>
+  </head>
+  <body>
+    <div id="outermost">
+    </div>
+    <script>
+      var rest = function() {
+        ble.sheet.run_test();
+      };
+      goog.events.listen(window, goog.events.EventType.LOAD, rest);
+    </script>
+  </body>
+</html>

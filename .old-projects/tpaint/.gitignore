@@ -1,0 +1,14 @@
+/ebin
+/doc
+/_test
+/.eunit
+/docs
+/deps
+/dyn
+/jquery
+/node
+/npm
+/coffee-script
+rebar
+/priv/www/scripts
+*.swp

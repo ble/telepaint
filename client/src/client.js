@@ -89,8 +89,6 @@ cp.startGame = function(game) {
 };
 
 cp.handleEvent = function(event) {
-  console.log('Client.handleEvent called');
-  console.log(event);
   switch(event.type) {
     case ble.rpc.EventType.RESPONSE:
       this.handleMethod(event.result.method, event.result);
@@ -104,7 +102,7 @@ cp.handleEvent = function(event) {
       break;
 
     default:
-      console.log("Unhandled event of type " + event.type);
+//      console.log("Unhandled event of type " + event.type);
   }
 };
 
@@ -131,10 +129,13 @@ cp.updateState = function(state) {
 
 cp.handleMethod = function(method, obj) {
   var parts = method.split(/:/);
+  var call = ble.json.RpcCall.coerce(obj);
+  var method = call.method;
+  var params = call.params; 
   if(parts.length == 1) {
     switch(method) {
       case 'set_name':
-        var who = obj['who'], name = obj['name'];
+        var who = params['who'], name = params['name'];
         this.state.byId[who].name = name;
         this.dom.set(this.state);
         break;
@@ -155,7 +156,7 @@ cp.handleMethod = function(method, obj) {
         break;
 
       case 'join_room':
-        var who = obj['who'], name = obj['name'];
+        var who = params['who'], name = params['name'];
         if(!name) name = null;
         var joined = new ble.room.Observer(name, who);
         this.state.addObserver(joined);
@@ -163,29 +164,26 @@ cp.handleMethod = function(method, obj) {
         break;
 
       case 'chat':
-        var who = obj['who'], message = obj['message'];
+        var who = params['who'], message = params['message'];
         this.dom.chat(this.state.getObserver(who), message);
         break;
 
       default:
-        console.error('Unknown method: ' + method);
-        console.error(obj);
+//        console.error('Unknown method: ' + method);
+//        console.error(obj);
     }
   } else if(parts.length == 2) {
     var gameName = parts[0];
     var gameMethod = parts[1];
     if(gameMethod == 'init') {
       var constructor = this.gameRegistry[gameName];
-      var game = constructor.varArgs(obj['params']);
+      var game = constructor.varArgs(params);
       game.bindToClient(this);
       this.startGame(game);
     }
-    console.log(gameName + " " + gameMethod);
-    console.log(this.gameRegistry[gameName]);
-    console.log(obj);
   } else {
-    console.error('Unknown method: ' + method);
-    console.error(obj);
+//    console.error('Unknown method: ' + method);
+//    console.error(obj);
   }
 };
 
@@ -198,12 +196,10 @@ cp.pickName = function(nameString) {
     window.setTimeout(showAgain, 0);
     return;
   }
-  console.log(match[1]);
   var rpc = new ble.json.RpcCall(
       'set_name',
       {'who': this.state.obsSelf.id,
        'name': match[1]});
-  console.log(ble.rpc.EventType.ALL);
   goog.events.listenOnce(
       rpc,
       ble.rpc.EventType.ALL,
@@ -242,8 +238,8 @@ cp.fetchState = function() {
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////
 var errorHandler = new goog.debug.ErrorHandler(function(e) {
-  console.log('Intercepted error:');
-  console.error(e);
+//  console.log('Intercepted error:');
+//  console.error(e);
   window.lastError = e;
   throw e;
 });

@@ -118,7 +118,7 @@ bcBp.handleEvent = function(event) {
       this.pendingSend = window.setTimeout(goog.bind(this.send_, this), delay);
       break;
     default:
-      console.error('Unexpected event type:' + event.type);
+//      console.error('Unexpected event type:' + event.type);
   }
 };
 
@@ -169,7 +169,8 @@ bcQp.preSend = function(uri) {
 bcQp.processSuccess = function(event) {
   /** @type {goog.net.XhrIo} */
   var xhr = event.target;
-
+//  console.error("LOOK HEEREERRERREEEEE");
+//  console.error(xhr.getResponseJson());
   var json = ble.json.RpcResponse.coerce(xhr.getResponseJson());
 
   var when = json['result']['when'];

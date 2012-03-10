@@ -30,14 +30,14 @@ var ccp = ble.room.Connection.prototype;
 
 ccp.handleQueueUpdate = function(event)  {
   if(event.type != ble.comet.Queue.Update.EventType) {
-    console.error("Unexpected function type");
+//    console.error("Unexpected function type");
     return;
   }
 
-  console.log(event);
+//  console.log(event);
   var obj = event.json;
   if(obj['result']['method'] !== 'queue_update') {
-    console.error('unexpected method on comet update');
+//    console.error('unexpected method on comet update');
     return;
   }
 
@@ -46,11 +46,11 @@ ccp.handleQueueUpdate = function(event)  {
     var message = messages[i];
     dispEvent = new Event(rpcType.RESPONSE);
     dispEvent.method = message['method'];
-    console.log(dispEvent.method + dispEvent.method + dispEvent.method);
+//    console.log(dispEvent.method + dispEvent.method + dispEvent.method);
     dispEvent.target = this;
     dispEvent.result = message;
     this.dispatchEvent(dispEvent); 
-    console.log([event.type, dispEvent.method].join(" "));
+//    console.log([event.type, dispEvent.method].join(" "));
   }
 };
 
@@ -80,8 +80,8 @@ ccp.handleNetSuccess = function(event) {
     dispEvent.error = obj['error'];
     rpc.dispatchEvent(dispEvent);
   } else {
-    console.error('unexpected handleRpcCall');
-    console.log(event);
+//    console.error('unexpected handleRpcCall');
+//    console.log(event);
     dispEvent = new Event(rpcType.FORMAT_ERROR);
     dispEvent.target = rpc;
     rpc.dispatchEvent(dispEvent);
@@ -107,8 +107,8 @@ ccp.handleRpc = function(o) {
   var res = o['result'];
   if(goog.isDefAndNotNull(res)) {
   } else {
-    console.error(o);
-    console.error(o['error']);
+//    console.error(o);
+//    console.error(o['error']);
   }
 };
 

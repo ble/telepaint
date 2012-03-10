@@ -44,15 +44,17 @@ ble.game.GroupDraw = function(width, height) {
 goog.inherits(ble.game.GroupDraw, goog.ui.Component);
 
 ble.game.GroupDraw.varArgs = function(params) { 
-  if(params.length != 2)
+  var size = params['size'];
+  if(size.length != 2)
     throw new Error();
-  return new ble.game.GroupDraw(params[0], params[1]);
+  return new ble.game.GroupDraw(size[0], size[1]);
 };
 
 var GDp = ble.game.GroupDraw.prototype;
 
 ble.game.GroupDraw.methodPrefix = "group_draw";
 GDp.methodPrefix = ble.game.GroupDraw.methodPrefix;
+GDp.deserializer = ble.scribbleDeserializer;
 
 GDp.bindToClient = function(client) {
   this.client = client;
@@ -90,7 +92,9 @@ GDp.handleDraw = function(event) {
   this.pendingDraw[rpc.id] = {
     drawPart: drawPart,
     drawing: drawing,
-    canvas: canvas
+    canvas: canvas,
+    drawn: false,
+    received: false
   },
   this.handler.listenOnce(
       rpc,
@@ -100,13 +104,31 @@ GDp.handleDraw = function(event) {
   return false;
 };
 
+GDp.succeedDraw = function(id) {
+  var pend = this.pendingDraw[id];
+  pend.drawing.addAtEnd(pend.drawPart);
+  pend.canvas.withContext(pend.canvas.repaintComplete);
+  pend.drawn = true; 
+  if(pend.drawn && pend.received)
+    delete this.pendingDraw[id];
+};
+
+GDp.receiveDraw = function(id) {
+  var pend = this.pendingDraw[id];
+  if(goog.isDefAndNotNull(pend)) {
+    pend.received = true;
+    if(pend.drawn && pend.received)
+      delete this.pendingDraw[id];
+    return false;
+  }
+  return true;
+};
+
 GDp.handleDrawResponse = function(event) {
   var rpc = event.target;
   switch(event.type) {
     case rpcType.CALL_SUCCESS:
-      var pend = this.pendingDraw[rpc.id];
-      pend.drawing.addAtEnd(pend.drawPart);
-      pend.canvas.withContext(pend.canvas.repaintComplete);
+      this.succeedDraw(rpc.id);
       break;
     default:
       console.log(event.type);
@@ -118,9 +140,14 @@ GDp.handleReceived = function(event) {
   var method = event.method;
   switch(method) {
     case 'draw':
-      var drawPart = event.result;
-      console.log(event.id);
-      console.log(event);
+      var drawCall = ble.json.RpcCall.coerce(event.result);
+      var params = drawCall.params;
+      var id = drawCall.id;
+      var drawPart = this.deserializer.deserialize(params['what']);
+      if(this.receiveDraw(id)) {
+        this.drawing.addAtEnd(drawPart);
+        this.canvas.withContext(this.canvas.repaintComplete);
+      }
   };
 };
 

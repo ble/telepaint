@@ -1,0 +1,5 @@
+Add reasonable behavior when receiving malformed JSON;
+Differentiate between a post to a sheet which is adding a 'stroke' and one
+which undoes an earlier stroke;
+transmit timestamps as part of each 'stroke';
+Write a minimal client for sheets using the subcanvas motion capture.

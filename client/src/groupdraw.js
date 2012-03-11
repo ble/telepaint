@@ -151,8 +151,7 @@ GDp.handleReceived = function(event) {
       var drawPart = this.deserializer.deserialize(params['what']);
       if(this.receiveDraw(id)) {
         this.drawing.add(drawPart);
-        this.canvas.withContext(this.canvas.repaintComplete);
-        window.setTimeout(goog.bind(this.canvas.replayAll, this.canvas, 1000), 10);
+        window.setTimeout(goog.bind(this.canvas.replayToEnd, this.canvas, 2), 10);
       }
   };
 };

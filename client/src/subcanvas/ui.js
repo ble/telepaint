@@ -27,6 +27,8 @@ ble.scribble.Canvas = function(width, height) {
   this.mocap_ = null;
   this.modes = this.makeModes();
   this.style = ble._2d.path.painterDefault;
+  this.animating = false;
+  this.animationStart = 0;
 };
 goog.inherits(ble.scribble.Canvas, ble.scratch.Canvas);
 
@@ -51,55 +53,61 @@ ble.scribble.Canvas.prototype.repaintAt = function(time) {
 
 ble.scribble.Canvas.prototype.finishAnimation = function() {
   this.animating = false;
+  this.animationStart = this.drawing.compact().end(); 
 };
 
-ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
-  if(!goog.isNumber(duration_millis)) {
-    throw new Error("non-numerical duration");
+ble.scribble.Canvas.prototype.replayToEnd = function(scale) {
+  if(!goog.isNumber(scale)) {
+    throw new Error("non-numerical scale");
   }
   if(this.animating)
     return;
   this.animating = true;
-  var real_duration = this.drawing.compact().length();
   if(window.webkitRequestAnimationFrame) {
-    this.animateRAF(duration_millis, real_duration);
+    this.animateToEnd_RAF(scale);
   } else {
-    this.animateInterval(duration_millis, real_duration, 32); 
+    this.animateToEnd_Interval(scale);
   }
+ 
 };
 
-ble.scribble.Canvas.prototype.animateRAF = function(replay_dur, capture_dur) {
-  var start = Date.now();
-  var redraw = goog.bind(function(now) {
-    var delta = now - start;
-    if(delta > replay_dur) {
+
+ble.scribble.Canvas.prototype.animateToEnd_RAF = function(scale) {
+  var startReplay = this.animationStart;
+  var startClock = Date.now();
+  var redraw = goog.bind(function(nowClock) { 
+    var deltaClock = nowClock - startClock;
+    var nowReplay = startReplay + deltaClock * scale;
+    var drawing = this.drawing.compact();
+    if(nowReplay > drawing.end()) {
       this.withContext(this.repaintComplete);
       this.finishAnimation();
     } else {
-      var effective_time = capture_dur * (delta / replay_dur);
-      this.withContext(this.repaintAt(effective_time));
+      this.withContext(this.repaintAt(nowReplay));
       window.webkitRequestAnimationFrame(redraw);
     }
   }, this);
-  redraw(Date.now());
+  redraw(Date.now()); 
 };
 
-ble.scribble.Canvas.prototype.animateInterval = function(replay_dur, capture_dur, interval) {
-  var start = Date.now();
+ble.scribble.Canvas.prototype.animateToEnd_Interval = function(scale) {
+  var startReplay = this.animationStart;
+  var startClock = Date.now();
   var handle;
   var redraw = goog.bind(function() {
-    var now = Date.now();
-    var delta = now - start;
-    if(delta > replay_dur) {
+    var nowClock = Date.now();
+    var deltaClock = nowClock - startClock;
+    var nowReplay = startReplay + deltaClock * scale;
+    var drawing = this.drawing.compact();
+    if(nowReplay > drawing.end()) {
       this.withContext(this.repaintComplete);
       this.finishAnimation();
       window.clearInterval(handle);
     } else {
-      var effective_time = capture_dur * (delta / replay_dur);
-      this.withContext(this.repaintAt(effective_time));
+      this.withContext(this.repaintAt(nowReplay));
     }
   }, this);
-  handle = window.setInterval(redraw, interval); 
+  handle = window.setInterval(redraw, interval);
 };
 
 ble.scribble.Canvas.prototype.handleEvent = function(event) {

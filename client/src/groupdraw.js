@@ -111,7 +111,8 @@ GDp.handleDraw = function(event) {
 
 GDp.succeedDraw = function(id) {
   var pend = this.pendingDraw[id];
-  pend.drawing.addAtEnd(pend.drawPart);
+  //TODO: fix so that we use the server timestamped drawpart...
+  pend.drawing.add(pend.drawPart);
   pend.canvas.withContext(pend.canvas.repaintComplete);
   pend.drawn = true; 
   if(pend.drawn && pend.received)
@@ -149,7 +150,7 @@ GDp.handleReceived = function(event) {
       var id = drawCall.id;
       var drawPart = this.deserializer.deserialize(params['what']);
       if(this.receiveDraw(id)) {
-        this.drawing.addAtEnd(drawPart);
+        this.drawing.add(drawPart);
         this.canvas.withContext(this.canvas.repaintComplete);
         window.setTimeout(goog.bind(this.canvas.replayAll, this.canvas, 1000), 10);
       }

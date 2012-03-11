@@ -4,7 +4,7 @@ goog.provide('ble.scribble.UI');
 goog.require('ble.scribble.style.StylePicker');
 goog.require('ble.scratch.Canvas');
 goog.require('ble.mocap.Stroke');
-goog.require('ble.scribble.MutableDrawing');
+goog.require('ble.scribble.SmartDrawing');
 
 goog.require('ble._2d');
 goog.require('ble._2d.path.painterDefault');
@@ -19,15 +19,11 @@ goog.require('goog.events.EventType');
  * @constructor
  * @param {number} width
  * @param {number} height
- * @param {ble.scribble.MutableDrawing=} opt_drawing
  * @extends {ble.scratch.Canvas}
  */
-ble.scribble.Canvas = function(width, height, opt_drawing) {
+ble.scribble.Canvas = function(width, height) {
   ble.scratch.Canvas.call(this, width, height);
-  if(goog.isDef(opt_drawing))
-    this.drawing = opt_drawing;
-  else
-    this.drawing = new ble.scribble.MutableDrawing(Date.now(), []);
+  this.drawing = new ble.scribble.SmartDrawing(Date.now(), []);
   this.mocap_ = null;
   this.modes = this.makeModes();
   this.style = ble._2d.path.painterDefault;
@@ -49,7 +45,7 @@ ble.scribble.Canvas.prototype.repaintComplete = function(ctx) {
 ble.scribble.Canvas.prototype.repaintAt = function(time) {
   return function(ctx) { 
     ctx.clearRect(0, 0, this.width_px, this.height_px);
-    this.drawing.at(time).draw(ctx);
+    this.drawing.compact().at(time).draw(ctx);
   };
 };
 
@@ -64,7 +60,7 @@ ble.scribble.Canvas.prototype.replayAll = function(duration_millis) {
   if(this.animating)
     return;
   this.animating = true;
-  var real_duration = this.drawing.length();
+  var real_duration = this.drawing.compact().length();
   if(window.webkitRequestAnimationFrame) {
     this.animateRAF(duration_millis, real_duration);
   } else {
@@ -80,7 +76,7 @@ ble.scribble.Canvas.prototype.animateRAF = function(replay_dur, capture_dur) {
       this.withContext(this.repaintComplete);
       this.finishAnimation();
     } else {
-      var effective_time = capture_dur * (delta / replay_dur) + this.drawing.start();
+      var effective_time = capture_dur * (delta / replay_dur);
       this.withContext(this.repaintAt(effective_time));
       window.webkitRequestAnimationFrame(redraw);
     }
@@ -99,7 +95,7 @@ ble.scribble.Canvas.prototype.animateInterval = function(replay_dur, capture_dur
       this.finishAnimation();
       window.clearInterval(handle);
     } else {
-      var effective_time = capture_dur * (delta / replay_dur) + this.drawing.start();
+      var effective_time = capture_dur * (delta / replay_dur);
       this.withContext(this.repaintAt(effective_time));
     }
   }, this);

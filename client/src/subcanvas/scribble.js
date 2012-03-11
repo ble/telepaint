@@ -1,7 +1,10 @@
 goog.require('ble.interval.startRank');
 goog.require('ble.util.comparatorFromRank');
+goog.require('ble.interval');
+goog.require('ble._2d');
+
 goog.provide('ble.scribble.Drawing');
-goog.provide('ble.scribble.MutableDrawing');
+goog.provide('ble.scribble.SmartDrawing');
 
 ////////////////////////////////////////////////////////////////////////////////
                                                         goog.scope(function(){
@@ -125,54 +128,84 @@ _.Drawing.prototype.at = function(time) {
   return drawable;
 };
 
+var _ = ble.scribble;
+
+var Also = ble._2d.Also;
+
+var withoutGaps = ble.interval.withoutGapsFromZero;
+var overlaps = ble.interval.overlaps;
+var shiftBy = ble.interval.shiftBy;
+var nothing = ble._2d.nothing;
+var startRank = ble.interval.startRank;
+var rankBinaryInsert = ble.util.rankBinaryInsert;
 /**
  * @constructor
- * @param {Array.<ble._2d.DrawPart>} items
  * @extends {ble.scribble.Drawing}
+ *
+ * A mutable drawing which maintains the true times of all of its strokes
+ * as well as a compact drawing in which the first stroke starts at zero
+ * and time gaps between strokes have been eliminated.
  */
-_.MutableDrawing = function(startTime, items) {
+_.SmartDrawing = function(startTime, items) {
   _.Drawing.call(this, startTime, items);
-  this.current = null;
+  this.updated_ = true;
+  this.currentPart = nothing;
 };
-goog.inherits(_.MutableDrawing, _.Drawing);
+goog.inherits(_.SmartDrawing, _.Drawing);
 
-/**
- * @override
- */
-_.MutableDrawing.prototype.draw = function(ctx) {
-  _.Drawing.prototype.draw.call(this, ctx);
-  if(!goog.isNull(this.current))
-    this.current.draw(ctx);
+_.SmartDrawing.prototype.compact = function() {
+  if(this.updated_) { 
+    this.compacted = new _.CompactDrawing(withoutGaps(this.byStart), this);
+    this.updated_ = false;
+  }
+  return this.compacted;
 };
 
-/**
- * @param {ble._2d.DrawPart} item
- */
-_.MutableDrawing.prototype.add = function(item) {
+_.SmartDrawing.prototype.add = function(item) {
   this.fetcher.add(item);
-  ble.util.rankBinaryInsert(ble.interval.startRank, this.byStart, item);
+  rankBinaryInsert(startRank, this.byStart, item);
+  this.updated_ = true;
 };
 
-/**
- * @param {ble._2d.DrawPart} item
- */
-_.MutableDrawing.prototype.setCurrent = function(item) {
-  this.current = item;
+_.SmartDrawing.prototype.setCurrent = function(item) {
+  if(!goog.isDefAndNotNull(item))
+    item = nothing;
+  this.currentPart = item;
 };
 
-_.MutableDrawing.prototype.getCurrent = function() {
-  return this.current;
+_.SmartDrawing.prototype.getCurrent = function() {
+  return this.currentPart;
 };
 
-_.MutableDrawing.prototype.recordCurrent = function() {
-  this.add(this.current.withStartAt(this.length()));
-  this.current = null;
+_.SmartDrawing.prototype.recordCurrent = function() {
+  if(this.getCurrent() !== nothing) {
+    this.add(this.getCurrent());
+    this.setCurrent(null);
+  }
 };
 
-_.MutableDrawing.prototype.addAtEnd = function(part) {
-  this.add(part.withStartAt(this.length()));
+_.SmartDrawing.prototype.draw = function(ctx) {
+  goog.base(this, 'draw', ctx);
+  this.getCurrent().draw(ctx);
 };
 
+_.SmartDrawing.prototype.at = function(time) {
+  return new Also(goog.base(this, 'at', time), this.getCurrent());
+};
+
+
+_.CompactDrawing = function(items, smart) {
+  _.Drawing.call(this, 0, items);
+  this.smart = smart;
+};
+goog.inherits(_.CompactDrawing, _.Drawing);
+
+_.CompactDrawing.prototype.getCurrent = function() {
+  return this.smart.getCurrent();
+};
+
+_.CompactDrawing.prototype.draw = _.SmartDrawing.prototype.draw; 
+_.CompactDrawing.prototype.at = _.SmartDrawing.prototype.at;
 ////////////////////////////////////////////////////////////////////////////////
                                                                            });
 ////////////////////////////////////////////////////////////////////////////////

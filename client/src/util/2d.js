@@ -1,4 +1,5 @@
 goog.require('goog.math.Box');
+goog.require('ble.interval.AdjustableInterval');
 
 goog.provide('ble._2d');
 goog.provide('ble._2d.DrawSurface');
@@ -66,6 +67,20 @@ ble._2d.Nothing.prototype.draw = function(context) {};
  * @type {ble._2d.Drawable}
  */
 ble._2d.nothing = new ble._2d.Nothing();
+
+/**
+ * @constructor
+ * @implements {ble._2d.Drawable}
+ */
+ble._2d.Also = function(a, b) {
+  this.a = a;
+  this.b = b;
+};
+
+ble._2d.Also.prototype.draw = function(context) {
+  this.a.draw(context);
+  this.b.draw(context);
+};
 
 ble._2d.pathCoords = function(ctx, coords) {
   ctx.beginPath();

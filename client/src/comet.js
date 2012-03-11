@@ -145,7 +145,7 @@ ble.comet.Queue =
  function(
      uri,
      lastObservedTime) {
-  ble.comet.Basic.call(this, uri, 10000, 1000, 5000);
+  ble.comet.Basic.call(this, uri, 10000, 0, 5000);
   this.lastObservedTime = lastObservedTime;
 };
 goog.inherits(ble.comet.Queue, ble.comet.Basic);

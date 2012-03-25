@@ -107,6 +107,7 @@ ble.scribble.Canvas.prototype.animateToEnd_Interval = function(scale) {
       this.withContext(this.repaintAt(nowReplay));
     }
   }, this);
+  var interval = 32;
   handle = window.setInterval(redraw, interval);
 };
 

@@ -1,6 +1,7 @@
 -module(room_state).
 -include("room.hrl").
 -include("rpc_methods.hrl").
+-define(DEFAULT_GAME, groupdraw).
 
 -export([
     make/1,
@@ -13,7 +14,7 @@
 
 -spec make(Name :: binary()) -> {ok, #room{}}.
 make(Name) ->
-  {ok, #room{id = id_unique:for(room), name=Name, game=undefined, observers=[]}}.
+  {ok, #room{id = id_unique:for(room), name=Name, game=?DEFAULT_GAME, observers=[]}}.
 
 -spec get_observers(Room :: #room{}) -> [#player{}].
 get_observers(Room) -> Room#room.observers.

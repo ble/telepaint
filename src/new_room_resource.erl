@@ -56,13 +56,15 @@ process_post(Req0, Ctx) ->
 %  %create a room
       {ok, Pid, RoomId} = room:start_link(Name),
       ok = nexus:register_room(Pid, RoomId),
+      RoomPath = binary_to_list(list_to_binary([<<"/room/">>, RoomId, <<"/">>])),
+      ClientPath = RoomPath ++ "client",
 %  %create the first user for that room
       {ok, ObserverId} = room:add_observer(Pid),
-      Cookie1 = mochiweb_cookies:cookie("roomId", RoomId),
+      Cookie1 = mochiweb_cookies:cookie("roomId", RoomId, [{path, RoomPath}]),
 %  %  set cookie identifying user
-      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId),
+      Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId, [{path, RoomPath}]),
 %  %  303 redirect to the url for the room client
-      Loc = {"Location", ["/room/"] ++ binary_to_list(RoomId) ++ "/client"},
+      Loc = {"Location", ClientPath},
       Req1 = wrq:merge_resp_headers([Loc, Cookie1, Cookie2], Req0),
       Req2 = wrq:do_redirect(true, Req1),
       {true, Req2, Ctx};

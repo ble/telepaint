@@ -40,7 +40,7 @@ forbidden(Req0, Ctx) ->
   case not AlreadyInRoom andalso room:allow_anonymous_join(RoomPid) of
     true ->
       {ok, ObserverId} = room:add_observer(RoomPid),
-      Path = binary_to_list(list_to_binary([<<"/room/">>, RoomId, <<"/">>])),
+      Path = binary_to_list(list_to_binary([<<"/room/">>, RoomId])),
       Cookie1 = mochiweb_cookies:cookie("roomId", RoomId, [{path, Path}]),
       Cookie2 = mochiweb_cookies:cookie("observerId", ObserverId, [{path, Path}]),
       Loc = {"Location", [<<"/room/">>, Ctx#room_context.room_id, <<"/client?join">>]},

@@ -56,8 +56,8 @@ process_post(Req0, Ctx) ->
 %  %create a room
       {ok, Pid, RoomId} = room:start_link(Name),
       ok = nexus:register_room(Pid, RoomId),
-      RoomPath = binary_to_list(list_to_binary([<<"/room/">>, RoomId, <<"/">>])),
-      ClientPath = RoomPath ++ "client",
+      RoomPath = binary_to_list(list_to_binary([<<"/room/">>, RoomId])),
+      ClientPath = RoomPath ++ "/client",
 %  %create the first user for that room
       {ok, ObserverId} = room:add_observer(Pid),
       Cookie1 = mochiweb_cookies:cookie("roomId", RoomId, [{path, RoomPath}]),

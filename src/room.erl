@@ -39,7 +39,7 @@ name_observer(Pid, Id, Name) ->
   gen_server:call(Pid, {name_observer, Id, Name}).
 
 game_action(Pid, ObserverId, Action) ->
-  ok.
+  gen_server:call(Pid, {game_action, ObserverId, Action}).
 
 get_observers(Pid) ->
   gen_server:call(Pid, get_observers).
@@ -102,6 +102,17 @@ handle_call({name_observer, Id, Name}, _, State0) ->
       {reply, ok, State1};
     rename ->
       {reply, {error, no_rename}, State0}
+  end;
+
+handle_call({game_action, Id, Action}, _, State0) ->
+  io:format("GAME ON~n",[]),
+%  {reply, ok, State0};
+  case room_state:game_action(Id, Action, State0) of
+    {ok, {State1, Msgs}} ->
+      internal_send_to_all(State1, Msgs),
+      {reply, ok, State1};
+    {error, Reason} ->
+      {reply, {error, Reason}, State0}
   end;
 
 handle_call({has_observer, PlayerId}, _, State) ->

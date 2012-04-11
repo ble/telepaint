@@ -1,7 +1,7 @@
 -module(room_state).
 -include("room.hrl").
 -include("rpc_methods.hrl").
--define(DEFAULT_GAME, groupdraw).
+-define(DEFAULT_GAME, group_draw).
 
 -export([
     make/1,
@@ -10,7 +10,8 @@
     bind_observer/3,
     get_observers/1,
     get_observer/2,
-    get_name/1]).
+    get_name/1,
+    game_action/3]).
 
 -spec make(Name :: binary()) -> {ok, #room{}}.
 make(Name) ->
@@ -76,3 +77,19 @@ bind_observer(Room0, Id, Pid) ->
 
 -spec get_name(Room :: #room{}) -> binary().
 get_name(Room) -> Room#room.name.
+
+game_action(Id, Action, State0) ->
+  case get_observer(State0, Id) of
+    {ok, Player} ->
+      Game0 = State0#room.game, 
+      case game:call_game(Player, Action, Game0) of
+        {error, Reason} ->
+          {error, {bad_call, Reason}};
+        {ok, Game1, Messages} ->
+          {ok, {State0#room{game = Game1}, Messages}}
+      end;
+    {error, Reason} ->
+      {error, {bad_player, Reason}}
+  end.
+
+

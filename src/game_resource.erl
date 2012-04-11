@@ -77,11 +77,13 @@ process_json(Req, Ctx) ->
             {true, #rpc_response{id = Id, result = [<<"ok">>]}};
           {error, Atom} when is_atom(Atom) ->
             Error = #rpc_response_error{message = list_to_binary(atom_to_list(Atom))},
-            {false, #rpc_response{id = Id, error = Error}};
+            {true, #rpc_response{id = Id, error = Error}};
           {error, Something} ->
-            Error = #rpc_response_error{message = Something},
-            {false, #rpc_response{id = Id, error = Error}}
+            Message = list_to_binary(io_lib:format("~p", [Something])),
+            Error = #rpc_response_error{message = Message},
+            {true, #rpc_response{id = Id, error = Error}}
         end,
+        io:format("~p~n", [Response]),
         JsonResult = jiffy:encode(json_rpc:jif(Response)),
         io:format("All right, we call it a draw.~n", []),
         {Success, wrq:set_resp_body(JsonResult, Req), Ctx};
